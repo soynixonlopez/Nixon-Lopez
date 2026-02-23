@@ -103,7 +103,7 @@ export default function CotizacionPage() {
           ${lineasExtra.join('')}
           ${esWeb ? `<div class="row"><span class="label">Incluye dominio, hosting y correo:</span> ${extrasIncluidos ? 'Sí (+$' + PRECIO_DOMINIO_HOSTING_CORREO + ')' : 'No'}</div>` : ''}
           ${form.comentarios ? `<div class="row"><span class="label">Comentarios:</span> ${form.comentarios}</div>` : ''}
-          <div class="row total">Total: $${total}${servicio?.mensual ? '/mes' : ''}</div>
+          <div class="row total">Total: $${total}${servicio && 'mensual' in servicio && servicio.mensual ? '/mes' : ''}</div>
           <p class="footer">Generado el ${new Date().toLocaleDateString('es-ES')}. Demo en menos de 2 horas. Presencia digital con Nixon López.</p>
         </body>
       </html>
@@ -128,7 +128,7 @@ export default function CotizacionPage() {
           Servicio: servicio?.label ?? '',
           'Cantidad de páginas': String(form.cantidadPaginas),
           'Incluye dominio/hosting/correo': extrasIncluidos ? 'Sí' : 'No',
-          Total: `$${total}${servicio?.mensual ? '/mes' : ''}`,
+          Total: `$${total}${servicio && 'mensual' in servicio && servicio.mensual ? '/mes' : ''}`,
           Comentarios: form.comentarios,
           Fecha: new Date().toLocaleString('es-ES'),
         }),
@@ -263,7 +263,7 @@ export default function CotizacionPage() {
                     >
                       <span className="text-sm sm:text-base">{s.label}</span>
                       <span className="font-semibold text-blue-400 text-sm sm:text-base">
-                        ${s.precio}{s.mensual ? '/mes' : ''}
+                        ${s.precio}{'mensual' in s && s.mensual ? '/mes' : ''}
                       </span>
                     </button>
                   ))}
@@ -438,7 +438,7 @@ export default function CotizacionPage() {
 
                 <div className="pt-4 border-t border-white/10">
                   <p className="text-xl sm:text-2xl font-bold text-white">
-                    Total: ${total}{servicio?.mensual ? '/mes' : ''}
+                    Total: ${total}{servicio && 'mensual' in servicio && servicio.mensual ? '/mes' : ''}
                   </p>
                   <p className="text-xs sm:text-sm text-gray-500 mt-1">
                     Demo en menos de 2 horas. Presencia digital con Nixon López.
