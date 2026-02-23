@@ -18,13 +18,14 @@ import Footer from '@/components/Footer'
 import Link from 'next/link'
 
 const SERVICIOS = [
-  { id: 'web-profesional', label: 'Sitio web profesional (básico para servicios)', precio: 70, tipo: 'web' },
-  { id: 'landing', label: 'Landing Page', precio: 85, tipo: 'web' },
-  { id: 'web-completo', label: 'Sitio web completo (5 páginas)', precio: 150, tipo: 'web' },
-  { id: 'marketplace', label: 'Sitio web de marketplace', precio: 300, tipo: 'web' },
-  { id: 'empresarial', label: 'Sitio web administrativo / empresarial', precio: 700, tipo: 'web' },
-  { id: 'meta-ads', label: 'Publicidad en Meta Ads', precio: 60, tipo: 'ads', mensual: true },
-  { id: 'google-ads', label: 'Publicidad en Google Ads', precio: 60, tipo: 'ads', mensual: true },
+  { id: 'landing', label: 'Landing Page', precio: 170, tipo: 'web' },
+  { id: 'web-5-secciones', label: 'Sitio Web 5 Secciones', precio: 320, tipo: 'web' },
+  { id: 'portafolio', label: 'Portafolio Profesional', precio: 280, tipo: 'web' },
+  { id: 'reservas-pedidos', label: 'Sitio con Reservas o Pedidos', precio: 500, tipo: 'web' },
+  { id: 'ecommerce', label: 'Ecommerce (con pasarela)', precio: 850, tipo: 'web' },
+  { id: 'marketplace', label: 'Marketplace', precio: 1500, tipo: 'web' },
+  { id: 'blog', label: 'Blog simple', precio: 150, tipo: 'web' },
+  { id: 'ajustes-wp', label: 'Ajustes WordPress', precio: 100, tipo: 'web' },
 ] as const
 
 const PRECIO_DOMINIO_HOSTING_CORREO = 35
@@ -268,9 +269,6 @@ export default function CotizacionPage() {
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  * Publicidad: 3 campañas efectivas según tu negocio.
-                </p>
               </motion.div>
             )}
 
