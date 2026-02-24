@@ -134,7 +134,7 @@ const HeroSection = () => {
 
       {/* Main content */}
       <motion.div
-        className="relative z-10 container-padding h-full pt-20 pb-0"
+        className="relative z-10 container-padding h-full pt-[calc(3.5rem+env(safe-area-inset-top,0px))] sm:pt-[calc(4rem+env(safe-area-inset-top,0px))] md:pt-20 pb-0"
         variants={containerVariants}
         initial="hidden"
         animate="visible"

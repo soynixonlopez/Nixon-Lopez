@@ -12,6 +12,7 @@ import {
   Check,
   Send,
   CheckCircle,
+  Info,
 } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -22,7 +23,7 @@ const SERVICIOS = [
   { id: 'web-5-secciones', label: 'Sitio Web 5 Secciones', precio: 320, tipo: 'web' },
   { id: 'portafolio', label: 'Portafolio Profesional', precio: 280, tipo: 'web' },
   { id: 'reservas-pedidos', label: 'Sitio con Reservas o Pedidos', precio: 500, tipo: 'web' },
-  { id: 'ecommerce', label: 'Ecommerce (con pasarela)', precio: 850, tipo: 'web' },
+  { id: 'ecommerce', label: 'Ecommerce', precio: 650, tipo: 'web' },
   { id: 'marketplace', label: 'Marketplace', precio: 1500, tipo: 'web' },
   { id: 'blog', label: 'Blog simple', precio: 150, tipo: 'web' },
   { id: 'ajustes-wp', label: 'Ajustes WordPress', precio: 100, tipo: 'web' },
@@ -30,6 +31,12 @@ const SERVICIOS = [
 
 const PRECIO_DOMINIO_HOSTING_CORREO = 35
 const PRECIO_PAGINA_EXTRA = 20
+const PRECIO_PASARELA_PAGOS = 200
+const MAX_IMAGENES_POR_SITIO = 20
+
+/** Texto de observaciones estándar: imágenes y escalabilidad hosting/DB */
+const OBSERVACIONES_IMAGENES = `Cada sitio web incluye hasta ${MAX_IMAGENES_POR_SITIO} imágenes en el paquete estándar. Si necesitas más, indícalo en los comentarios.`
+const OBSERVACIONES_HOSTING_DB = 'El precio de base de datos y hosting depende de la escalabilidad del sitio. Cuando el sitio escale y tenga mucho tráfico y afluencia de personas, la base de datos suele ser ~$25/mes y el hosting ~$25/mes.'
 
 export default function CotizacionPage() {
   const [paso, setPaso] = useState(1)
@@ -43,6 +50,7 @@ export default function CotizacionPage() {
     tieneHosting: '' as '' | 'si' | 'no',
     tieneCorreo: '' as '' | 'si' | 'no',
     incluirDominioHostingCorreo: false,
+    incluirPasarelaPagos: false,
     comentarios: '',
   })
   const [enviando, setEnviando] = useState(false)
@@ -60,7 +68,8 @@ export default function CotizacionPage() {
   const extrasHosting = extrasIncluidos ? PRECIO_DOMINIO_HOSTING_CORREO : 0
   const paginasExtra = esWeb && form.cantidadPaginas > 5 ? form.cantidadPaginas - 5 : 0
   const costoPaginasExtra = paginasExtra * PRECIO_PAGINA_EXTRA
-  const total = base + extrasHosting + costoPaginasExtra
+  const costoPasarela = esWeb && form.incluirPasarelaPagos ? PRECIO_PASARELA_PAGOS : 0
+  const total = base + extrasHosting + costoPaginasExtra + costoPasarela
 
   // FormSubmit.co: gratis, sin registro. Las cotizaciones aceptadas llegan a soynixonlopez@gmail.com
   const FORMSUBMIT_URL = `https://formsubmit.co/ajax/${encodeURIComponent('soynixonlopez@gmail.com')}`
@@ -72,6 +81,12 @@ export default function CotizacionPage() {
     if (esWeb && paginasExtra > 0) {
       lineasExtra.push(`<div class="row"><span class="label">Páginas adicionales (${paginasExtra} x $${PRECIO_PAGINA_EXTRA}):</span> $${costoPaginasExtra}</div>`)
     }
+    if (esWeb && form.incluirPasarelaPagos) {
+      lineasExtra.push(`<div class="row"><span class="label">Integración pasarela de pagos:</span> +$${PRECIO_PASARELA_PAGOS}</div>`)
+    }
+    const observacionesPrint = esWeb
+      ? `<div class="obs"><strong>Observaciones:</strong><ul><li>${OBSERVACIONES_IMAGENES}</li><li>${OBSERVACIONES_HOSTING_DB}</li></ul></div>`
+      : ''
     ventana.document.write(`
       <!DOCTYPE html>
       <html>
@@ -88,6 +103,9 @@ export default function CotizacionPage() {
             .label { font-weight: 600; color: #64748b; }
             .total { font-size: 1.5rem; font-weight: 700; color: #0f172a; margin-top: 24px; }
             .footer { margin-top: 32px; font-size: 12px; color: #94a3b8; }
+            .obs { margin-top: 16px; padding: 12px; background: #f1f5f9; border-radius: 8px; font-size: 0.85rem; color: #475569; }
+            .obs ul { margin: 6px 0 0 0; padding-left: 1.2rem; }
+            .obs li { margin: 4px 0; }
           </style>
         </head>
         <body>
@@ -103,7 +121,9 @@ export default function CotizacionPage() {
           ${esWeb ? `<div class="row"><span class="label">Cantidad de páginas:</span> ${form.cantidadPaginas}</div>` : ''}
           ${lineasExtra.join('')}
           ${esWeb ? `<div class="row"><span class="label">Incluye dominio, hosting y correo:</span> ${extrasIncluidos ? 'Sí (+$' + PRECIO_DOMINIO_HOSTING_CORREO + ')' : 'No'}</div>` : ''}
+          ${esWeb && form.incluirPasarelaPagos ? `<div class="row"><span class="label">Integración pasarela de pagos:</span> +$${PRECIO_PASARELA_PAGOS}</div>` : ''}
           ${form.comentarios ? `<div class="row"><span class="label">Comentarios:</span> ${form.comentarios}</div>` : ''}
+          ${observacionesPrint}
           <div class="row total">Total: $${total}${servicio && 'mensual' in servicio && servicio.mensual ? '/mes' : ''}</div>
           <p class="footer">Generado el ${new Date().toLocaleDateString('es-ES')}. Demo en menos de 2 horas. Presencia digital con Nixon López.</p>
         </body>
@@ -129,8 +149,13 @@ export default function CotizacionPage() {
           Servicio: servicio?.label ?? '',
           'Cantidad de páginas': String(form.cantidadPaginas),
           'Incluye dominio/hosting/correo': extrasIncluidos ? 'Sí' : 'No',
+          'Pasarela de pagos integrada': form.incluirPasarelaPagos ? `Sí (+$${PRECIO_PASARELA_PAGOS})` : 'No',
           Total: `$${total}${servicio && 'mensual' in servicio && servicio.mensual ? '/mes' : ''}`,
           Comentarios: form.comentarios,
+          ...(esWeb ? {
+            'Observación (imágenes)': OBSERVACIONES_IMAGENES,
+            'Observación (hosting/DB al escalar)': OBSERVACIONES_HOSTING_DB,
+          } : {}),
           Fecha: new Date().toLocaleString('es-ES'),
         }),
       })
@@ -382,6 +407,34 @@ export default function CotizacionPage() {
                         </label>
                       </div>
                     )}
+                    <div className="bg-white/5 rounded-xl p-3 sm:p-4 border border-white/10">
+                      <label className="flex items-center gap-3 cursor-pointer flex-wrap">
+                        <input
+                          type="checkbox"
+                          checked={form.incluirPasarelaPagos}
+                          onChange={(e) =>
+                            setForm((f) => ({
+                              ...f,
+                              incluirPasarelaPagos: e.target.checked,
+                            }))
+                          }
+                          className="rounded border-white/30 bg-white/5 text-blue-500 focus:ring-blue-500"
+                        />
+                        <span className="text-gray-300 text-sm sm:text-base">
+                          Incluir integración de pasarela de pagos (+${PRECIO_PASARELA_PAGOS})
+                        </span>
+                      </label>
+                    </div>
+                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-3 sm:p-4 space-y-3">
+                      <p className="text-gray-300 text-xs sm:text-sm flex items-start gap-2">
+                        <Info className="w-4 h-4 shrink-0 mt-0.5 text-blue-400" />
+                        <span>{OBSERVACIONES_IMAGENES}</span>
+                      </p>
+                      <p className="text-gray-300 text-xs sm:text-sm flex items-start gap-2">
+                        <Info className="w-4 h-4 shrink-0 mt-0.5 text-blue-400" />
+                        <span>{OBSERVACIONES_HOSTING_DB}</span>
+                      </p>
+                    </div>
                   </>
                 )}
                 <div>
@@ -427,10 +480,25 @@ export default function CotizacionPage() {
                       {extrasIncluidos && (
                         <p><span className="text-gray-500">Dominio, hosting y correo:</span> +${PRECIO_DOMINIO_HOSTING_CORREO}</p>
                       )}
+                      {form.incluirPasarelaPagos && (
+                        <p><span className="text-gray-500">Integración pasarela de pagos:</span> +${PRECIO_PASARELA_PAGOS}</p>
+                      )}
                     </>
                   )}
                   {form.comentarios && (
                     <p><span className="text-gray-500">Comentarios:</span> {form.comentarios}</p>
+                  )}
+                  {esWeb && (
+                    <div className="mt-3 space-y-2 pt-3 border-t border-white/10">
+                      <p className="text-xs text-gray-500 flex items-start gap-2">
+                        <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                        <span>{OBSERVACIONES_IMAGENES}</span>
+                      </p>
+                      <p className="text-xs text-gray-500 flex items-start gap-2">
+                        <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                        <span>{OBSERVACIONES_HOSTING_DB}</span>
+                      </p>
+                    </div>
                   )}
                 </div>
 

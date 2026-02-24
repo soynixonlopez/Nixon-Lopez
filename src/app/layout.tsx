@@ -1,5 +1,12 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import '../styles/globals.css'
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover', /* permite safe-area-inset en dispositivos con notch */
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://nixonlopez.dev'),
