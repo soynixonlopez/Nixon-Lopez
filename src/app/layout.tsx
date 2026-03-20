@@ -16,8 +16,9 @@ export const metadata: Metadata = {
   authors: [{ name: 'Nixon López' }],
   creator: 'Nixon López',
   icons: {
-    icon: '/favicon.svg',
-    apple: '/favicon.svg',
+    icon: '/favicon.png',
+    apple: '/favicon.png',
+    shortcut: '/favicon.png',
   },
   openGraph: {
     title: 'Nixon López - Desarrollo Web con IA',

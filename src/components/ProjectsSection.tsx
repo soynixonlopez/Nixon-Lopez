@@ -30,197 +30,79 @@ const ProjectsSection = () => {
   const [dragStart, setDragStart] = useState(0)
   const [dragOffset, setDragOffset] = useState(0)
 
-  const projects = [
-    {
-      id: 1,
-      title: "Sitio Web para Estética",
-      description: "Sitio web profesional para centro de estética con diseño moderno y elegante que muestra servicios, galería y contacto.",
-      longDescription: "Sitio web profesional desarrollado para centro de estética con diseño moderno y elegante. Incluye sección de servicios, galería de trabajos, información de contacto y formularios de reserva. Optimizado para móviles y con excelente rendimiento.",
-      image: "/images/website-Sara.png",
-      icon: Globe,
-      gradient: "from-pink-500 to-rose-600",
-      tags: ["Next.js", "Tailwind", "TypeScript"],
-      allTags: ["Next.js", "Tailwind", "TypeScript", "Vercel"],
-      metrics: {
-        performance: "95/100",
-        responsive: "100%",
-        seo: "Optimizado"
-      },
-      features: [
-        "Diseño moderno y elegante",
-        "Galería de trabajos",
-        "Formularios de contacto",
-        "Optimizado para móviles",
-        "Performance optimizada"
-      ],
-      links: {
-        demo: "https://sara-carryhau-project.vercel.app/",
-        github: "",
-        case: ""
-      },
-      client: "Centro de Estética",
-      duration: "1 mes",
-      year: "2024"
-    },
-    {
-      id: 2,
-      title: "Sitio Web para Aprender a Programar",
-      description: "Plataforma educativa interactiva para aprender Python desde cero con lecciones, ejercicios y código interactivo.",
-      longDescription: "Plataforma educativa interactiva diseñada para enseñar Python desde cero. Incluye lecciones paso a paso, ejercicios prácticos, editor de código integrado y sistema de seguimiento de progreso. Perfecta para principiantes que quieren aprender programación de forma interactiva.",
-      image: "/images/website-python.png",
-      icon: GraduationCap,
-      gradient: "from-blue-500 to-cyan-600",
-      tags: ["Next.js", "React", "TypeScript"],
-      allTags: ["Next.js", "React", "TypeScript", "Tailwind"],
-      metrics: {
-        lessons: "20+",
-        students: "Activos",
-        interactivity: "100%"
-      },
-      features: [
-        "Lecciones interactivas",
-        "Editor de código integrado",
-        "Ejercicios prácticos",
-        "Seguimiento de progreso",
-        "Diseño intuitivo y moderno"
-      ],
-      links: {
-        demo: "https://pythonlearn.vercel.app/",
-        github: "",
-        case: ""
-      },
-      client: "Python Junior Course",
-      duration: "2 meses",
-      year: "2024"
-    },
-    {
-      id: 3,
-      title: "Formulario de Reservas",
-      description: "Sistema completo de reservas para agencia de viajes con formulario dinámico, cálculo de cotizaciones y generación de PDF.",
-      longDescription: "Sistema completo de reservas desarrollado para agencia de viajes. Incluye formulario dinámico con múltiples opciones, cálculo automático de cotizaciones según destino, hospedaje y servicios adicionales. Genera cotizaciones en PDF y permite gestionar reservas de forma eficiente.",
-      image: "/images/reservas-tropical.png",
-      icon: Calendar,
-      gradient: "from-emerald-500 to-teal-600",
-      tags: ["Next.js", "React", "Tailwind"],
-      allTags: ["Next.js", "React", "Tailwind", "JavaScript"],
-      metrics: {
-        destinations: "8+",
-        bookings: "Múltiples",
-        efficiency: "Alta"
-      },
-      features: [
-        "Formulario de reservas completo",
-        "Cálculo automático de cotizaciones",
-        "Múltiples destinos y opciones",
-        "Generación de PDF",
-        "Diseño intuitivo y responsive"
-      ],
-      links: {
-        demo: "https://tropicaldreams.vercel.app/",
-        github: "",
-        case: ""
-      },
-      client: "Tropical Dreams Tours",
-      duration: "1 mes",
-      year: "2024"
-    },
-    {
-      id: 4,
-      title: "Sitio Web para Fotografía",
-      description: "Sitio web profesional para fotógrafa con portafolio, galería de trabajos y sistema de contacto.",
-      longDescription: "Sitio web profesional desarrollado para fotógrafa. Incluye portafolio visual, galería de trabajos organizada por categorías, información sobre servicios y sistema de contacto. Diseño elegante que destaca la calidad visual de las fotografías.",
-      image: "/images/website-jill.png",
-      icon: Globe,
-      gradient: "from-sky-500 to-blue-600",
-      tags: ["Next.js", "React", "Tailwind"],
-      allTags: ["Next.js", "React", "Tailwind", "TypeScript"],
-      metrics: {
-        portfolio: "Completo",
-        gallery: "Organizada",
-        design: "Elegante"
-      },
-      features: [
-        "Portafolio visual",
-        "Galería de trabajos",
-        "Categorías organizadas",
-        "Sistema de contacto",
-        "Diseño elegante y profesional"
-      ],
-      links: {
-        demo: "",
-        github: "",
-        case: ""
-      },
-      client: "Fotografía Profesional",
-      duration: "1 mes",
-      year: "2024"
-    },
-    {
-      id: 5,
-      title: "Sitio Web para Agencia de Modelaje",
-      description: "Plataforma web profesional para academia de modelaje indígena con información de estudiantes, competencias y eventos.",
-      longDescription: "Plataforma web profesional desarrollada para academia de modelaje indígena. Incluye información sobre la academia, equipo, estudiantes destacados, competencias y eventos. Celebra la belleza ancestral y promueve la cultura indígena panameña a través del modelaje profesional.",
-      image: "/images/website-obit.png",
-      icon: Users,
-      gradient: "from-purple-500 to-pink-600",
-      tags: ["Next.js", "React", "Tailwind"],
-      allTags: ["Next.js", "React", "Tailwind", "TypeScript"],
-      metrics: {
-        students: "14+",
-        competitions: "Múltiples",
-        impact: "Cultural"
-      },
-      features: [
-        "Información de la academia",
-        "Galería de estudiantes",
-        "Calendario de eventos",
-        "Sistema de inscripciones",
-        "Diseño elegante y cultural"
-      ],
-      links: {
-        demo: "https://obip.vercel.app/",
-        github: "",
-        case: ""
-      },
-      client: "OBIP - Bellezas Indígenas",
-      duration: "2 meses",
-      year: "2024"
-    },
-    {
-      id: 6,
-      title: "Landing Page para Estilista",
-      description: "Landing page profesional para estilista y colorista con presentación de ebook, beneficios y sistema de compra.",
-      longDescription: "Landing page profesional desarrollada para estilista y colorista profesional. Presenta un ebook sobre colorimetría capilar con diseño atractivo, beneficios claros, testimonios y sistema de compra. Optimizada para conversión y diseño moderno que refleja la profesionalidad del servicio.",
-      image: "/images/landingpage-carmen.png",
-      icon: Zap,
-      gradient: "from-orange-500 to-red-600",
-      tags: ["Next.js", "React", "Tailwind"],
-      allTags: ["Next.js", "React", "Tailwind", "JavaScript"],
-      metrics: {
-        sales: "42+",
-        conversion: "Optimizada",
-        design: "Profesional"
-      },
-      features: [
-        "Presentación del producto",
-        "Sección de beneficios",
-        "Testimonios",
-        "Sistema de compra",
-        "Diseño profesional y atractivo"
-      ],
-      links: {
-        demo: "https://carmengonzalezestilista.vercel.app/",
-        github: "",
-        case: ""
-      },
-      client: "Carmen González Estilista",
-      duration: "1 mes",
-      year: "2024"
-    }
-  ]
+  /** Enlaces reales de cada proyecto (demo / sitio en vivo) */
+  const projectDemoUrls: Record<string, string> = {
+    sara: 'https://www.saracarryhau.com',
+    fotosonido: 'https://fotosonidopty.vercel.app',
+    alquilereventos: 'https://alquilerdeeventos.vercel.app',
+    marbi: 'https://marbisilva.vercel.app',
+    nutrielys: 'https://www.nutrielys.com',
+    obip: 'https://obip.vercel.app',
+    python: 'https://pythonlearn.vercel.app',
+    realtors: 'https://premierrealtor.vercel.app',
+    nixontours: 'https://nixontours.vercel.app',
+    yurna: 'https://www.yurnafinance.com',
+    tobykids: 'https://tobykids.vercel.app',
+    vipal: 'https://www.vipalglasspanama.com',
+    quantico: 'https://www.quanticoglobalsystem.com',
+  }
 
-  // Calculate total slides (groups of 2)
-  const totalSlides = Math.ceil(projects.length / 2)
+  const projectImageFiles = [
+    { slug: 'fotosonido', title: 'Foto Sonido', image: '/proyectos-img/website-fotosonido.png', icon: Globe },
+    { slug: 'alquilereventos', title: 'Alquiler de Eventos', image: '/proyectos-img/website-alquilereventos.png', icon: Zap },
+    { slug: 'sara', title: 'Sara Carryhau', image: '/proyectos-img/website-Sara.png', icon: Globe },
+    { slug: 'marbi', title: 'Marbi', image: '/proyectos-img/website-marbi.png', icon: Globe },
+    { slug: 'nutrielys', title: 'Nutrielys', image: '/proyectos-img/website-nutrielys.png', icon: Globe },
+    { slug: 'obip', title: 'OBIP', image: '/proyectos-img/website-obip.png', icon: Users },
+    { slug: 'python', title: 'Python', image: '/proyectos-img/website-python.png', icon: GraduationCap },
+    { slug: 'realtors', title: 'Realtors', image: '/proyectos-img/website-realtors.png', icon: Building },
+    { slug: 'nixontours', title: 'Nixon Tours', image: '/proyectos-img/website-nixontours.png', icon: Globe },
+    { slug: 'yurna', title: 'Yurna', image: '/proyectos-img/website-yurna.png', icon: Globe },
+    { slug: 'tobykids', title: 'Toby Kids', image: '/proyectos-img/website-tobykids.png', icon: Globe },
+    { slug: 'vipal', title: 'VIPAL', image: '/proyectos-img/website-vipal.png', icon: Globe },
+    { slug: 'quantico', title: 'Quantico', image: '/proyectos-img/website-quantico.png', icon: Bot },
+  ] as const
+
+  const projects = projectImageFiles.map((p, idx) => {
+    const demo =
+      projectDemoUrls[p.slug] ?? `https://www.${p.slug.toLowerCase()}.com`
+    return {
+      id: idx + 1,
+      title: p.title,
+      description: `Proyecto web: ${p.title}.`,
+      longDescription:
+        `Proyecto ${p.title} desarrollado para una presencia digital profesional. Incluye diseño moderno, secciones clave y optimización para una excelente experiencia en móviles.`,
+      image: p.image,
+      icon: p.icon,
+      gradient: 'from-indigo-500 to-purple-500',
+      tags: ['Next.js', 'React', 'Tailwind'],
+      allTags: ['Next.js', 'React', 'Tailwind', 'TypeScript'],
+      metrics: {
+        performance: '95/100',
+        responsive: '100%',
+        seo: 'Optimizado',
+      },
+      features: [
+        'Diseño moderno y atractivo',
+        'Optimizado para móviles',
+        'Estructura clara por secciones',
+        'Rendimiento mejorado',
+        'Implementación profesional',
+      ],
+      links: {
+        demo,
+        github: '',
+        case: '',
+      },
+      client: p.title,
+      duration: '1 mes',
+      year: '2024',
+    }
+  })
+
+  // Calculate total slides (groups of 3)
+  const slideSize = 3
+  const totalSlides = Math.ceil(projects.length / slideSize)
   
   const nextSlide = () => {
     setCurrentIndex((prev) => (prev + 1) % totalSlides)
@@ -269,10 +151,10 @@ const ProjectsSection = () => {
 
   // Removed auto-scroll - only manual navigation
 
-  // Get current projects to display (2 per slide)
+  // Get current projects to display (3 per slide)
   const getCurrentProjects = () => {
-    const startIndex = currentIndex * 2
-    return projects.slice(startIndex, startIndex + 2)
+    const startIndex = currentIndex * slideSize
+    return projects.slice(startIndex, startIndex + slideSize)
   }
 
   return (
@@ -349,7 +231,7 @@ const ProjectsSection = () => {
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentIndex}
-                className="grid grid-cols-1 md:grid-cols-2 gap-8"
+                className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8"
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ 
                   opacity: 1, 
@@ -359,8 +241,6 @@ const ProjectsSection = () => {
                 transition={{ duration: isDragging ? 0 : 0.5 }}
               >
                 {getCurrentProjects().map((project, index) => {
-                  const IconComponent = project.icon
-                  
                   return (
                     <motion.div
                       key={project.id}
@@ -370,30 +250,23 @@ const ProjectsSection = () => {
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                       whileHover={{ y: -8 }}
                     >
-                      {/* Image Area - Imagen desde los bordes redondeados superiores */}
-                      <div className="relative w-full h-80 overflow-hidden rounded-t-2xl">
-                        {/* Imagen del proyecto - cubre todo el espacio desde arriba sin espacios */}
+                      {/* Imagen completa (sin recorte): la tarjeta se adapta al aspect ratio */}
+                      <div className="relative w-full overflow-hidden rounded-t-2xl bg-slate-100 dark:bg-slate-900/80">
                         <img 
                           src={project.image} 
                           alt={project.title}
-                          className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                          className="relative z-0 block w-full h-auto max-h-[min(75vh,720px)] object-contain object-center transition-transform duration-500 group-hover:scale-[1.02]"
                         />
                         
-                        {/* Gradient Overlay superior sutil para mejor legibilidad */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent rounded-t-2xl" />
-                        
-                        {/* Gradient Overlay inferior para el título */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent rounded-t-2xl" />
-
-                        {/* Title - Posicionado en la parte inferior */}
-                        <div className="absolute bottom-0 left-0 right-0 z-10 p-6">
-                          <h3 className="text-2xl font-bold text-white drop-shadow-2xl">
+                        {/* Título sobre franja inferior (no tapa toda la imagen) */}
+                        <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/85 via-black/40 to-transparent pt-16 pb-4 px-4">
+                          <h3 className="text-xl sm:text-2xl font-bold text-white drop-shadow-lg">
                             {project.title}
                           </h3>
                         </div>
 
                         {/* Hover Overlay - Elegante y profesional */}
-                        <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center p-8 z-20">
+                        <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center p-6 sm:p-8 z-20">
                           <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}

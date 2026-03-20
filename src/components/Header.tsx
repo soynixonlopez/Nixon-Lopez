@@ -81,9 +81,9 @@ const Header = () => {
             whileHover={{ scale: 1.05 }}
           >
             <img 
-              src="/images/logo-blanco.png" 
+              src="/images/logocolor.png" 
               alt="Nixon López Logo" 
-              className="h-9 w-auto max-h-12 object-contain sm:h-10 md:h-12"
+              className="h-10 w-auto max-h-14 object-contain sm:h-11 md:h-14"
             />
           </motion.a>
 
@@ -154,9 +154,9 @@ const Header = () => {
             <div className="flex items-center justify-between px-4 py-4 sm:p-5 border-b border-white/10 shrink-0">
               <div className="flex items-center gap-2 min-w-0">
                 <img 
-                  src="/images/logo-blanco.png" 
+                  src="/images/logocolor.png" 
                   alt="Nixon López Logo" 
-                  className="h-9 w-auto object-contain shrink-0"
+                  className="h-10 w-auto object-contain shrink-0"
                 />
                 <span className="text-white font-semibold text-sm sm:text-base truncate">Menú</span>
               </div>

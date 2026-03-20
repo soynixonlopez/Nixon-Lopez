@@ -200,7 +200,7 @@ const AboutSection = () => {
                   Ver mi LinkedIn
                 </a>
                 <a
-                  href="https://github.com/nixonlopez"
+                  href="https://github.com/soynixonlopez"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-black text-white px-5 py-3 rounded-xl font-semibold shadow-lg transition-all duration-300 hover:-translate-y-0.5"

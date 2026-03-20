@@ -74,14 +74,44 @@ Los formularios se envían desde endpoints internos (`/api/contact` y `/api/quot
 
 Con eso, cada contacto y cotización llegará directamente a `info@nixonlopez.com`.
 
+## 🔐 Panel de administración (`/admin`)
+
+Panel interno con **Supabase Auth** (solo el correo administrador definido en la base de datos puede operar las tablas vía RLS).
+
+### Configuración rápida
+
+1. Crea un proyecto en [Supabase](https://supabase.com) y copia **URL** y **anon key**.
+2. En **SQL Editor**, ejecuta el archivo `supabase/migrations/20250220120000_admin_panel_schema.sql` (o `supabase db push` si usas CLI).
+3. En **Authentication → Users**, crea un usuario con el correo **`info@nixonlopez.com`** y una contraseña segura **(no la subas al repositorio)**. Ese usuario será el único con acceso a cotizaciones, proyectos y facturas según la función `is_admin()`.
+4. En **Project Settings → API**, copia también la **service_role** key y úsala solo en el servidor (Vercel / `.env.local`), nunca en el cliente.
+5. Copia `.env.example` a `.env.local` y rellena:
+   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY` (para que el formulario público de cotización pueda insertar en `quotes` sin romper el envío del correo si falla la BD)
+
+### Rutas del panel
+
+| Ruta | Descripción |
+|------|-------------|
+| `/admin/login` | Inicio de sesión |
+| `/admin` | Resumen / estadísticas |
+| `/admin/cotizaciones` | Listado y gestión de cotizaciones |
+| `/admin/cotizacion-nueva` | Crear cotización manual |
+| `/admin/proyectos` | Tablero pendiente / en proceso / completado |
+| `/admin/facturas` | Listado de prefacturas y facturas finales |
+| `/admin/facturas/nueva` | Nueva factura (prefactura con abono o factura final) |
+| `/admin/facturas/[id]` | Vista profesional (1 página), imprimir/PDF, enviar por correo con PDF |
+| `/admin/facturas/[id]/edit` | Editar datos, líneas y estado |
+
+Datos fiscales y logo en el documento: edita `src/lib/invoice-branding.ts` (NL Services, RUC, dirección, logo en `/public/images/…`). El envío por correo con adjunto usa la misma configuración SMTP que el resto del sitio.
+
+Si cambias el correo del administrador, actualiza la función `is_admin()` en SQL y, si aplica, `ADMIN_EMAIL` / `src/lib/admin-constants.ts`.
+
 ## 🌐 Deployment
 
 ### Vercel (Recomendado)
 1. Conecta tu repositorio a Vercel
 2. Las configuraciones están listas para deployment automático
-3. Configura las variables de entorno:
-   - Ve a Settings > Environment Variables
-   - Agrega `RESEND_API_KEY` con tu API key de Resend
+3. Configura las variables de entorno (SMTP, Supabase públicas y `SUPABASE_SERVICE_ROLE_KEY` solo en servidor).
 
 ### Otros Proveedores
 - Netlify: Compatible con build commands estándar

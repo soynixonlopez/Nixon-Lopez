@@ -8,7 +8,8 @@ import {
   Mail,
   User,
   FileText,
-  CheckCircle
+  CheckCircle,
+  Github
 } from 'lucide-react'
 import TechLogo from './TechLogo'
 
@@ -335,9 +336,9 @@ const ContactSection = () => {
               <span className="gradient-text">Redes Sociales</span>
             </h3>
             
-            <div className="flex justify-center gap-6">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
             <motion.a
-              href="https://instagram.com/soynixonlopez"
+              href="https://www.instagram.com/nixondev.ai/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-pink-400 hover:text-pink-300 transition-colors p-3 rounded-full hover:bg-pink-500/10"
@@ -345,6 +346,16 @@ const ContactSection = () => {
               whileTap={{ scale: 0.9 }}
             >
               <TechLogo name="Instagram" size={32} />
+            </motion.a>
+            <motion.a
+              href="https://github.com/soynixonlopez"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-200 hover:text-white transition-colors p-3 rounded-full hover:bg-white/10"
+              whileHover={{ scale: 1.2, y: -2 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <Github className="w-8 h-8" />
             </motion.a>
             <motion.a
               href="https://tiktok.com/@soynixonlopez"
@@ -367,7 +378,7 @@ const ContactSection = () => {
               <TechLogo name="Facebook" size={32} />
             </motion.a>
             <motion.a
-              href="https://youtube.com/@soynixonlopez"
+              href="https://www.youtube.com/@soynixonlopez"
               target="_blank"
               rel="noopener noreferrer"
               className="text-red-400 hover:text-red-300 transition-colors p-3 rounded-full hover:bg-red-500/10"

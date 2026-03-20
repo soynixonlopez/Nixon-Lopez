@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   User,
@@ -13,30 +13,33 @@ import {
   Send,
   CheckCircle,
   Info,
+  Layers,
+  Sparkles,
 } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import Link from 'next/link'
+import {
+  QUOTE_SERVICES,
+  calculateQuoteLines,
+  getService,
+  MAX_INCLUDED_PAGES,
+  PRICE_EXTRA_PAGE_USD,
+  PRICE_DOMAIN_USD,
+  PRICE_EMAIL_USD,
+} from '@/lib/quote-pricing'
 
-const SERVICIOS = [
-  { id: 'landing', label: 'Landing Page', precio: 170, tipo: 'web' },
-  { id: 'web-5-secciones', label: 'Sitio Web 5 Secciones', precio: 320, tipo: 'web' },
-  { id: 'portafolio', label: 'Portafolio Profesional', precio: 280, tipo: 'web' },
-  { id: 'reservas-pedidos', label: 'Sitio con Reservas o Pedidos', precio: 500, tipo: 'web' },
-  { id: 'ecommerce', label: 'Ecommerce', precio: 650, tipo: 'web' },
-  { id: 'marketplace', label: 'Marketplace', precio: 1500, tipo: 'web' },
-  { id: 'blog', label: 'Blog simple', precio: 150, tipo: 'web' },
-  { id: 'ajustes-wp', label: 'Ajustes WordPress', precio: 100, tipo: 'web' },
-] as const
-
-const PRECIO_DOMINIO_HOSTING_CORREO = 35
-const PRECIO_PAGINA_EXTRA = 20
-const PRECIO_PASARELA_PAGOS = 200
 const MAX_IMAGENES_POR_SITIO = 20
-
-/** Texto de observaciones estándar: imágenes y escalabilidad hosting/DB */
 const OBSERVACIONES_IMAGENES = `Cada sitio web incluye hasta ${MAX_IMAGENES_POR_SITIO} imágenes en el paquete estándar. Si necesitas más, indícalo en los comentarios.`
-const OBSERVACIONES_HOSTING_DB = 'El precio de base de datos y hosting depende de la escalabilidad del sitio. Cuando el sitio escale y tenga mucho tráfico y afluencia de personas, la base de datos suele ser ~$25/mes y el hosting ~$25/mes.'
+const OBSERVACIONES_HOSTING_DB =
+  'Hosting y base de datos dependen del tráfico y escala del proyecto; se acuerdan según necesidad.'
+
+const STEPS = [
+  { n: 1, title: 'Datos generales', desc: 'Nombre y correo de contacto' },
+  { n: 2, title: 'Tipo de servicio', desc: 'Elige el paquete que mejor encaje' },
+  { n: 3, title: 'Detalles', desc: 'Páginas, dominio, correo y comentarios' },
+  { n: 4, title: 'Resumen', desc: 'Revisa y envía tu cotización' },
+]
 
 export default function CotizacionPage() {
   const [paso, setPaso] = useState(1)
@@ -47,89 +50,88 @@ export default function CotizacionPage() {
     tipoServicio: '',
     cantidadPaginas: 5,
     tieneDominio: '' as '' | 'si' | 'no',
-    tieneHosting: '' as '' | 'si' | 'no',
     tieneCorreo: '' as '' | 'si' | 'no',
-    incluirDominioHostingCorreo: false,
-    incluirPasarelaPagos: false,
+    incluirPasarelaAddon: false,
     comentarios: '',
   })
   const [enviando, setEnviando] = useState(false)
   const [cotizacionEnviada, setCotizacionEnviada] = useState(false)
-  const printRef = useRef<HTMLDivElement>(null)
 
-  const servicio = SERVICIOS.find((s) => s.id === form.tipoServicio)
-  const esWeb = servicio?.tipo === 'web'
-  const necesitaExtras =
-    esWeb &&
-    (form.tieneDominio === 'no' || form.tieneHosting === 'no' || form.tieneCorreo === 'no')
-  const extrasIncluidos = esWeb && form.incluirDominioHostingCorreo
+  const servicio = getService(form.tipoServicio)
+  const needsPages = servicio?.needsPages ?? false
+  const needsDomainEmail = servicio?.needsDomainEmail ?? false
+  const esPasarelaSolo = form.tipoServicio === 'pasarela'
+  const monthly = servicio?.monthly ?? false
 
-  const base = servicio ? servicio.precio : 0
-  const extrasHosting = extrasIncluidos ? PRECIO_DOMINIO_HOSTING_CORREO : 0
-  const paginasExtra = esWeb && form.cantidadPaginas > 5 ? form.cantidadPaginas - 5 : 0
-  const costoPaginasExtra = paginasExtra * PRECIO_PAGINA_EXTRA
-  const costoPasarela = esWeb && form.incluirPasarelaPagos ? PRECIO_PASARELA_PAGOS : 0
-  const total = base + extrasHosting + costoPaginasExtra + costoPasarela
+  const { lines, total } = calculateQuoteLines({
+    serviceId: form.tipoServicio,
+    cantidadPaginas: form.cantidadPaginas,
+    tieneDominio: form.tieneDominio,
+    tieneCorreo: form.tieneCorreo,
+    incluirPasarelaAddon: esPasarelaSolo ? false : form.incluirPasarelaAddon,
+  })
+
+  const paginasExtra =
+    needsPages && form.cantidadPaginas > MAX_INCLUDED_PAGES
+      ? form.cantidadPaginas - MAX_INCLUDED_PAGES
+      : 0
+
+  const puedePaso1 =
+    form.nombre.trim() &&
+    form.apellido.trim() &&
+    form.correo.trim() &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.correo)
+
+  const puedePaso2 = Boolean(form.tipoServicio)
+
+  const puedePaso3 =
+    (!needsPages || (form.cantidadPaginas >= 1 && form.cantidadPaginas <= 50)) &&
+    (!needsDomainEmail || (form.tieneDominio === 'si' || form.tieneDominio === 'no')) &&
+    (!needsDomainEmail || (form.tieneCorreo === 'si' || form.tieneCorreo === 'no'))
+
+  const puedeSiguiente =
+    (paso === 1 && puedePaso1) ||
+    (paso === 2 && puedePaso2) ||
+    (paso === 3 && puedePaso3) ||
+    paso === 4
 
   const handlePrint = () => {
     const ventana = window.open('', '_blank')
     if (!ventana) return
-    const lineasExtra = []
-    if (esWeb && paginasExtra > 0) {
-      lineasExtra.push(`<div class="row"><span class="label">Páginas adicionales (${paginasExtra} x $${PRECIO_PAGINA_EXTRA}):</span> $${costoPaginasExtra}</div>`)
-    }
-    if (esWeb && form.incluirPasarelaPagos) {
-      lineasExtra.push(`<div class="row"><span class="label">Integración pasarela de pagos:</span> +$${PRECIO_PASARELA_PAGOS}</div>`)
-    }
-    const observacionesPrint = esWeb
-      ? `<div class="obs"><strong>Observaciones:</strong><ul><li>${OBSERVACIONES_IMAGENES}</li><li>${OBSERVACIONES_HOSTING_DB}</li></ul></div>`
-      : ''
-    ventana.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Cotización - Nixon López Services</title>
-          <style>
-            body { font-family: system-ui, sans-serif; padding: 24px; color: #1e293b; max-width: 600px; margin: 0 auto; }
-            .brand { margin-bottom: 8px; }
-            h1 { color: #0f172a; font-size: 1.5rem; margin: 0; }
-            .ruc { color: #64748b; font-size: 0.9rem; margin: 4px 0 0 0; }
-            .desc { color: #475569; font-size: 0.85rem; margin: 8px 0 16px 0; line-height: 1.4; }
-            h2 { color: #0f172a; border-bottom: 2px solid #3b82f6; padding-bottom: 8px; font-size: 1.1rem; margin-top: 20px; }
-            .row { margin: 12px 0; }
-            .label { font-weight: 600; color: #64748b; }
-            .total { font-size: 1.5rem; font-weight: 700; color: #0f172a; margin-top: 24px; }
-            .footer { margin-top: 32px; font-size: 12px; color: #94a3b8; }
-            .obs { margin-top: 16px; padding: 12px; background: #f1f5f9; border-radius: 8px; font-size: 0.85rem; color: #475569; }
-            .obs ul { margin: 6px 0 0 0; padding-left: 1.2rem; }
-            .obs li { margin: 4px 0; }
-          </style>
-        </head>
-        <body>
-          <div class="brand">
-            <h1>Nixon López Services</h1>
-            <p class="ruc">RUC 10-711-1351</p>
-            <p class="desc">Servicios de diseño y desarrollo web y apps para empresas en crecimiento.</p>
-          </div>
-          <h2>Cotización</h2>
-          <div class="row"><span class="label">Cliente:</span> ${form.nombre} ${form.apellido}</div>
-          <div class="row"><span class="label">Correo:</span> ${form.correo}</div>
-          <div class="row"><span class="label">Servicio:</span> ${servicio?.label ?? '-'}</div>
-          ${esWeb ? `<div class="row"><span class="label">Cantidad de páginas:</span> ${form.cantidadPaginas}</div>` : ''}
-          ${lineasExtra.join('')}
-          ${esWeb ? `<div class="row"><span class="label">Incluye dominio, hosting y correo:</span> ${extrasIncluidos ? 'Sí (+$' + PRECIO_DOMINIO_HOSTING_CORREO + ')' : 'No'}</div>` : ''}
-          ${esWeb && form.incluirPasarelaPagos ? `<div class="row"><span class="label">Integración pasarela de pagos:</span> +$${PRECIO_PASARELA_PAGOS}</div>` : ''}
-          ${form.comentarios ? `<div class="row"><span class="label">Comentarios:</span> ${form.comentarios}</div>` : ''}
-          ${observacionesPrint}
-          <div class="row total">Total: $${total}${servicio && 'mensual' in servicio && servicio.mensual ? '/mes' : ''}</div>
-          <p class="footer">Generado el ${new Date().toLocaleDateString('es-ES')}. Demo en menos de 2 horas. Presencia digital con Nixon López.</p>
-        </body>
-      </html>
-    `)
+    const lineasHtml = lines
+      .map(
+        (l) =>
+          `<tr><td style="padding:8px;border-bottom:1px solid #e2e8f0;">${escapeHtml(l.label)}</td><td style="padding:8px;text-align:right;border-bottom:1px solid #e2e8f0;">$${l.amount.toFixed(2)}</td></tr>`
+      )
+      .join('')
+    ventana.document.write(`<!DOCTYPE html><html><head><title>Cotización — NL Services</title>
+      <style>
+        body{font-family:system-ui,sans-serif;padding:24px;color:#0f172a;max-width:640px;margin:0 auto;}
+        h1{font-size:1.35rem;color:#1e3a5f;margin:0 0 4px 0;}
+        .sub{color:#64748b;font-size:0.85rem;}
+        table{width:100%;border-collapse:collapse;margin:16px 0;}
+        .total{font-size:1.4rem;font-weight:700;color:#1e3a5f;margin-top:16px;}
+        .obs{margin-top:16px;padding:12px;background:#f8fafc;border-radius:8px;font-size:0.85rem;color:#475569;}
+      </style></head><body>
+      <h1>NL Services</h1>
+      <p class="sub">RUC 10-711-1351 · Panama City · info@nixonlopez.com</p>
+      <h2 style="margin-top:20px;font-size:1.1rem;">Cotización</h2>
+      <p><strong>Cliente:</strong> ${escapeHtml(form.nombre)} ${escapeHtml(form.apellido)}</p>
+      <p><strong>Correo:</strong> ${escapeHtml(form.correo)}</p>
+      <table><thead><tr><th align="left">Concepto</th><th align="right">Importe</th></tr></thead><tbody>${lineasHtml}</tbody></table>
+      <p class="total">Total: $${total.toFixed(2)} USD${monthly ? ' / mes' : ''}</p>
+      ${form.comentarios ? `<p><strong>Comentarios:</strong> ${escapeHtml(form.comentarios)}</p>` : ''}
+      <div class="obs"><strong>Nota:</strong> ${OBSERVACIONES_IMAGENES}</div>
+      <p style="margin-top:24px;font-size:12px;color:#94a3b8;">${new Date().toLocaleString('es-PA')}</p>
+      </body></html>`)
     ventana.document.close()
     ventana.focus()
     ventana.print()
     ventana.close()
+  }
+
+  function escapeHtml(s: string) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   }
 
   const handleAceptarCotizacion = async () => {
@@ -142,455 +144,401 @@ export default function CotizacionPage() {
           nombre: form.nombre,
           apellido: form.apellido,
           correo: form.correo,
+          tipoServicio: form.tipoServicio,
           servicio: servicio?.label ?? '',
-          cantidadPaginas: String(form.cantidadPaginas),
-          incluyeDominioHostingCorreo: extrasIncluidos ? 'Sí' : 'No',
-          pasarelaPagos: form.incluirPasarelaPagos ? `Sí (+$${PRECIO_PASARELA_PAGOS})` : 'No',
-          total: `$${total}${servicio && 'mensual' in servicio && servicio.mensual ? '/mes' : ''}`,
+          cantidadPaginas: needsPages ? String(form.cantidadPaginas) : '',
+          incluyeDominioHostingCorreo:
+            needsDomainEmail && (form.tieneDominio === 'no' || form.tieneCorreo === 'no')
+              ? 'Sí (dominio/correo en presupuesto)'
+              : 'No aplica',
+          pasarelaPagos:
+            !esPasarelaSolo && needsPages && form.incluirPasarelaAddon
+              ? 'Sí (add-on)'
+              : esPasarelaSolo
+                ? 'Servicio pasarela'
+                : 'No',
+          total: `$${total}${monthly ? '/mes' : ''}`,
+          totalNumeric: total,
+          monthly,
+          tieneDominio: form.tieneDominio,
+          tieneCorreo: form.tieneCorreo,
+          breakdown: { lines },
           comentarios: form.comentarios,
-          ...(esWeb ? {
-            observacionImagenes: OBSERVACIONES_IMAGENES,
-            observacionHostingDb: OBSERVACIONES_HOSTING_DB,
-          } : {}),
+          ...(needsPages
+            ? {
+                observacionImagenes: OBSERVACIONES_IMAGENES,
+                observacionHostingDb: OBSERVACIONES_HOSTING_DB,
+              }
+            : {}),
         }),
       })
-      if (response.ok) {
-        setCotizacionEnviada(true)
-      } else {
-        throw new Error('Error al enviar')
-      }
+      if (response.ok) setCotizacionEnviada(true)
+      else throw new Error('Error')
     } catch (e) {
       console.error(e)
-      alert('No se pudo enviar la cotización. Intenta de nuevo o contáctanos por otro medio.')
+      alert('No se pudo enviar la cotización. Intenta de nuevo o contáctanos.')
     } finally {
       setEnviando(false)
     }
   }
 
-  const puedeSiguiente =
-    (paso === 1 &&
-      form.nombre.trim() &&
-      form.apellido.trim() &&
-      form.correo.trim() &&
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.correo)) ||
-    (paso === 2 && form.tipoServicio) ||
-    (paso === 3 && true) ||
-    paso === 4
-
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-slate-950 pt-24 sm:pt-28 pb-12 sm:pb-16 px-4 sm:px-6">
-        <div className="max-w-xl sm:max-w-2xl mx-auto">
-          {/* Título */}
+      <main className="min-h-screen bg-slate-950 pt-24 sm:pt-28 pb-16 px-4 sm:px-6">
+        <div className="max-w-3xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-8 sm:mb-10"
+            className="text-center mb-10"
           >
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
-              Solicitar cotización
-            </h1>
-            <p className="text-gray-400 text-sm sm:text-base">
-              Responde unas preguntas y obtén tu presupuesto. Incluye demo en menos de 2 horas.
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-600/20 border border-white/10 mb-4">
+              <Sparkles className="w-6 h-6 text-blue-400" />
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">Solicitar cotización</h1>
+            <p className="text-slate-400 text-sm sm:text-base max-w-xl mx-auto">
+              Completa por partes: datos generales, tipo de servicio y detalles. Obtén un presupuesto claro en USD.
             </p>
           </motion.div>
 
-          {/* Indicador de pasos */}
-          <div className="flex justify-center gap-2 sm:gap-3 mb-8 sm:mb-10">
-            {[1, 2, 3, 4].map((n) => (
+          {/* Pasos */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-10">
+            {STEPS.map((s) => (
               <div
-                key={n}
-                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
-                  paso >= n ? 'bg-blue-500 text-white' : 'bg-white/10 text-gray-400'
+                key={s.n}
+                className={`rounded-xl border px-2 py-3 sm:px-3 text-left transition-colors ${
+                  paso === s.n
+                    ? 'border-blue-500/60 bg-blue-500/10 ring-1 ring-blue-500/30'
+                    : paso > s.n
+                      ? 'border-emerald-500/30 bg-emerald-500/5'
+                      : 'border-white/10 bg-white/[0.03]'
                 }`}
               >
-                {paso > n ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : n}
+                <div className="flex items-center gap-2 mb-1">
+                  <span
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                      paso > s.n
+                        ? 'bg-emerald-500 text-white'
+                        : paso === s.n
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-white/10 text-slate-500'
+                    }`}
+                  >
+                    {paso > s.n ? <Check className="w-3.5 h-3.5" /> : s.n}
+                  </span>
+                  <span className="text-[11px] sm:text-xs font-semibold text-white leading-tight">{s.title}</span>
+                </div>
+                <p className="text-[10px] sm:text-[11px] text-slate-500 pl-9 hidden sm:block">{s.desc}</p>
               </div>
             ))}
           </div>
 
-          {/* Contenedor del formulario / resumen */}
-          <div className="bg-slate-900/60 rounded-2xl border border-white/10 p-4 sm:p-6 md:p-8 shadow-xl">
+          <div className="bg-slate-900/50 rounded-2xl border border-white/10 p-5 sm:p-8 shadow-2xl shadow-black/40">
             {paso === 1 && (
-              <motion.div
-                initial={{ opacity: 0, x: -16 }}
+              <motion.section
+                initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="space-y-4 sm:space-y-5"
+                className="space-y-5"
               >
+                <div className="flex items-center gap-2 text-blue-400 mb-2">
+                  <User className="w-5 h-5" />
+                  <h2 className="text-lg font-semibold text-white">1. Datos generales</h2>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1.5">Nombre</label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                      <input
-                        type="text"
-                        value={form.nombre}
-                        onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-                        className="w-full bg-white/5 border border-white/20 rounded-lg pl-10 pr-4 py-2.5 sm:py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm sm:text-base"
-                        placeholder="Tu nombre"
-                      />
-                    </div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1.5">Nombre</label>
+                    <input
+                      type="text"
+                      value={form.nombre}
+                      onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
+                      className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      placeholder="Tu nombre"
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1.5">Apellido</label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                      <input
-                        type="text"
-                        value={form.apellido}
-                        onChange={(e) => setForm((f) => ({ ...f, apellido: e.target.value }))}
-                        className="w-full bg-white/5 border border-white/20 rounded-lg pl-10 pr-4 py-2.5 sm:py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm sm:text-base"
-                        placeholder="Tu apellido"
-                      />
-                    </div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1.5">Apellido</label>
+                    <input
+                      type="text"
+                      value={form.apellido}
+                      onChange={(e) => setForm((f) => ({ ...f, apellido: e.target.value }))}
+                      className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      placeholder="Tu apellido"
+                    />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1.5">Correo electrónico</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Correo electrónico</label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                     <input
                       type="email"
                       value={form.correo}
                       onChange={(e) => setForm((f) => ({ ...f, correo: e.target.value }))}
-                      className="w-full bg-white/5 border border-white/20 rounded-lg pl-10 pr-4 py-2.5 sm:py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm sm:text-base"
+                      className="w-full bg-white/5 border border-white/15 rounded-xl pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       placeholder="tu@correo.com"
                     />
                   </div>
                 </div>
-              </motion.div>
+              </motion.section>
             )}
 
             {paso === 2 && (
-              <motion.div
-                initial={{ opacity: 0, x: -16 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="space-y-3 sm:space-y-4"
-              >
-                <label className="block text-sm font-medium text-gray-300 mb-2">Tipo de servicio</label>
-                <div className="space-y-2">
-                  {SERVICIOS.map((s) => (
+              <motion.section initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
+                <div className="flex items-center gap-2 text-blue-400 mb-2">
+                  <Layers className="w-5 h-5" />
+                  <h2 className="text-lg font-semibold text-white">2. Tipo de servicio</h2>
+                </div>
+                <p className="text-sm text-slate-500">Selecciona una opción. Los precios base se muestran en USD.</p>
+                <div className="space-y-2 max-h-[min(60vh,420px)] overflow-y-auto pr-1 admin-table-scroll">
+                  {QUOTE_SERVICES.map((s) => (
                     <button
                       key={s.id}
                       type="button"
-                      onClick={() => setForm((f) => ({ ...f, tipoServicio: s.id }))}
-                      className={`w-full text-left px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border transition-all flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 ${
+                      onClick={() =>
+                        setForm((f) => ({
+                          ...f,
+                          tipoServicio: s.id,
+                          incluirPasarelaAddon: false,
+                        }))
+                      }
+                      className={`w-full text-left px-4 py-3 rounded-xl border transition-all flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 ${
                         form.tipoServicio === s.id
-                          ? 'border-blue-500 bg-blue-500/10 text-white'
-                          : 'border-white/20 bg-white/5 text-gray-300 hover:border-white/40'
+                          ? 'border-blue-500 bg-blue-500/15 text-white'
+                          : 'border-white/15 bg-white/[0.03] text-slate-300 hover:border-white/25'
                       }`}
                     >
-                      <span className="text-sm sm:text-base">{s.label}</span>
-                      <span className="font-semibold text-blue-400 text-sm sm:text-base">
-                        ${s.precio}{'mensual' in s && s.mensual ? '/mes' : ''}
+                      <span className="text-sm">{s.label}</span>
+                      <span className="font-semibold text-blue-400 text-sm whitespace-nowrap">
+                        ${s.price}
+                        {s.monthly ? '/mes' : ''}
                       </span>
                     </button>
                   ))}
                 </div>
-              </motion.div>
+              </motion.section>
             )}
 
             {paso === 3 && (
-              <motion.div
-                initial={{ opacity: 0, x: -16 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="space-y-4 sm:space-y-6"
-              >
-                {esWeb && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Cantidad de páginas
-                      </label>
-                      <input
-                        type="number"
-                        min={1}
-                        max={50}
-                        value={form.cantidadPaginas}
-                        onChange={(e) =>
-                          setForm((f) => ({
-                            ...f,
-                            cantidadPaginas: Math.max(1, Math.min(50, Number(e.target.value) || 1)),
-                          }))
-                        }
-                        className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-2.5 sm:py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm sm:text-base"
-                      />
-                      {form.cantidadPaginas > 5 && (
-                        <p className="text-xs text-blue-400 mt-1">
-                          +${PRECIO_PAGINA_EXTRA} por cada página después de 5 (${(form.cantidadPaginas - 5) * PRECIO_PAGINA_EXTRA} adicional)
-                        </p>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">¿Tienes dominio?</label>
-                        <div className="flex gap-2">
-                          {(['si', 'no'] as const).map((op) => (
-                            <button
-                              key={op}
-                              type="button"
-                              onClick={() => setForm((f) => ({ ...f, tieneDominio: op }))}
-                              className={`flex-1 py-2 rounded-lg border text-sm ${
-                                form.tieneDominio === op
-                                  ? 'border-blue-500 bg-blue-500/20 text-white'
-                                  : 'border-white/20 text-gray-400'
-                              }`}
-                            >
-                              {op === 'si' ? 'Sí' : 'No'}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">¿Tienes hosting?</label>
-                        <div className="flex gap-2">
-                          {(['si', 'no'] as const).map((op) => (
-                            <button
-                              key={op}
-                              type="button"
-                              onClick={() => setForm((f) => ({ ...f, tieneHosting: op }))}
-                              className={`flex-1 py-2 rounded-lg border text-sm ${
-                                form.tieneHosting === op
-                                  ? 'border-blue-500 bg-blue-500/20 text-white'
-                                  : 'border-white/20 text-gray-400'
-                              }`}
-                            >
-                              {op === 'si' ? 'Sí' : 'No'}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">¿Correo profesional?</label>
-                        <div className="flex gap-2">
-                          {(['si', 'no'] as const).map((op) => (
-                            <button
-                              key={op}
-                              type="button"
-                              onClick={() => setForm((f) => ({ ...f, tieneCorreo: op }))}
-                              className={`flex-1 py-2 rounded-lg border text-sm ${
-                                form.tieneCorreo === op
-                                  ? 'border-blue-500 bg-blue-500/20 text-white'
-                                  : 'border-white/20 text-gray-400'
-                              }`}
-                            >
-                              {op === 'si' ? 'Sí' : 'No'}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    {necesitaExtras && (
-                      <div className="bg-white/5 rounded-xl p-3 sm:p-4 border border-white/10">
-                        <label className="flex items-center gap-3 cursor-pointer flex-wrap">
-                          <input
-                            type="checkbox"
-                            checked={form.incluirDominioHostingCorreo}
-                            onChange={(e) =>
-                              setForm((f) => ({
-                                ...f,
-                                incluirDominioHostingCorreo: e.target.checked,
-                              }))
-                            }
-                            className="rounded border-white/30 bg-white/5 text-blue-500 focus:ring-blue-500"
-                          />
-                          <span className="text-gray-300 text-sm sm:text-base">
-                            Incluir dominio, hosting y correo profesional (+${PRECIO_DOMINIO_HOSTING_CORREO})
-                          </span>
-                        </label>
-                      </div>
-                    )}
-                    <div className="bg-white/5 rounded-xl p-3 sm:p-4 border border-white/10">
-                      <label className="flex items-center gap-3 cursor-pointer flex-wrap">
-                        <input
-                          type="checkbox"
-                          checked={form.incluirPasarelaPagos}
-                          onChange={(e) =>
-                            setForm((f) => ({
-                              ...f,
-                              incluirPasarelaPagos: e.target.checked,
-                            }))
-                          }
-                          className="rounded border-white/30 bg-white/5 text-blue-500 focus:ring-blue-500"
-                        />
-                        <span className="text-gray-300 text-sm sm:text-base">
-                          Incluir integración de pasarela de pagos (+${PRECIO_PASARELA_PAGOS})
-                        </span>
-                      </label>
-                    </div>
-                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-3 sm:p-4 space-y-3">
-                      <p className="text-gray-300 text-xs sm:text-sm flex items-start gap-2">
-                        <Info className="w-4 h-4 shrink-0 mt-0.5 text-blue-400" />
-                        <span>{OBSERVACIONES_IMAGENES}</span>
-                      </p>
-                      <p className="text-gray-300 text-xs sm:text-sm flex items-start gap-2">
-                        <Info className="w-4 h-4 shrink-0 mt-0.5 text-blue-400" />
-                        <span>{OBSERVACIONES_HOSTING_DB}</span>
-                      </p>
-                    </div>
-                  </>
-                )}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Comentarios adicionales
-                  </label>
-                  <div className="relative">
-                    <MessageSquare className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
-                    <textarea
-                      value={form.comentarios}
-                      onChange={(e) => setForm((f) => ({ ...f, comentarios: e.target.value }))}
-                      rows={3}
-                      className="w-full bg-white/5 border border-white/20 rounded-lg pl-10 pr-4 py-2.5 sm:py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none text-sm sm:text-base"
-                      placeholder="Cuéntame sobre tu proyecto..."
-                    />
-                  </div>
+              <motion.section initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
+                <div className="flex items-center gap-2 text-blue-400 mb-2">
+                  <Calculator className="w-5 h-5" />
+                  <h2 className="text-lg font-semibold text-white">3. Detalles del proyecto</h2>
                 </div>
-              </motion.div>
+
+                {needsPages && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      Cantidad de páginas a desarrollar (incluye hasta {MAX_INCLUDED_PAGES} en base)
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={form.cantidadPaginas}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          cantidadPaginas: Math.max(1, Math.min(50, Number(e.target.value) || 1)),
+                        }))
+                      }
+                      className="w-full max-w-xs bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white"
+                    />
+                    {paginasExtra > 0 && (
+                      <p className="text-xs text-blue-400 mt-2">
+                        +${PRICE_EXTRA_PAGE_USD} por página adicional ({paginasExtra} páginas × ${PRICE_EXTRA_PAGE_USD} = $
+                        {paginasExtra * PRICE_EXTRA_PAGE_USD})
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {needsDomainEmail && (
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <span className="block text-sm font-medium text-slate-300 mb-2">¿Ya tienes dominio?</span>
+                      <div className="flex gap-2">
+                        {(['si', 'no'] as const).map((op) => (
+                          <button
+                            key={op}
+                            type="button"
+                            onClick={() => setForm((f) => ({ ...f, tieneDominio: op }))}
+                            className={`flex-1 py-2.5 rounded-xl border text-sm ${
+                              form.tieneDominio === op
+                                ? 'border-blue-500 bg-blue-500/20 text-white'
+                                : 'border-white/15 text-slate-400'
+                            }`}
+                          >
+                            {op === 'si' ? 'Sí' : `No (+$${PRICE_DOMAIN_USD})`}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="block text-sm font-medium text-slate-300 mb-2">¿Correo profesional?</span>
+                      <div className="flex gap-2">
+                        {(['si', 'no'] as const).map((op) => (
+                          <button
+                            key={op}
+                            type="button"
+                            onClick={() => setForm((f) => ({ ...f, tieneCorreo: op }))}
+                            className={`flex-1 py-2.5 rounded-xl border text-sm ${
+                              form.tieneCorreo === op
+                                ? 'border-blue-500 bg-blue-500/20 text-white'
+                                : 'border-white/15 text-slate-400'
+                            }`}
+                          >
+                            {op === 'si' ? 'Sí' : `No (+$${PRICE_EMAIL_USD})`}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {needsPages && !esPasarelaSolo && (
+                  <label className="flex items-start gap-3 cursor-pointer rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                    <input
+                      type="checkbox"
+                      checked={form.incluirPasarelaAddon}
+                      onChange={(e) => setForm((f) => ({ ...f, incluirPasarelaAddon: e.target.checked }))}
+                      className="mt-1 rounded border-white/30 bg-white/5 text-blue-500"
+                    />
+                    <span className="text-sm text-slate-300">
+                      Añadir integración de pasarela de pagos al sitio (+$200)
+                    </span>
+                  </label>
+                )}
+
+                {needsPages && (
+                  <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 space-y-2">
+                    <p className="text-xs text-slate-300 flex gap-2">
+                      <Info className="w-4 h-4 shrink-0 text-blue-400" />
+                      {OBSERVACIONES_IMAGENES}
+                    </p>
+                    <p className="text-xs text-slate-400 flex gap-2">
+                      <Info className="w-4 h-4 shrink-0 text-blue-400/80" />
+                      {OBSERVACIONES_HOSTING_DB}
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Comentarios adicionales</label>
+                  <textarea
+                    value={form.comentarios}
+                    onChange={(e) => setForm((f) => ({ ...f, comentarios: e.target.value }))}
+                    rows={3}
+                    className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 resize-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    placeholder="Describe tu proyecto, plazos o referencias..."
+                  />
+                </div>
+              </motion.section>
             )}
 
             {paso === 4 && (
-              <motion.div
+              <motion.section
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                ref={printRef}
                 className="space-y-6"
               >
                 <div className="flex items-center gap-3 text-blue-400">
-                  <Calculator className="w-7 h-7 sm:w-8 sm:h-8" />
-                  <h2 className="text-lg sm:text-xl font-bold text-white">Tu cotización</h2>
+                  <Calculator className="w-8 h-8" />
+                  <h2 className="text-xl font-bold text-white">Tu cotización</h2>
                 </div>
 
-                <div className="space-y-2 sm:space-y-3 text-gray-300 text-sm sm:text-base">
-                  <p><span className="text-gray-500">Cliente:</span> {form.nombre} {form.apellido}</p>
-                  <p><span className="text-gray-500">Correo:</span> {form.correo}</p>
-                  <p><span className="text-gray-500">Servicio:</span> {servicio?.label}</p>
-                  {esWeb && (
-                    <>
-                      <p><span className="text-gray-500">Páginas:</span> {form.cantidadPaginas}</p>
-                      {paginasExtra > 0 && (
-                        <p><span className="text-gray-500">Páginas adicionales ({paginasExtra} × ${PRECIO_PAGINA_EXTRA}):</span> +${costoPaginasExtra}</p>
-                      )}
-                      {extrasIncluidos && (
-                        <p><span className="text-gray-500">Dominio, hosting y correo:</span> +${PRECIO_DOMINIO_HOSTING_CORREO}</p>
-                      )}
-                      {form.incluirPasarelaPagos && (
-                        <p><span className="text-gray-500">Integración pasarela de pagos:</span> +${PRECIO_PASARELA_PAGOS}</p>
-                      )}
-                    </>
-                  )}
-                  {form.comentarios && (
-                    <p><span className="text-gray-500">Comentarios:</span> {form.comentarios}</p>
-                  )}
-                  {esWeb && (
-                    <div className="mt-3 space-y-2 pt-3 border-t border-white/10">
-                      <p className="text-xs text-gray-500 flex items-start gap-2">
-                        <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                        <span>{OBSERVACIONES_IMAGENES}</span>
-                      </p>
-                      <p className="text-xs text-gray-500 flex items-start gap-2">
-                        <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                        <span>{OBSERVACIONES_HOSTING_DB}</span>
-                      </p>
-                    </div>
-                  )}
+                <div className="rounded-xl border border-white/10 overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-white/5 text-slate-400 text-left">
+                      <tr>
+                        <th className="px-4 py-2">Concepto</th>
+                        <th className="px-4 py-2 text-right">USD</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/10 text-slate-200">
+                      {lines.map((l, i) => (
+                        <tr key={i}>
+                          <td className="px-4 py-2.5">{l.label}</td>
+                          <td className="px-4 py-2.5 text-right tabular-nums">${l.amount.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
 
-                <div className="pt-4 border-t border-white/10">
-                  <p className="text-xl sm:text-2xl font-bold text-white">
-                    Total: ${total}{servicio && 'mensual' in servicio && servicio.mensual ? '/mes' : ''}
-                  </p>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-1">
-                    Demo en menos de 2 horas. Presencia digital con Nixon López.
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-2 border-t border-white/10">
+                  <div>
+                    <p className="text-xs text-slate-500">Cliente</p>
+                    <p className="text-white font-medium">
+                      {form.nombre} {form.apellido}
+                    </p>
+                    <p className="text-slate-400 text-sm">{form.correo}</p>
+                  </div>
+                  <p className="text-2xl sm:text-3xl font-bold text-white">
+                    Total: ${total.toFixed(2)} USD{monthly ? ' / mes' : ''}
                   </p>
                 </div>
 
                 {cotizacionEnviada ? (
-                  <div className="flex items-center gap-2 text-green-400 bg-green-500/10 border border-green-500/30 rounded-xl p-4">
-                    <CheckCircle className="w-5 h-5 flex-shrink-0" />
-                    <p className="text-sm sm:text-base">
-                      Cotización enviada correctamente. Te contactaremos pronto.
-                    </p>
+                  <div className="flex items-center gap-2 text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
+                    <CheckCircle className="w-5 h-5 shrink-0" />
+                    <p>Cotización enviada. Te contactaremos pronto.</p>
                   </div>
                 ) : (
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <motion.button
+                    <button
                       type="button"
                       onClick={handlePrint}
-                      className="flex-1 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-4 sm:px-5 py-3 sm:py-3.5 rounded-xl font-medium transition-colors text-sm sm:text-base"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                      className="flex-1 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-5 py-3.5 rounded-xl font-medium transition-colors print:hidden"
                     >
-                      <Printer className="w-4 h-4 sm:w-5 sm:h-5" />
-                      Imprimir
-                    </motion.button>
-                    <motion.button
+                      <Printer className="w-5 h-5" />
+                      Imprimir / PDF
+                    </button>
+                    <button
                       type="button"
                       onClick={handleAceptarCotizacion}
                       disabled={enviando}
-                      className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 sm:px-5 py-3 sm:py-3.5 rounded-xl font-medium hover:shadow-lg hover:shadow-blue-500/25 transition-all disabled:opacity-60 disabled:cursor-not-allowed text-sm sm:text-base"
-                      whileHover={{ scale: enviando ? 1 : 1.02 }}
-                      whileTap={{ scale: enviando ? 1 : 0.98 }}
+                      className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-5 py-3.5 rounded-xl font-medium disabled:opacity-60"
                     >
-                      {enviando ? (
+                      {enviando ? 'Enviando…' : (
                         <>
-                          <motion.div
-                            className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                          />
-                          Enviando...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-4 h-4 sm:w-5 sm:h-5" />
-                          Aceptar cotización
+                          <Send className="w-5 h-5" /> Enviar cotización
                         </>
                       )}
-                    </motion.button>
+                    </button>
                   </div>
                 )}
 
-                {!cotizacionEnviada && (
-                  <p className="text-xs text-gray-500 text-center">
-                    Al aceptar, la cotización se enviará al correo de seguimiento configurado.
-                  </p>
-                )}
-
-                <div className="pt-2">
-                  <Link
-                    href="/#contact"
-                    className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm"
-                  >
-                    Contactar para continuar
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </div>
-              </motion.div>
+                <p className="text-xs text-slate-500 text-center">
+                  Al enviar, recibimos tu solicitud en nuestro correo de seguimiento.
+                </p>
+                <Link href="/#contact" className="inline-flex items-center gap-2 text-slate-400 hover:text-white text-sm">
+                  ¿Prefieres hablar antes? Contactar
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </motion.section>
             )}
           </div>
 
-          {/* Navegación entre pasos */}
-          <div className="flex justify-between items-center mt-6 sm:mt-8">
+          <div className="flex justify-between items-center mt-8">
             {paso > 1 && paso < 4 && (
-              <motion.button
+              <button
                 type="button"
                 onClick={() => setPaso((p) => p - 1)}
-                className="text-gray-400 hover:text-white transition-colors text-sm sm:text-base py-2"
+                className="text-slate-400 hover:text-white text-sm py-2"
               >
                 Atrás
-              </motion.button>
+              </button>
             )}
             {paso < 4 ? (
-              <motion.button
+              <button
                 type="button"
                 onClick={() => setPaso((p) => p + 1)}
                 disabled={!puedeSiguiente}
-                className="ml-auto flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-blue-500/25 transition-all text-sm sm:text-base"
+                className="ml-auto flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {paso === 3 ? 'Ver cotización' : 'Siguiente'}
+                {paso === 3 ? 'Ver resumen' : 'Siguiente'}
                 <ArrowRight className="w-4 h-4" />
-              </motion.button>
+              </button>
             ) : (
               <div className="ml-auto" />
             )}

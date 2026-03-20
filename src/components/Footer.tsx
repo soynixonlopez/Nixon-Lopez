@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { X, Mail, Send } from 'lucide-react'
+import { X, Mail, Send, Github } from 'lucide-react'
 import Link from 'next/link'
 import TechLogo from './TechLogo'
 
@@ -43,8 +43,14 @@ const Footer = () => {
   const socialLinks = [
     {
       name: 'Instagram',
-      href: 'https://instagram.com/soynixonlopez',
+      href: 'https://www.instagram.com/nixondev.ai/',
       color: 'hover:text-pink-400'
+    },
+    {
+      name: 'GitHub',
+      href: 'https://github.com/soynixonlopez',
+      color: 'hover:text-gray-300',
+      lucideIcon: 'github' as const
     },
     {
       name: 'Facebook',
@@ -58,7 +64,7 @@ const Footer = () => {
     },
     {
       name: 'YouTube',
-      href: 'https://youtube.com/@soynixonlopez',
+      href: 'https://www.youtube.com/@soynixonlopez',
       color: 'hover:text-red-400'
     }
   ]
@@ -84,7 +90,7 @@ const Footer = () => {
   }
 
   return (
-    <footer className="bg-slate-950 text-white relative overflow-hidden">
+    <footer className="bg-slate-950 text-white relative overflow-hidden text-left">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center" />
@@ -103,7 +109,7 @@ const Footer = () => {
                 transition={{ duration: 0.6 }}
               >
                 <img 
-                  src="/images/logo-blanco.png" 
+                  src="/images/logocolor.png" 
                   alt="Nixon López Logo" 
                   className="h-14 w-auto object-contain"
                 />
@@ -136,7 +142,11 @@ const Footer = () => {
                     whileHover={{ scale: 1.1, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <TechLogo name={social.name} size={20} />
+                    {'lucideIcon' in social && social.lucideIcon === 'github' ? (
+                      <Github className="w-5 h-5" />
+                    ) : (
+                      <TechLogo name={social.name} size={20} />
+                    )}
                   </motion.a>
                 ))}
               </motion.div>
@@ -162,7 +172,7 @@ const Footer = () => {
                   <li key={link.name}>
                     <button
                       onClick={() => scrollToSection(link.href)}
-                      className="text-gray-400 hover:text-white transition-colors text-sm hover:translate-x-1 transform transition-transform duration-200 block"
+                      className="w-full text-left text-gray-400 hover:text-white transition-colors text-sm leading-relaxed hover:translate-x-1 transform transition-transform duration-200 block"
                     >
                       {link.name}
                     </button>
@@ -192,14 +202,14 @@ const Footer = () => {
                     {service.href.startsWith('#') ? (
                       <button
                         onClick={() => scrollToSection(service.href)}
-                        className="text-gray-400 hover:text-white transition-colors text-sm hover:translate-x-1 transform transition-transform duration-200 block"
+                        className="w-full text-left text-gray-400 hover:text-white transition-colors text-sm leading-relaxed hover:translate-x-1 transform transition-transform duration-200 block"
                       >
                         {service.name}
                       </button>
                     ) : (
                       <Link
                         href={service.href}
-                        className="text-gray-400 hover:text-white transition-colors text-sm hover:translate-x-1 transform transition-transform duration-200 block"
+                        className="w-full text-left text-gray-400 hover:text-white transition-colors text-sm leading-relaxed hover:translate-x-1 transform transition-transform duration-200 block"
                       >
                         {service.name}
                       </Link>
@@ -288,7 +298,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-gray-800">
           <div className="container-padding py-6">
-            <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-start">
                           <motion.p
               className="text-gray-400 text-sm mb-4 md:mb-0"
               initial={{ opacity: 0 }}

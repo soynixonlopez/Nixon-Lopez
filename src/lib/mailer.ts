@@ -64,3 +64,35 @@ export async function sendEmail({ subject, html, replyTo, to }: MailPayload) {
     replyTo,
   })
 }
+
+type AttachmentPayload = {
+  subject: string
+  html: string
+  to: string
+  replyTo?: string
+  attachments: { filename: string; content: Buffer }[]
+}
+
+/** Envío con PDF u otros adjuntos (p. ej. factura al cliente). */
+export async function sendEmailWithAttachments({
+  subject,
+  html,
+  to,
+  replyTo,
+  attachments,
+}: AttachmentPayload) {
+  const from = process.env.SMTP_FROM || process.env.SMTP_USER || 'info@nixonlopez.com'
+
+  await getTransporter().sendMail({
+    from,
+    to,
+    subject,
+    html,
+    replyTo,
+    attachments: attachments.map((a) => ({
+      filename: a.filename,
+      content: a.content,
+      contentType: 'application/pdf',
+    })),
+  })
+}
