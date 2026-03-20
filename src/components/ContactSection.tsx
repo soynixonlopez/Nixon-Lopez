@@ -40,9 +40,6 @@ const ContactSection = () => {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState('')
 
-  // FormSubmit.co: gratis, sin registro. Los mensajes llegan a soynixonlopez@gmail.com
-  const FORMSUBMIT_URL = `https://formsubmit.co/ajax/${encodeURIComponent('soynixonlopez@gmail.com')}`
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -50,22 +47,19 @@ const ContactSection = () => {
 
     try {
       const servicio = SERVICIOS.find(s => s.id === formData.tipoServicio)
-      const response = await fetch(FORMSUBMIT_URL, {
+      const response = await fetch('/api/contact', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          _subject: `Nuevo mensaje de contacto - ${formData.nombre} ${formData.apellido}`,
-          Nombre: formData.nombre,
-          Apellido: formData.apellido,
-          Correo: formData.correo,
-          'Tipo de servicio': servicio?.label || formData.tipoServicio,
-          Descripción: formData.descripcion,
-          Fecha: new Date().toLocaleString('es-ES'),
+          nombre: formData.nombre,
+          apellido: formData.apellido,
+          correo: formData.correo,
+          tipoServicio: servicio?.label || formData.tipoServicio,
+          descripcion: formData.descripcion,
         }),
       })
       
-      const data = await response.json()
-      if (response.ok && data.success !== false) {
+      if (response.ok) {
         setIsSubmitted(true)
         setFormData({
           nombre: '',
@@ -76,7 +70,7 @@ const ContactSection = () => {
         })
         setTimeout(() => setIsSubmitted(false), 5000)
       } else {
-        throw new Error(data.message || 'Error al enviar el mensaje')
+        throw new Error('Error al enviar el mensaje')
       }
     } catch (err) {
       console.error('Error:', err)

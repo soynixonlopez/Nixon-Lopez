@@ -71,9 +71,6 @@ export default function CotizacionPage() {
   const costoPasarela = esWeb && form.incluirPasarelaPagos ? PRECIO_PASARELA_PAGOS : 0
   const total = base + extrasHosting + costoPaginasExtra + costoPasarela
 
-  // FormSubmit.co: gratis, sin registro. Las cotizaciones aceptadas llegan a soynixonlopez@gmail.com
-  const FORMSUBMIT_URL = `https://formsubmit.co/ajax/${encodeURIComponent('soynixonlopez@gmail.com')}`
-
   const handlePrint = () => {
     const ventana = window.open('', '_blank')
     if (!ventana) return
@@ -138,32 +135,29 @@ export default function CotizacionPage() {
   const handleAceptarCotizacion = async () => {
     setEnviando(true)
     try {
-      const response = await fetch(FORMSUBMIT_URL, {
+      const response = await fetch('/api/quote', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          _subject: `Cotización aceptada - ${form.nombre} ${form.apellido}`,
-          Nombre: form.nombre,
-          Apellido: form.apellido,
-          Correo: form.correo,
-          Servicio: servicio?.label ?? '',
-          'Cantidad de páginas': String(form.cantidadPaginas),
-          'Incluye dominio/hosting/correo': extrasIncluidos ? 'Sí' : 'No',
-          'Pasarela de pagos integrada': form.incluirPasarelaPagos ? `Sí (+$${PRECIO_PASARELA_PAGOS})` : 'No',
-          Total: `$${total}${servicio && 'mensual' in servicio && servicio.mensual ? '/mes' : ''}`,
-          Comentarios: form.comentarios,
+          nombre: form.nombre,
+          apellido: form.apellido,
+          correo: form.correo,
+          servicio: servicio?.label ?? '',
+          cantidadPaginas: String(form.cantidadPaginas),
+          incluyeDominioHostingCorreo: extrasIncluidos ? 'Sí' : 'No',
+          pasarelaPagos: form.incluirPasarelaPagos ? `Sí (+$${PRECIO_PASARELA_PAGOS})` : 'No',
+          total: `$${total}${servicio && 'mensual' in servicio && servicio.mensual ? '/mes' : ''}`,
+          comentarios: form.comentarios,
           ...(esWeb ? {
-            'Observación (imágenes)': OBSERVACIONES_IMAGENES,
-            'Observación (hosting/DB al escalar)': OBSERVACIONES_HOSTING_DB,
+            observacionImagenes: OBSERVACIONES_IMAGENES,
+            observacionHostingDb: OBSERVACIONES_HOSTING_DB,
           } : {}),
-          Fecha: new Date().toLocaleString('es-ES'),
         }),
       })
-      const data = await response.json()
-      if (response.ok && data.success !== false) {
+      if (response.ok) {
         setCotizacionEnviada(true)
       } else {
-        throw new Error(data.message || 'Error al enviar')
+        throw new Error('Error al enviar')
       }
     } catch (e) {
       console.error(e)
@@ -515,7 +509,7 @@ export default function CotizacionPage() {
                   <div className="flex items-center gap-2 text-green-400 bg-green-500/10 border border-green-500/30 rounded-xl p-4">
                     <CheckCircle className="w-5 h-5 flex-shrink-0" />
                     <p className="text-sm sm:text-base">
-                      Cotización enviada a soynixonlopez@gmail.com. Te contactaremos pronto.
+                      Cotización enviada correctamente. Te contactaremos pronto.
                     </p>
                   </div>
                 ) : (
@@ -559,7 +553,7 @@ export default function CotizacionPage() {
 
                 {!cotizacionEnviada && (
                   <p className="text-xs text-gray-500 text-center">
-                    Al aceptar, la cotización se enviará a soynixonlopez@gmail.com para dar seguimiento.
+                    Al aceptar, la cotización se enviará al correo de seguimiento configurado.
                   </p>
                 )}
 

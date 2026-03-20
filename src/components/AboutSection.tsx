@@ -8,7 +8,9 @@ import {
   Users, 
   Rocket,
   Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  Linkedin,
+  Github
 } from 'lucide-react'
 
 const AboutSection = () => {
@@ -160,7 +162,7 @@ const AboutSection = () => {
             transition={{ duration: 0.8, delay: 0.3 }}
           >
             {/* Enhanced image container with decorative elements */}
-            <div className="relative w-full h-full flex items-center justify-center">
+            <div className="relative w-full h-full flex flex-col items-center justify-center">
               {/* Decorative gradient circles */}
               <div className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-full blur-2xl" />
               <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-gradient-to-tr from-blue-500/20 to-purple-500/20 rounded-full blur-2xl" />
@@ -179,6 +181,33 @@ const AboutSection = () => {
                   className="w-full h-full max-h-[800px] object-contain drop-shadow-2xl"
                   priority
                 />
+              </motion.div>
+
+              {/* Social buttons below image */}
+              <motion.div
+                className="relative z-10 mt-6 w-full max-w-md mx-auto flex flex-col items-stretch justify-center gap-3"
+                initial={{ opacity: 0, y: 16 }}
+                animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+                transition={{ duration: 0.6, delay: 0.45 }}
+              >
+                <a
+                  href="https://www.linkedin.com/in/nixonlopez"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-[#0A66C2] hover:bg-[#004182] text-white px-5 py-3 rounded-xl font-semibold shadow-lg transition-all duration-300 hover:-translate-y-0.5"
+                >
+                  <Linkedin className="w-5 h-5" />
+                  Ver mi LinkedIn
+                </a>
+                <a
+                  href="https://github.com/nixonlopez"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-black text-white px-5 py-3 rounded-xl font-semibold shadow-lg transition-all duration-300 hover:-translate-y-0.5"
+                >
+                  <Github className="w-5 h-5" />
+                  Ver GitHub
+                </a>
               </motion.div>
             </div>
           </motion.div>

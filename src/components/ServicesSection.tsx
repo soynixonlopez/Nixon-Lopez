@@ -22,11 +22,11 @@ const ServicesSection = () => {
   const services = [
     {
       icon: Globe,
-      title: 'Creación y Diseño de Sitio Web',
+      title: 'Diseño y Desarrollo Web para Negocios',
       features: [
-        'Diseño profesional y personalizado',
+        'Sitios web profesionales y personalizados',
         'Diseño responsive para todos los dispositivos',
-        'Optimizado para Google (SEO)',
+        'Optimización para buscadores (SEO)',
         'Fácil de administrar y actualizar'
       ],
       color: 'from-blue-500 to-cyan-500',
@@ -35,12 +35,12 @@ const ServicesSection = () => {
     },
     {
       icon: MessageSquare,
-      title: 'Implementación de Formularios y Reservas',
+      title: 'Desarrollo de Apps Móviles para Negocios',
       features: [
-        'Formularios de contacto personalizados',
-        'Sistema de reservas online',
-        'Notificaciones automáticas',
-        'Integración con calendarios'
+        'Aplicaciones móviles personalizadas para iOS y Android',
+        'Interfaces intuitivas enfocadas en conversión',
+        'Integración con APIs y sistemas existentes',
+        'Mantenimiento y mejoras continuas'
       ],
       color: 'from-green-500 to-teal-500',
       delay: 0.2,

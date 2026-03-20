@@ -59,14 +59,20 @@ El ChatBot demo se encuentra en `src/components/ChatBotDemo.tsx`. Puedes:
 - Integrar con APIs reales de IA
 - Personalizar la apariencia y comportamiento
 
-## 🔧 Formularios (Newsletter y Cotización)
+## 🔧 Formularios (Contacto y Cotización)
 
-Se usa **[FormSubmit.co](https://formsubmit.co)** (gratis, sin registro). Los correos llegan **directamente a soynixonlopez@gmail.com**:
+Los formularios se envían desde endpoints internos (`/api/contact` y `/api/quote`) usando **SMTP**.
 
-- **Newsletter**: cada suscripción te llega con asunto "Nueva suscripción al newsletter - Nixon López".
-- **Cotización aceptada**: cuando alguien pulsa "Aceptar cotización" en `/cotizacion`, recibes un correo con nombre, servicio, total, etc.
+1. Copia `.env.example` a `.env.local`.
+2. Configura tus credenciales de Hostinger:
+   - `SMTP_HOST=smtp.hostinger.com`
+   - `SMTP_PORT=465`
+   - `SMTP_SECURE=true`
+   - `SMTP_USER=info@nixonlopez.com`
+   - `SMTP_PASS=...`
+   - `CONTACT_EMAIL_TO=info@nixonlopez.com`
 
-**Importante:** La primera vez que alguien envíe un formulario, FormSubmit te enviará un correo de confirmación a soynixonlopez@gmail.com. Debes hacer clic en el enlace para activar el formulario; después, todos los envíos llegarán a tu bandeja de entrada. No hace falta crear cuenta ni configurar variables de entorno.
+Con eso, cada contacto y cotización llegará directamente a `info@nixonlopez.com`.
 
 ## 🌐 Deployment
 

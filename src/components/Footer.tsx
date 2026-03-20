@@ -14,29 +14,24 @@ const Footer = () => {
   const [isNewsletterSubmitted, setIsNewsletterSubmitted] = useState(false)
   
 
-  // FormSubmit.co: gratis, sin registro. Los correos llegan a soynixonlopez@gmail.com (la primera vez debes confirmar el email desde el enlace que te envían).
-  const FORMSUBMIT_URL = `https://formsubmit.co/ajax/${encodeURIComponent('soynixonlopez@gmail.com')}`
-
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsNewsletterSubmitting(true)
     try {
-      const response = await fetch(FORMSUBMIT_URL, {
+      const response = await fetch('/api/newsletter', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: newsletterEmail,
-          _subject: 'Nueva suscripción al newsletter - Nixon López',
         }),
       })
-      const data = await response.json()
-      if (response.ok && data.success !== false) {
+      if (response.ok) {
         setIsNewsletterSubmitting(false)
         setIsNewsletterSubmitted(true)
         setNewsletterEmail('')
         setTimeout(() => setIsNewsletterSubmitted(false), 3000)
       } else {
-        throw new Error(data.message || 'Error al suscribirse')
+        throw new Error('Error al suscribirse')
       }
     } catch (error) {
       console.error('Error:', error)
@@ -76,10 +71,9 @@ const Footer = () => {
   ]
 
   const services = [
-    { name: 'Desarrollo Web', href: '#services' },
-    { name: 'Aplicaciones Móviles', href: '#services' },
-    { name: 'Automatizaciones con IA', href: '#services' },
-    { name: 'Consultoría Técnica', href: '#contact' }
+    { name: 'Diseño y Desarrollo Web para Negocios', href: '#services' },
+    { name: 'Desarrollo de Apps Móviles para Negocios', href: '#services' },
+    { name: 'Automatizaciones con IA', href: '#services' }
   ]
 
   const scrollToSection = (href: string) => {
