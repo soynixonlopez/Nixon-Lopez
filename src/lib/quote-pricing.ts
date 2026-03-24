@@ -1,10 +1,14 @@
-/** Catálogo y reglas de cotización pública (NL Services). */
+/** Catálogo y reglas de cotización pública (NL Services) + opciones del panel admin. */
 
 export const MAX_INCLUDED_PAGES = 5
 export const PRICE_EXTRA_PAGE_USD = 25
 export const PRICE_DOMAIN_USD = 15
 export const PRICE_EMAIL_USD = 10
 export const PRICE_PASARELA_ADDON_USD = 200
+
+/** Alias para textos del flujo admin (mismos montos que cotización pública) */
+export const FEE_NO_DOMAIN_USD = PRICE_DOMAIN_USD
+export const FEE_NO_PROFESSIONAL_EMAIL_USD = PRICE_EMAIL_USD
 
 export type ServiceDef = {
   id: string
@@ -153,4 +157,51 @@ export function calculateQuoteLines(input: {
   }
 
   return { lines, total }
+}
+
+// --- Panel admin: tipos de servicio manuales (valores en service_id / raw_payload) ---
+
+export const ADMIN_SERVICE_TYPE_OPTIONS = [
+  { value: 'web', label: 'Desarrollo web para negocios' },
+  { value: 'mobile', label: 'Apps móviles para negocios' },
+  { value: 'automation', label: 'Automatizaciones con IA' },
+  { value: 'meta_ads', label: 'Publicidad en Meta Ads' },
+  { value: 'google_ads', label: 'Publicidad en Google Ads' },
+  { value: 'saas', label: 'Sistemas SaaS' },
+  { value: 'consultoria', label: 'Consultorías' },
+  { value: 'other', label: 'Otro servicio' },
+] as const
+
+export type YesNo = 'si' | 'no' | ''
+
+export function computeManualQuoteTotals(params: {
+  baseAmount: number
+  hasDomain: YesNo
+  hasProfessionalEmail: YesNo
+}): { lines: QuoteLine[]; subtotal: number; extrasTotal: number; total: number } {
+  const lines: QuoteLine[] = []
+  const base = Math.max(0, Number(params.baseAmount) || 0)
+  if (base > 0) {
+    lines.push({ label: 'Servicio / proyecto (precio base)', amount: base })
+  }
+  let extras = 0
+  if (params.hasDomain === 'no') {
+    lines.push({ label: 'Dominio (registro o gestión)', amount: FEE_NO_DOMAIN_USD })
+    extras += FEE_NO_DOMAIN_USD
+  }
+  if (params.hasProfessionalEmail === 'no') {
+    lines.push({
+      label: 'Correo electrónico profesional (configuración)',
+      amount: FEE_NO_PROFESSIONAL_EMAIL_USD,
+    })
+    extras += FEE_NO_PROFESSIONAL_EMAIL_USD
+  }
+  const total = base + extras
+  return { lines, subtotal: base, extrasTotal: extras, total }
+}
+
+export function serviceTypeLabel(value: string | null | undefined): string {
+  if (!value) return ''
+  const o = ADMIN_SERVICE_TYPE_OPTIONS.find((x) => x.value === value)
+  return o?.label ?? value
 }

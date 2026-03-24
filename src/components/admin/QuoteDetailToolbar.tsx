@@ -30,7 +30,7 @@ export function QuoteDetailToolbar({ quoteId, clientName }: Props) {
   }
 
   return (
-    <div className="print:hidden no-print flex flex-wrap items-center gap-2 mb-6">
+    <div className="print:hidden no-print flex flex-wrap items-stretch sm:items-center gap-2 mb-6 w-full min-w-0">
       <Link
         href="/admin/cotizaciones"
         className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-700 text-slate-300 text-sm hover:bg-slate-800"
@@ -41,14 +41,14 @@ export function QuoteDetailToolbar({ quoteId, clientName }: Props) {
       <button
         type="button"
         onClick={() => window.print()}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800 text-white text-sm hover:bg-slate-700 border border-slate-700"
+        className="inline-flex items-center justify-center gap-2 min-h-[44px] px-3 py-2 rounded-xl bg-slate-800 text-white text-sm hover:bg-slate-700 border border-slate-700 flex-1 sm:flex-initial min-w-0"
       >
         <Printer className="w-4 h-4" />
         Imprimir / PDF
       </button>
       <a
         href="#editar-cotizacion"
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-600 text-slate-200 text-sm hover:bg-slate-800"
+        className="inline-flex items-center justify-center gap-2 min-h-[44px] px-3 py-2 rounded-xl border border-slate-600 text-slate-200 text-sm hover:bg-slate-800 flex-1 sm:flex-initial min-w-0"
       >
         <Pencil className="w-4 h-4" />
         Editar datos
@@ -57,7 +57,7 @@ export function QuoteDetailToolbar({ quoteId, clientName }: Props) {
         type="button"
         onClick={handleDelete}
         disabled={busy}
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-red-900/60 text-red-300 text-sm hover:bg-red-950/50 disabled:opacity-50 ml-auto"
+        className="inline-flex items-center justify-center gap-2 min-h-[44px] px-3 py-2 rounded-xl border border-red-900/60 text-red-300 text-sm hover:bg-red-950/50 disabled:opacity-50 w-full sm:w-auto sm:ml-auto"
       >
         <Trash2 className="w-4 h-4" />
         Eliminar

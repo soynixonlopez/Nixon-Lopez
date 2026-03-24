@@ -155,6 +155,12 @@ html {
   .no-print {
     display: none !important;
   }
+  /* Cotización: caber en A4 sin desbordar horizontal */
+  #quote-print-root {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: none !important;
+  }
 }
 
 /* Tablas admin: barra de desplazamiento acorde al tema oscuro (evita scroll blanco) */

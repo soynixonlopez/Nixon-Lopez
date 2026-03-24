@@ -194,7 +194,7 @@ const HeroSection = () => {
               className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mt-8"
             >
               <motion.button
-                className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 flex items-center justify-center gap-3 shadow-lg hover:shadow-green-500/50"
+                className="bg-green-500 hover:bg-green-600 text-white rounded-full font-semibold transition-all duration-300 inline-flex items-center justify-center gap-2 sm:gap-3 shadow-lg hover:shadow-green-500/50 whitespace-nowrap text-xs min-[400px]:text-sm sm:text-base md:text-lg px-3 min-[400px]:px-4 sm:px-6 md:px-8 py-3 sm:py-3.5 md:py-4 w-full sm:w-auto min-h-[48px] max-sm:leading-none"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => {
@@ -204,12 +204,12 @@ const HeroSection = () => {
                   window.open(whatsappUrl, '_blank')
                 }}
               >
-                <TechLogo name="WhatsApp" size={28} />
+                <TechLogo name="WhatsApp" size={22} className="shrink-0" />
                 Contactar por WhatsApp
               </motion.button>
               
               <motion.button
-                className="bg-white/10 backdrop-blur-sm text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-white/20 transition-all duration-300 flex items-center justify-center gap-2 border border-white/20"
+                className="bg-white/10 backdrop-blur-sm text-white rounded-full font-semibold hover:bg-white/20 transition-all duration-300 inline-flex items-center justify-center gap-2 border border-white/20 whitespace-nowrap text-xs min-[400px]:text-sm sm:text-base md:text-lg px-3 min-[400px]:px-4 sm:px-6 md:px-8 py-3 sm:py-3.5 md:py-4 w-full sm:w-auto min-h-[48px] max-sm:leading-none"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => {
@@ -219,7 +219,7 @@ const HeroSection = () => {
                   }
                 }}
               >
-                <Star className="w-5 h-5" />
+                <Star className="w-4 h-4 shrink-0 sm:w-5 sm:h-5" />
                 Ver Proyectos
               </motion.button>
             </motion.div>

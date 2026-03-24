@@ -18,7 +18,7 @@ export default async function CotizacionDetailPage({ params }: { params: Promise
   }
 
   return (
-    <div className="max-w-[220mm] mx-auto">
+    <div className="w-full max-w-[220mm] mx-auto px-2 sm:px-4 min-w-0">
       <QuoteDetailToolbar
         quoteId={q.id}
         clientName={`${q.client_first_name} ${q.client_last_name}`}
