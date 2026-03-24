@@ -23,12 +23,11 @@ const Header = () => {
     if (isMenuOpen) {
       document.body.style.overflow = 'hidden'
     } else {
-      document.body.style.overflow = 'unset'
+      document.body.style.overflow = ''
     }
-    
-    // Cleanup al desmontar el componente
+
     return () => {
-      document.body.style.overflow = 'unset'
+      document.body.style.overflow = ''
     }
   }, [isMenuOpen])
 
@@ -143,7 +142,7 @@ const Header = () => {
 
         {/* Mobile Navigation Menu - desde debajo del header */}
         <motion.nav
-          className="fixed top-0 right-0 h-full w-[min(320px,100vw-2rem)] max-w-[calc(100vw-2rem)] bg-slate-900 border-l border-white/10 z-50 md:hidden transform transition-transform duration-300 ease-in-out safe-area-nav"
+          className="fixed top-0 right-0 h-full w-[min(320px,calc(100%-2rem))] max-w-[calc(100%-2rem)] bg-slate-900 border-l border-white/10 z-50 md:hidden transform transition-transform duration-300 ease-in-out safe-area-nav"
           style={{ backgroundColor: '#0f172a', paddingTop: 'max(env(safe-area-inset-top), 0px)' }}
           initial={{ x: '100%' }}
           animate={{ x: isMenuOpen ? 0 : '100%' }}

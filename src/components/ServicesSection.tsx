@@ -89,7 +89,7 @@ const ServicesSection = () => {
   }
 
   return (
-    <section id="services" className="py-20 bg-slate-50 dark:bg-slate-900" ref={ref}>
+    <section id="services" className="py-20 bg-slate-50 dark:bg-slate-900 overflow-x-hidden" ref={ref}>
       <div className="container-padding">
         <motion.div
           className="text-center mb-16"

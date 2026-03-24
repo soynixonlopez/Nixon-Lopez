@@ -12,11 +12,19 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
   line-height: 1.6;
   overflow-x: hidden;
+  max-width: 100%;
 }
 
-/* Evitar overflow horizontal en móvil */
+/* Evitar scroll horizontal: html + body (100vw y elementos posicionados suelen desbordar solo en body) */
+html {
+  overflow-x: hidden;
+  max-width: 100%;
+  scroll-behavior: smooth;
+}
+
 @media (max-width: 767px) {
-  html, body {
+  html,
+  body {
     min-width: 0;
     width: 100%;
   }
@@ -41,11 +49,6 @@ body {
 
 .text-glow {
   text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
-}
-
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
 }
 
 /* Selection styling */

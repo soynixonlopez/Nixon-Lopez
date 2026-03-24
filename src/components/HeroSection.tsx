@@ -74,7 +74,7 @@ const HeroSection = () => {
   ]
 
   return (
-    <section id="hero" className="relative min-h-screen h-auto md:h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 px-4 py-8 md:py-0 pb-0">
+    <section id="hero" className="relative w-full max-w-full min-w-0 min-h-screen h-auto md:h-screen flex items-center justify-center overflow-x-hidden overflow-y-visible md:overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 px-4 py-8 md:py-0 pb-0">
       {/* Animated background */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
@@ -140,12 +140,12 @@ const HeroSection = () => {
         animate="visible"
       >
         {/* Two column layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center md:items-stretch h-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center md:items-stretch h-full w-full min-w-0">
           
           {/* Left column - Content */}
           <motion.div
             variants={itemVariants}
-            className="text-center md:text-left flex flex-col justify-center h-full"
+            className="min-w-0 text-center md:text-left flex flex-col justify-center h-full"
           >
             {/* Greeting */}
             <motion.div
@@ -228,10 +228,10 @@ const HeroSection = () => {
           {/* Right column - Profile Image */}
           <motion.div
             variants={itemVariants}
-            className="flex justify-center md:justify-end h-full relative"
+            className="flex min-w-0 justify-center md:justify-end h-full relative overflow-hidden"
           >
             <motion.div
-              className="relative w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl xl:max-w-3xl h-[500px] sm:h-[600px] md:h-full"
+              className="relative w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl xl:max-w-3xl h-[500px] sm:h-[600px] md:h-full overflow-hidden"
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.3 }}
             >
@@ -327,7 +327,7 @@ const HeroSection = () => {
               </motion.div>
               
               <motion.div
-                className="absolute top-1/2 right-0 sm:right-1 w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 bg-indigo-500 rounded-full flex items-center justify-center shadow-lg"
+                className="absolute top-1/2 right-2 sm:right-3 w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 bg-indigo-500 rounded-full flex items-center justify-center shadow-lg"
                 animate={{ 
                   x: [0, 3, 0],
                   rotate: [0, 180, 360]

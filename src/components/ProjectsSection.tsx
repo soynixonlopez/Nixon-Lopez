@@ -158,7 +158,7 @@ const ProjectsSection = () => {
   }
 
   return (
-    <section id="projects" className="py-20 bg-white dark:bg-slate-900" ref={ref}>
+    <section id="projects" className="py-20 bg-white dark:bg-slate-900 overflow-x-hidden" ref={ref}>
       <div className="container-padding">
         {/* Header */}
         <motion.div
