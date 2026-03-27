@@ -19,6 +19,7 @@ import {
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   QUOTE_SERVICES,
   calculateQuoteLines,
@@ -28,9 +29,11 @@ import {
   PRICE_DOMAIN_USD,
   PRICE_EMAIL_USD,
 } from '@/lib/quote-pricing'
+import { INVOICE_BRANDING } from '@/lib/invoice-branding'
 
 const MAX_IMAGENES_POR_SITIO = 20
-const OBSERVACIONES_IMAGENES = `Cada sitio web incluye hasta ${MAX_IMAGENES_POR_SITIO} imágenes en el paquete estándar. Si necesitas más, indícalo en los comentarios.`
+const OBSERVACIONES_IMAGENES =
+  'Cada sitio web puede requerir funcionalidades adicionales según el alcance. En esos casos, contacta al desarrollador, ya que podrían generarse gastos extras.'
 const OBSERVACIONES_HOSTING_DB =
   'Hosting y base de datos dependen del tráfico y escala del proyecto; se acuerdan según necesidad.'
 
@@ -98,28 +101,61 @@ export default function CotizacionPage() {
   const handlePrint = () => {
     const ventana = window.open('', '_blank')
     if (!ventana) return
+    const accent = INVOICE_BRANDING.accentHex
+    const clientName = `${form.nombre} ${form.apellido}`.trim()
     const lineasHtml = lines
       .map(
         (l) =>
-          `<tr><td style="padding:8px;border-bottom:1px solid #e2e8f0;">${escapeHtml(l.label)}</td><td style="padding:8px;text-align:right;border-bottom:1px solid #e2e8f0;">$${l.amount.toFixed(2)}</td></tr>`
+          `<tr><td style="padding:10px;border-bottom:1px solid #e2e8f0;">${escapeHtml(l.label)}</td><td style="padding:10px;text-align:right;border-bottom:1px solid #e2e8f0;white-space:nowrap;">$${l.amount.toFixed(2)}</td></tr>`
       )
       .join('')
     ventana.document.write(`<!DOCTYPE html><html><head><title>Cotización — NL Services</title>
       <style>
-        body{font-family:system-ui,sans-serif;padding:24px;color:#0f172a;max-width:640px;margin:0 auto;}
-        h1{font-size:1.35rem;color:#1e3a5f;margin:0 0 4px 0;}
-        .sub{color:#64748b;font-size:0.85rem;}
-        table{width:100%;border-collapse:collapse;margin:16px 0;}
-        .total{font-size:1.4rem;font-weight:700;color:#1e3a5f;margin-top:16px;}
-        .obs{margin-top:16px;padding:12px;background:#f8fafc;border-radius:8px;font-size:0.85rem;color:#475569;}
+        *{box-sizing:border-box}
+        body{font-family:system-ui,sans-serif;padding:20px;color:#0f172a;max-width:860px;margin:0 auto;background:#fff}
+        .sheet{border:1px solid #e2e8f0;border-radius:12px;overflow:hidden}
+        .head{display:flex;justify-content:space-between;gap:20px;padding:24px;border-bottom:1px solid #e2e8f0}
+        .brand{font-weight:800;font-size:1.25rem;color:${accent};margin:0}
+        .sub{margin:6px 0 0;color:#64748b;font-size:0.9rem}
+        .right{text-align:right}
+        .doc{font-size:1.7rem;font-weight:800;color:${accent};margin:0}
+        .muted{color:#64748b;font-size:0.85rem;margin-top:6px}
+        .block{padding:20px 24px}
+        .label{display:inline-block;background:${accent};color:#fff;font-weight:700;font-size:11px;padding:8px 12px;border-radius:6px 6px 0 0;text-transform:uppercase}
+        .client{border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;padding:12px}
+        .client p{margin:4px 0}
+        table{width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden}
+        thead tr{background:${accent};color:#fff}
+        th{padding:10px;text-align:left;font-size:13px}
+        .num{text-align:right}
+        .total{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px;background:${accent};color:#fff;padding:12px 14px;border-radius:8px}
+        .total b{font-size:1.2rem}
+        .obs{margin-top:14px;padding:12px;background:#f8fafc;border-radius:8px;font-size:0.84rem;color:#475569;border:1px solid #e2e8f0}
       </style></head><body>
-      <h1>NL Services</h1>
-      <p class="sub">RUC 10-711-1351 · Panama City · info@nixonlopez.com</p>
-      <h2 style="margin-top:20px;font-size:1.1rem;">Cotización</h2>
-      <p><strong>Cliente:</strong> ${escapeHtml(form.nombre)} ${escapeHtml(form.apellido)}</p>
-      <p><strong>Correo:</strong> ${escapeHtml(form.correo)}</p>
-      <table><thead><tr><th align="left">Concepto</th><th align="right">Importe</th></tr></thead><tbody>${lineasHtml}</tbody></table>
-      <p class="total">Total: $${total.toFixed(2)} USD${monthly ? ' / mes' : ''}</p>
+      <article class="sheet">
+        <section class="head">
+          <div>
+            <h1 class="brand">${escapeHtml(INVOICE_BRANDING.businessName)}</h1>
+            <p class="sub">${escapeHtml(INVOICE_BRANDING.businessSubtitle)}</p>
+            <p class="muted">RUC: ${escapeHtml(INVOICE_BRANDING.ruc)} · ${escapeHtml(INVOICE_BRANDING.email)}</p>
+          </div>
+          <div class="right">
+            <p class="doc">COTIZACIÓN</p>
+            <p class="muted">${new Date().toLocaleDateString('es-PA')}</p>
+          </div>
+        </section>
+        <section class="block">
+          <span class="label">Cliente</span>
+          <div class="client">
+            <p><strong>${escapeHtml(clientName || 'Cliente')}</strong></p>
+            <p>${escapeHtml(form.correo)}</p>
+          </div>
+        </section>
+        <section class="block" style="padding-top:0">
+          <table><thead><tr><th>Concepto</th><th class="num">Importe</th></tr></thead><tbody>${lineasHtml}</tbody></table>
+          <div class="total"><span>Total estimado</span><b>$${total.toFixed(2)} USD${monthly ? ' / mes' : ''}</b></div>
+        </section>
+      </article>
       ${form.comentarios ? `<p><strong>Comentarios:</strong> ${escapeHtml(form.comentarios)}</p>` : ''}
       <div class="obs"><strong>Nota:</strong> ${OBSERVACIONES_IMAGENES}</div>
       <p style="margin-top:24px;font-size:12px;color:#94a3b8;">${new Date().toLocaleString('es-PA')}</p>
@@ -441,41 +477,77 @@ export default function CotizacionPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="space-y-6"
               >
-                <div className="flex items-center gap-3 text-blue-400">
-                  <Calculator className="w-8 h-8" />
-                  <h2 className="text-xl font-bold text-white">Tu cotización</h2>
-                </div>
-
-                <div className="rounded-xl border border-white/10 overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-white/5 text-slate-400 text-left">
-                      <tr>
-                        <th className="px-4 py-2">Concepto</th>
-                        <th className="px-4 py-2 text-right">USD</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/10 text-slate-200">
-                      {lines.map((l, i) => (
-                        <tr key={i}>
-                          <td className="px-4 py-2.5">{l.label}</td>
-                          <td className="px-4 py-2.5 text-right tabular-nums">${l.amount.toFixed(2)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-2 border-t border-white/10">
-                  <div>
-                    <p className="text-xs text-slate-500">Cliente</p>
-                    <p className="text-white font-medium">
-                      {form.nombre} {form.apellido}
-                    </p>
-                    <p className="text-slate-400 text-sm">{form.correo}</p>
+                <div className="bg-white text-slate-900 rounded-xl sm:rounded-2xl overflow-hidden border border-slate-200 shadow-lg">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 px-4 sm:px-6 py-5 border-b border-slate-200">
+                    <div>
+                      <div className="relative h-12 w-44 sm:h-14 sm:w-52 max-w-full">
+                        <Image
+                          src={INVOICE_BRANDING.logoPath}
+                          alt={INVOICE_BRANDING.logoAlt}
+                          fill
+                          className="object-contain object-left"
+                          sizes="(max-width: 640px) 176px, 208px"
+                          priority
+                        />
+                      </div>
+                      <p className="text-base sm:text-lg font-bold mt-3" style={{ color: INVOICE_BRANDING.accentHex }}>
+                        {INVOICE_BRANDING.businessName}
+                      </p>
+                      <p className="text-xs sm:text-sm text-slate-600">{INVOICE_BRANDING.businessSubtitle}</p>
+                      <p className="text-[11px] text-slate-500 mt-1">RUC: {INVOICE_BRANDING.ruc}</p>
+                    </div>
+                    <div className="text-left sm:text-right">
+                      <p className="text-xl sm:text-2xl font-bold tracking-tight" style={{ color: INVOICE_BRANDING.accentHex }}>
+                        COTIZACIÓN
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">{new Date().toLocaleDateString('es-PA')}</p>
+                    </div>
                   </div>
-                  <p className="text-2xl sm:text-3xl font-bold text-white">
-                    Total: ${total.toFixed(2)} USD{monthly ? ' / mes' : ''}
-                  </p>
+
+                  <div className="px-4 sm:px-6 py-4">
+                    <div
+                      className="text-white text-[11px] font-bold uppercase tracking-wide px-3 py-1.5 rounded-t inline-block"
+                      style={{ backgroundColor: INVOICE_BRANDING.accentHex }}
+                    >
+                      Cliente
+                    </div>
+                    <div className="border border-t-0 border-slate-200 rounded-b px-3 py-3 text-sm">
+                      <p className="font-semibold text-slate-900 break-words">
+                        {form.nombre} {form.apellido}
+                      </p>
+                      <p className="text-slate-600 break-all">{form.correo}</p>
+                    </div>
+                  </div>
+
+                  <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[280px] text-xs sm:text-sm border border-slate-200 rounded-lg overflow-hidden">
+                        <thead>
+                          <tr style={{ backgroundColor: INVOICE_BRANDING.accentHex }} className="text-white">
+                            <th className="text-left px-3 py-2 font-semibold">Concepto</th>
+                            <th className="text-right px-3 py-2 font-semibold whitespace-nowrap">Importe</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {lines.map((l, i) => (
+                            <tr key={i}>
+                              <td className="px-3 py-2 text-slate-800 break-words">{l.label}</td>
+                              <td className="px-3 py-2 text-right tabular-nums whitespace-nowrap">${l.amount.toFixed(2)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div
+                      className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-white px-4 py-3 rounded-lg"
+                      style={{ backgroundColor: INVOICE_BRANDING.accentHex }}
+                    >
+                      <span className="font-bold uppercase text-sm">Total estimado</span>
+                      <span className="text-lg sm:text-xl font-bold tabular-nums">
+                        ${total.toFixed(2)} USD{monthly ? ' / mes' : ''}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
                 {cotizacionEnviada ? (
