@@ -240,7 +240,7 @@ const ServicesSection = () => {
             </p>
 
             <motion.button
-              className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 flex items-center gap-3 mx-auto shadow-lg hover:shadow-green-500/50"
+              className="bg-green-500 hover:bg-green-600 text-white rounded-full font-semibold transition-all duration-300 inline-flex items-center justify-center gap-2 sm:gap-3 mx-auto shadow-lg hover:shadow-green-500/50 whitespace-nowrap text-xs min-[400px]:text-sm sm:text-base md:text-lg px-3 min-[400px]:px-4 sm:px-6 md:px-8 py-3 sm:py-3.5 md:py-4 max-sm:leading-none"
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => {
@@ -250,7 +250,7 @@ const ServicesSection = () => {
                 window.open(whatsappUrl, '_blank')
               }}
             >
-              <TechLogo name="WhatsApp" size={28} />
+              <TechLogo name="WhatsApp" size={22} className="shrink-0" />
               Contactar por WhatsApp
             </motion.button>
           </div>

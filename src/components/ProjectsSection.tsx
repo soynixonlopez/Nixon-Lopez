@@ -45,22 +45,25 @@ const ProjectsSection = () => {
     tobykids: 'https://tobykids.vercel.app',
     vipal: 'https://www.vipalglasspanama.com',
     quantico: 'https://www.quanticoglobalsystem.com',
+    'erp-website': '',
   }
 
+  /** Orden: más recientes primero (2026 → 2023). Años repartidos entre 2023 y 2026. */
   const projectImageFiles = [
-    { slug: 'fotosonido', title: 'Foto Sonido', image: '/proyectos-img/website-fotosonido.png', icon: Globe },
-    { slug: 'alquilereventos', title: 'Alquiler de Eventos', image: '/proyectos-img/website-alquilereventos.png', icon: Zap },
-    { slug: 'sara', title: 'Sara Carryhau', image: '/proyectos-img/website-Sara.png', icon: Globe },
-    { slug: 'marbi', title: 'Marbi', image: '/proyectos-img/website-marbi.png', icon: Globe },
-    { slug: 'nutrielys', title: 'Nutrielys', image: '/proyectos-img/website-nutrielys.png', icon: Globe },
-    { slug: 'obip', title: 'OBIP', image: '/proyectos-img/website-obip.png', icon: Users },
-    { slug: 'python', title: 'Python', image: '/proyectos-img/website-python.png', icon: GraduationCap },
-    { slug: 'realtors', title: 'Realtors', image: '/proyectos-img/website-realtors.png', icon: Building },
-    { slug: 'nixontours', title: 'Nixon Tours', image: '/proyectos-img/website-nixontours.png', icon: Globe },
-    { slug: 'yurna', title: 'Yurna', image: '/proyectos-img/website-yurna.png', icon: Globe },
-    { slug: 'tobykids', title: 'Toby Kids', image: '/proyectos-img/website-tobykids.png', icon: Globe },
-    { slug: 'vipal', title: 'VIPAL', image: '/proyectos-img/website-vipal.png', icon: Globe },
-    { slug: 'quantico', title: 'Quantico', image: '/proyectos-img/website-quantico.png', icon: Bot },
+    { slug: 'sara', title: 'Sara Carryhau', image: '/proyectos-img/website-Sara.png', icon: Globe, year: '2026' },
+    { slug: 'quantico', title: 'Quantico', image: '/proyectos-img/website-quantico.png', icon: Bot, year: '2026' },
+    { slug: 'fotosonido', title: 'Foto Sonido', image: '/proyectos-img/website-fotosonido.png', icon: Globe, year: '2026' },
+    { slug: 'erp-website', title: 'ERP WebSite', image: '/proyectos-img/website-erp.png', icon: Globe, year: '2026' },
+    { slug: 'vipal', title: 'VIPAL', image: '/proyectos-img/website-vipal.png', icon: Globe, year: '2026' },
+    { slug: 'nutrielys', title: 'Nutrielys', image: '/proyectos-img/website-nutrielys.png', icon: Globe, year: '2026' },
+    { slug: 'marbi', title: 'Marbi', image: '/proyectos-img/website-marbi.png', icon: Globe, year: '2025' },
+    { slug: 'yurna', title: 'Yurna', image: '/proyectos-img/website-yurna.png', icon: Globe, year: '2025' },
+    { slug: 'alquilereventos', title: 'Alquiler de Eventos', image: '/proyectos-img/website-alquilereventos.png', icon: Zap, year: '2025' },
+    { slug: 'nixontours', title: 'Nixon Tours', image: '/proyectos-img/website-nixontours.png', icon: Globe, year: '2025' },
+    { slug: 'obip', title: 'OBIP', image: '/proyectos-img/website-obip.png', icon: Users, year: '2024' },
+    { slug: 'tobykids', title: 'Toby Kids', image: '/proyectos-img/website-tobykids.png', icon: Globe, year: '2024' },
+    { slug: 'python', title: 'Python', image: '/proyectos-img/website-python.png', icon: GraduationCap, year: '2024' },
+    { slug: 'realtors', title: 'Realtors', image: '/proyectos-img/website-realtors.png', icon: Building, year: '2023' },
   ] as const
 
   const projects = projectImageFiles.map((p, idx) => {
@@ -96,7 +99,7 @@ const ProjectsSection = () => {
       },
       client: p.title,
       duration: '1 mes',
-      year: '2024',
+      year: p.year,
     }
   })
 

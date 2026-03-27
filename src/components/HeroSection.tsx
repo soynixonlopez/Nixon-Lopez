@@ -168,7 +168,7 @@ const HeroSection = () => {
             {/* Animated subtitle */}
             <motion.div
               variants={itemVariants}
-              className="mb-8"
+              className="mb-4 sm:mb-6 md:mb-8"
             >
               <h2 className="text-xl md:text-2xl lg:text-3xl text-gray-300 mb-2">
                 Especialistas en{' '}
@@ -183,7 +183,7 @@ const HeroSection = () => {
                   </motion.span>
                 </span>
               </h2>
-              <p className="pt-5 text-gray-400 max-w-2xl mx-auto lg:mx-0 text-lg"> 
+              <p className="pt-3 sm:pt-4 md:pt-5 text-gray-400 max-w-2xl mx-auto lg:mx-0 text-lg"> 
                 Creamos páginas web profesionales para negocios de servicios. Conecta con más clientes, integra WhatsApp y convierte visitantes en ventas.
               </p>
             </motion.div>
@@ -191,7 +191,7 @@ const HeroSection = () => {
             {/* CTA Buttons */}
             <motion.div
               variants={itemVariants}
-              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mt-8"
+              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mt-4 sm:mt-6 md:mt-8"
             >
               <motion.button
                 className="bg-green-500 hover:bg-green-600 text-white rounded-full font-semibold transition-all duration-300 inline-flex items-center justify-center gap-2 sm:gap-3 shadow-lg hover:shadow-green-500/50 whitespace-nowrap text-xs min-[400px]:text-sm sm:text-base md:text-lg px-3 min-[400px]:px-4 sm:px-6 md:px-8 py-3 sm:py-3.5 md:py-4 w-full sm:w-auto min-h-[48px] max-sm:leading-none"
