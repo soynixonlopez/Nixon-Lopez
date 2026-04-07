@@ -5,20 +5,38 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 type Line = { description: string; quantity: string; unit_price: string }
+type PrefillQuote = {
+  id: string
+  client_first_name: string
+  client_last_name: string
+  client_email: string
+  client_phone: string | null
+  service_label: string | null
+  total_amount: number | null
+  converted_project_id: string | null
+}
 
-export function InvoiceCreateForm() {
+export function InvoiceCreateForm({ prefillQuote }: { prefillQuote?: PrefillQuote | null }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [invoiceKind, setInvoiceKind] = useState<'prefactura' | 'final'>('prefactura')
   const [isAbono, setIsAbono] = useState(true)
   const [abonoAmount, setAbonoAmount] = useState('')
-  const [clientName, setClientName] = useState('')
-  const [clientEmail, setClientEmail] = useState('')
+  const [clientName, setClientName] = useState(
+    prefillQuote
+      ? `${prefillQuote.client_first_name} ${prefillQuote.client_last_name}`.trim()
+      : ''
+  )
+  const [clientEmail, setClientEmail] = useState(prefillQuote?.client_email ?? '')
   const [clientTaxId, setClientTaxId] = useState('')
   const [clientAddress, setClientAddress] = useState('')
   const [taxRate, setTaxRate] = useState('0')
   const [lines, setLines] = useState<Line[]>([
-    { description: 'Servicio web', quantity: '1', unit_price: '0' },
+    {
+      description: prefillQuote?.service_label || 'Servicio web',
+      quantity: '1',
+      unit_price: String(prefillQuote?.total_amount ?? 0),
+    },
   ])
   const [notes, setNotes] = useState('')
 
@@ -73,6 +91,7 @@ export function InvoiceCreateForm() {
           : 0,
       currency: 'USD',
       notes: notes || null,
+      quote_id: prefillQuote?.id ?? null,
     }
 
     const { data: inv, error: invErr } = await supabase
@@ -98,11 +117,66 @@ export function InvoiceCreateForm() {
     }))
 
     const { error: lineErr } = await supabase.from('invoice_line_items').insert(lineRows)
-    setLoading(false)
     if (lineErr) {
+      setLoading(false)
       alert(lineErr.message)
       return
     }
+
+    if (prefillQuote?.id) {
+      let projectId = prefillQuote.converted_project_id
+
+      if (!projectId) {
+        const todayIso = new Date().toISOString()
+        const { data: project, error: projectErr } = await supabase
+          .from('projects')
+          .insert({
+            quote_id: prefillQuote.id,
+            title: prefillQuote.service_label || `Proyecto ${clientName}`,
+            client_name: clientName,
+            client_email: clientEmail || null,
+            client_phone: prefillQuote.client_phone || null,
+            description: prefillQuote.service_label || null,
+            started_at: todayIso,
+            due_date: null,
+            status: 'pending',
+          })
+          .select('id')
+          .single()
+
+        if (projectErr || !project) {
+          setLoading(false)
+          alert(projectErr?.message ?? 'Factura creada, pero no se pudo crear el proyecto automático.')
+          return
+        }
+
+        projectId = (project as { id: string }).id
+        const { error: quoteErr } = await supabase
+          .from('quotes')
+          .update({
+            status: 'converted_to_project',
+            converted_project_id: projectId,
+          })
+          .eq('id', prefillQuote.id)
+        if (quoteErr) {
+          setLoading(false)
+          alert('Factura y proyecto creados, pero no se pudo actualizar la cotización.')
+          return
+        }
+      }
+
+      const { error: invLinkErr } = await supabase
+        .from('invoices')
+        .update({ project_id: projectId })
+        .eq('id', invoiceId)
+      if (invLinkErr) {
+        setLoading(false)
+        alert('Factura creada, pero no se pudo enlazar con el proyecto.')
+        return
+      }
+    }
+
+    setLoading(false)
     router.push(`/admin/facturas/${invoiceId}`)
     router.refresh()
   }
@@ -110,6 +184,11 @@ export function InvoiceCreateForm() {
   return (
     <form onSubmit={submit} className="max-w-3xl space-y-6">
       <div className="grid sm:grid-cols-2 gap-4">
+        {prefillQuote && (
+          <p className="sm:col-span-2 text-xs text-indigo-300 rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-3 py-2">
+            Esta factura está vinculada a una cotización. Al crearla, se generará un proyecto automáticamente.
+          </p>
+        )}
         <label className="sm:col-span-2">
           <span className="text-xs text-slate-400">Tipo de documento</span>
           <select

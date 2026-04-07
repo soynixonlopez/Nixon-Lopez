@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { ArrowLeft, Printer, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, Printer, Pencil, Trash2, ReceiptText } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 type Props = {
@@ -53,6 +53,13 @@ export function QuoteDetailToolbar({ quoteId, clientName }: Props) {
         <Pencil className="w-4 h-4" />
         Editar datos
       </a>
+      <Link
+        href={`/admin/facturas/nueva?quoteId=${quoteId}`}
+        className="inline-flex items-center justify-center gap-2 min-h-[44px] px-3 py-2 rounded-xl border border-indigo-500/40 text-indigo-200 text-sm hover:bg-indigo-500/20 flex-1 sm:flex-initial min-w-0"
+      >
+        <ReceiptText className="w-4 h-4" />
+        Generar factura
+      </Link>
       <button
         type="button"
         onClick={handleDelete}

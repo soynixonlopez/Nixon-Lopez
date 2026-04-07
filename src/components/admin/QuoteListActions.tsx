@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createPortal } from 'react-dom'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Eye, MoreVertical, Pencil, Printer, Trash2 } from 'lucide-react'
+import { Eye, FileText, MoreVertical, Pencil, Printer, ReceiptText, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { clsx } from 'clsx'
 
@@ -144,6 +144,24 @@ export function QuoteListActions({ id, label }: Props) {
         >
           <Printer className="h-4 w-4 shrink-0 text-slate-400" />
           Imprimir
+        </Link>
+        <Link
+          href={`/admin/facturas/nueva?quoteId=${id}`}
+          role="menuitem"
+          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800/90"
+          onClick={() => setOpen(false)}
+        >
+          <ReceiptText className="h-4 w-4 shrink-0 text-indigo-400/90" />
+          Crear factura
+        </Link>
+        <Link
+          href={`/admin/contratos/nuevo?quoteId=${id}`}
+          role="menuitem"
+          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800/90"
+          onClick={() => setOpen(false)}
+        >
+          <FileText className="h-4 w-4 shrink-0 text-indigo-400/90" />
+          Crear contrato
         </Link>
         <div className="my-1 h-px bg-slate-800" />
         <button

@@ -8,7 +8,6 @@ import {
   FileText,
   FolderKanban,
   Receipt,
-  PlusCircle,
   LogOut,
   Menu,
   X,
@@ -24,10 +23,9 @@ const STORAGE_KEY = 'admin-sidebar-collapsed'
 const nav = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/cotizaciones', label: 'Cotizaciones', icon: FileText },
-  { href: '/admin/cotizacion-nueva', label: 'Nueva cotización', icon: PlusCircle },
+  { href: '/admin/contratos', label: 'Contratos', icon: FileText },
   { href: '/admin/proyectos', label: 'Proyectos', icon: FolderKanban },
   { href: '/admin/facturas', label: 'Facturas', icon: Receipt },
-  { href: '/admin/facturas/nueva', label: 'Nueva factura', icon: PlusCircle },
 ]
 
 export function AdminShell({ children }: { children: React.ReactNode }) {

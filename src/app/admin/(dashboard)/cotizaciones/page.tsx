@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { QuotesTable } from '@/components/admin/QuotesTable'
+import Link from 'next/link'
+import { Plus } from 'lucide-react'
 
 export default async function CotizacionesPage() {
   const supabase = await createClient()
@@ -24,6 +26,13 @@ export default async function CotizacionesPage() {
         </p>
       )}
       <QuotesTable quotes={(quotes ?? []) as never[]} />
+      <Link
+        href="/admin/cotizacion-nueva"
+        aria-label="Crear cotización"
+        className="fixed bottom-6 right-6 z-20 inline-flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-2xl shadow-indigo-900/40 transition-transform hover:scale-105"
+      >
+        <Plus className="h-6 w-6" />
+      </Link>
     </div>
   )
 }

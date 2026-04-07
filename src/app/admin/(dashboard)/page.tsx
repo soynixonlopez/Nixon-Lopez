@@ -5,10 +5,11 @@ import { FileText, FolderKanban, Receipt, TrendingUp } from 'lucide-react'
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
 
-  const [quotes, projects, invoices] = await Promise.all([
+  const [quotes, projects, invoices, contracts] = await Promise.all([
     supabase.from('quotes').select('*', { count: 'exact', head: true }),
     supabase.from('projects').select('*', { count: 'exact', head: true }),
     supabase.from('invoices').select('*', { count: 'exact', head: true }),
+    supabase.from('service_contracts').select('*', { count: 'exact', head: true }),
   ])
 
   const qStatus = await supabase.from('quotes').select('status').limit(500)
@@ -41,6 +42,12 @@ export default async function AdminDashboardPage() {
       href: '/admin/facturas',
       icon: Receipt,
     },
+    {
+      label: 'Contratos',
+      value: contracts.count ?? 0,
+      href: '/admin/contratos',
+      icon: FileText,
+    },
   ]
 
   return (
@@ -53,7 +60,7 @@ export default async function AdminDashboardPage() {
         <p className="text-slate-400 mt-1">Resumen de cotizaciones, proyectos y facturas.</p>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((c) => (
           <Link
             key={c.label}
@@ -83,6 +90,11 @@ export default async function AdminDashboardPage() {
           <li>
             <Link className="text-indigo-400 hover:underline" href="/admin/facturas/nueva">
               Nueva factura / prefactura
+            </Link>
+          </li>
+          <li>
+            <Link className="text-indigo-400 hover:underline" href="/admin/contratos/nuevo">
+              Nuevo contrato
             </Link>
           </li>
         </ul>
