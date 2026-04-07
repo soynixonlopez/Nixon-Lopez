@@ -6,7 +6,7 @@ function getPublicConfig() {
 
   if (!url || !key) {
     throw new Error(
-      'Faltan NEXT_PUBLIC_SUPABASE_URL o NEXT_PUBLIC_SUPABASE_ANON_KEY en .env.local. Deben llevar el prefijo NEXT_PUBLIC_ y reinicia "npm run dev" después de guardar.'
+      'Faltan NEXT_PUBLIC_SUPABASE_URL o NEXT_PUBLIC_SUPABASE_ANON_KEY en .env.local. Deben llevar el prefijo NEXT_PUBLIC_ y reinicia el servidor (por ejemplo, "pnpm dev") después de guardar.'
     )
   }
 

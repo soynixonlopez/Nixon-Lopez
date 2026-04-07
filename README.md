@@ -27,16 +27,16 @@ Portafolio profesional de Nixon López, especialista en desarrollo web con IA, C
 git clone https://github.com/nixonlopez/portfolio.git
 
 # Instalar dependencias
-npm install
+pnpm install
 
 # Ejecutar en desarrollo
-npm run dev
+pnpm dev
 
 # Construir para producción
-npm run build
+pnpm build
 
 # Iniciar servidor de producción
-npm start
+pnpm start
 ```
 
 ## 🎨 Personalización
