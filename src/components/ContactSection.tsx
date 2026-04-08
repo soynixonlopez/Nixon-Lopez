@@ -2,14 +2,13 @@
 
 import { motion, useInView } from 'framer-motion'
 import { useRef, useState } from 'react'
-import { 
+import {
   MessageCircle,
   Send,
   Mail,
   User,
   FileText,
   CheckCircle,
-  Github
 } from 'lucide-react'
 import TechLogo from './TechLogo'
 
@@ -355,7 +354,7 @@ const ContactSection = () => {
               whileHover={{ scale: 1.2, y: -2 }}
               whileTap={{ scale: 0.9 }}
             >
-              <Github className="w-8 h-8" />
+              <TechLogo name="GitHub" size={32} />
             </motion.a>
             <motion.a
               href="https://tiktok.com/@soynixonlopez"

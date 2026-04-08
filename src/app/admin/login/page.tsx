@@ -3,6 +3,7 @@
 import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { ADMIN_EMAIL } from '@/lib/admin-constants'
 import { Lock, Mail } from 'lucide-react'
@@ -44,6 +45,16 @@ function LoginForm() {
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900/80 p-8 shadow-xl">
+        <div className="flex justify-center mb-6">
+          <Image
+            src="/images/logonlservices.png"
+            alt="NL Services — logo oficial"
+            width={1057}
+            height={186}
+            className="h-8 w-auto max-w-full object-contain sm:h-9"
+            priority
+          />
+        </div>
         <h1 className="text-2xl font-bold text-white mb-2 text-center">Acceso administrador</h1>
         <p className="text-slate-400 text-sm text-center mb-6">
           Solo el correo autorizado puede entrar.

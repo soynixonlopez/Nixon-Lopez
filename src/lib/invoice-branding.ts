@@ -3,11 +3,11 @@
  */
 export const INVOICE_BRANDING = {
   /** Texto alternativo del logo (accesibilidad) */
-  logoAlt: 'Nixon López — Desarrollo web',
+  logoAlt: 'NL Services — Desarrollo web e IA',
   /** Nombre comercial bajo el logo en documentos */
   businessName: 'NL Services',
   /** Nombre corto para correos y asuntos */
-  publicName: 'Nixon López',
+  publicName: 'NL Services',
   /** Línea de actividad bajo el nombre comercial */
   businessSubtitle: 'Desarrollo web, automatización e IA',
   /** RUC Panamá */
@@ -16,11 +16,11 @@ export const INVOICE_BRANDING = {
   addressLine2: 'Edificio Mirador 50',
   country: 'República de Panamá',
   /** Logo en /public (ruta absoluta para <Image> y PDF) */
-  logoPath: '/images/logocolor.png',
+  logoPath: '/images/logonlservices.png',
   email: 'info@nixonlopez.com',
   /** Deja vacío para ocultar en el PDF/vista */
   phone: '',
-  website: 'https://nixonlopez.com',
+  website: 'https://nixonlopez.dev',
   /** Color principal (encabezados, barra total) — slate-800 / azul corporativo */
   accentHex: '#1e3a5f',
   /** Texto legal corto (pie de documento) */

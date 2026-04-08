@@ -199,7 +199,7 @@ const ServicesSection = () => {
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <TechLogo name="WhatsApp" size={24} />
+                      <TechLogo name="WhatsApp" size={24} light />
                       <span>Contactar por WhatsApp</span>
                     </motion.button>
                   </div>
@@ -250,7 +250,7 @@ const ServicesSection = () => {
                 window.open(whatsappUrl, '_blank')
               }}
             >
-              <TechLogo name="WhatsApp" size={22} className="shrink-0" />
+              <TechLogo name="WhatsApp" size={22} className="shrink-0" light />
               Contactar por WhatsApp
             </motion.button>
           </div>

@@ -34,6 +34,7 @@ const Header = () => {
   const menuItems = [
     { name: 'Inicio', href: '#hero' },
     { name: 'Servicios', href: '#services' },
+    { name: 'Beneficios', href: '#why-choose' },
     { name: 'Proyectos', href: '#projects' },
     { name: 'Contacto', href: '#contact' },
   ]
@@ -67,36 +68,35 @@ const Header = () => {
           ? 'bg-slate-900 border-b border-white/10' 
           : 'bg-transparent'
       }`}
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.8 }}
+      initial={false}
     >
       <div className="container-padding px-3 sm:px-4">
-        <div className="flex items-center justify-between h-14 sm:h-16 md:h-20 min-h-[56px]">
+        <div className="flex items-center justify-between h-12 sm:h-14 md:h-16 min-h-[48px]">
           {/* Logo */}
           <motion.a
             href="/"
-            className="flex items-center shrink-0 min-w-0"
-            whileHover={{ scale: 1.05 }}
+            className="flex items-center shrink-0 min-w-0 max-w-[min(62vw,11rem)] sm:max-w-[min(52vw,12.5rem)] md:max-w-[min(40vw,14rem)]"
+            whileHover={{ scale: 1.02 }}
           >
-            <img 
-              src="/images/logocolor.png" 
-              alt="Nixon López Logo" 
-              className="h-10 w-auto max-h-14 object-contain sm:h-11 md:h-14"
+            <img
+              src="/images/logonlservices.png"
+              alt="NL Services — logo oficial"
+              className="h-6 w-auto max-h-7 object-contain object-left sm:h-7 sm:max-h-8 md:h-7 md:max-h-9 lg:h-8 lg:max-h-9"
+              width={1057}
+              height={186}
+              sizes="(max-width: 768px) 72vw, 320px"
             />
           </motion.a>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
-            {menuItems.map((item, index) => (
+            {menuItems.map((item) => (
               <motion.button
                 key={item.name}
                 onClick={() => scrollToSection(item.href)}
                 className="text-gray-300 hover:text-white transition-colors relative group"
                 whileHover={{ y: -2 }}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                initial={false}
               >
                 {item.name}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-600 group-hover:w-full transition-all duration-300" />
@@ -110,9 +110,7 @@ const Header = () => {
             className="hidden md:flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-full font-medium hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
+            initial={false}
           >
             <Calculator className="w-4 h-4" />
             <span>Cotizar</span>
@@ -152,10 +150,12 @@ const Header = () => {
             {/* Header del menú móvil */}
             <div className="flex items-center justify-between px-4 py-4 sm:p-5 border-b border-white/10 shrink-0">
               <div className="flex items-center gap-2 min-w-0">
-                <img 
-                  src="/images/logocolor.png" 
-                  alt="Nixon López Logo" 
-                  className="h-10 w-auto object-contain shrink-0"
+                <img
+                  src="/images/logonlservices.png"
+                  alt="NL Services — logo oficial"
+                  className="h-6 w-auto max-h-7 object-contain object-left shrink-0 sm:h-7 sm:max-h-8"
+                  width={1057}
+                  height={186}
                 />
                 <span className="text-white font-semibold text-sm sm:text-base truncate">Menú</span>
               </div>
@@ -171,14 +171,12 @@ const Header = () => {
             {/* Navegación */}
             <div className="flex-1 px-4 py-6 sm:px-5 sm:py-8 overflow-y-auto">
               <div className="space-y-1">
-                {menuItems.map((item, index) => (
+                {menuItems.map((item) => (
                   <motion.button
                     key={item.name}
                     onClick={() => scrollToSection(item.href)}
                     className="w-full text-left text-gray-300 hover:text-white transition-all duration-200 py-3.5 px-4 rounded-lg hover:bg-white/5 active:bg-white/10 group min-h-[48px] flex items-center"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
+                    initial={false}
                     whileHover={{ x: 5 }}
                   >
                     <div className="flex items-center space-x-3">
@@ -192,9 +190,7 @@ const Header = () => {
               {/* Botón Cotizar */}
               <motion.div
                 className="mt-6 pt-5 border-t border-white/10"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
+                initial={false}
               >
                 <button
                   onClick={redirectToCotizacion}

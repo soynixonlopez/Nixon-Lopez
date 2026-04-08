@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import {
@@ -76,21 +77,30 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <div className="flex items-center justify-between gap-2 border-b border-slate-800 p-3 min-h-[3.5rem]">
           <Link
             href="/admin"
-            className="min-w-0 flex-1 font-bold"
+            className="min-w-0 flex-1 font-bold flex items-center gap-2"
             onClick={() => setOpen(false)}
             title="Inicio del panel"
-            aria-label="Nixon Admin — inicio del panel"
+            aria-label="NL Services — panel de administración"
           >
-            <span className="gradient-text text-lg leading-tight block truncate">
-              <span className="lg:hidden">Nixon Admin</span>
-              <span className="hidden lg:inline text-center" aria-hidden="true">
-                {collapsed ? (
-                  <span className="text-2xl font-bold tracking-tight">N</span>
-                ) : (
-                  'Nixon Admin'
-                )}
-              </span>
-            </span>
+            {collapsed ? (
+              <Image
+                src="/images/favicon.png"
+                alt=""
+                width={32}
+                height={32}
+                className="h-8 w-8 object-contain shrink-0 rounded"
+                aria-hidden
+              />
+            ) : (
+              <Image
+                src="/images/logonlservices.png"
+                alt="NL Services"
+                width={1057}
+                height={186}
+                className="h-6 w-auto max-w-[min(100%,9rem)] object-contain object-left"
+                priority
+              />
+            )}
           </Link>
           <div className="flex shrink-0 items-center gap-0.5">
             <button

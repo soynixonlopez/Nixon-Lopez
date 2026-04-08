@@ -38,11 +38,11 @@ const OBSERVACIONES_HOSTING_DB =
   'Hosting y base de datos dependen del tráfico y escala del proyecto; se acuerdan según necesidad.'
 
 const STEPS = [
-  { n: 1, title: 'Datos generales', desc: 'Nombre y correo de contacto' },
-  { n: 2, title: 'Tipo de servicio', desc: 'Elige el paquete que mejor encaje' },
-  { n: 3, title: 'Detalles', desc: 'Páginas, dominio, correo y comentarios' },
-  { n: 4, title: 'Resumen', desc: 'Revisa y envía tu cotización' },
-]
+  { n: 1, title: 'Datos generales' },
+  { n: 2, title: 'Tipo de servicio' },
+  { n: 3, title: 'Detalles' },
+  { n: 4, title: 'Resumen' },
+] as const
 
 export default function CotizacionPage() {
   const [paso, setPaso] = useState(1)
@@ -231,13 +231,12 @@ export default function CotizacionPage() {
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-600/20 border border-white/10 mb-4">
               <Sparkles className="w-6 h-6 text-blue-400" />
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">Solicitar cotización</h1>
-            <p className="text-slate-400 text-sm sm:text-base max-w-xl mx-auto">
-              Completa por partes: datos generales, tipo de servicio y detalles. Obtén un presupuesto claro en USD.
+            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">Cotización online</h1>
+            <p className="text-slate-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+              Presupuesto estimado en USD, sin compromiso. Avanza paso a paso y revisa el total al final.
             </p>
           </motion.div>
 
-          {/* Pasos */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-10">
             {STEPS.map((s) => (
               <div
@@ -250,7 +249,7 @@ export default function CotizacionPage() {
                       : 'border-white/10 bg-white/[0.03]'
                 }`}
               >
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2">
                   <span
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                       paso > s.n
@@ -264,7 +263,6 @@ export default function CotizacionPage() {
                   </span>
                   <span className="text-[11px] sm:text-xs font-semibold text-white leading-tight">{s.title}</span>
                 </div>
-                <p className="text-[10px] sm:text-[11px] text-slate-500 pl-9 hidden sm:block">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -278,7 +276,7 @@ export default function CotizacionPage() {
               >
                 <div className="flex items-center gap-2 text-blue-400 mb-2">
                   <User className="w-5 h-5" />
-                  <h2 className="text-lg font-semibold text-white">1. Datos generales</h2>
+                  <h2 className="text-lg font-semibold text-white">Datos de contacto</h2>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -322,9 +320,11 @@ export default function CotizacionPage() {
               <motion.section initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
                 <div className="flex items-center gap-2 text-blue-400 mb-2">
                   <Layers className="w-5 h-5" />
-                  <h2 className="text-lg font-semibold text-white">2. Tipo de servicio</h2>
+                  <h2 className="text-lg font-semibold text-white">Elige tu servicio</h2>
                 </div>
-                <p className="text-sm text-slate-500">Selecciona una opción. Los precios base se muestran en USD.</p>
+                <p className="text-sm text-slate-500">
+                  Todos los importes están en dólares (USD). Marca la opción que mejor encaje con tu proyecto.
+                </p>
                 <div className="space-y-2 max-h-[min(60vh,420px)] overflow-y-auto pr-1 admin-table-scroll">
                   {QUOTE_SERVICES.map((s) => (
                     <button
@@ -358,13 +358,13 @@ export default function CotizacionPage() {
               <motion.section initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                 <div className="flex items-center gap-2 text-blue-400 mb-2">
                   <Calculator className="w-5 h-5" />
-                  <h2 className="text-lg font-semibold text-white">3. Detalles del proyecto</h2>
+                  <h2 className="text-lg font-semibold text-white">Detalles del proyecto</h2>
                 </div>
 
                 {needsPages && (
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Cantidad de páginas a desarrollar (incluye hasta {MAX_INCLUDED_PAGES} en base)
+                      Páginas a desarrollar (hasta {MAX_INCLUDED_PAGES} incluidas en el precio base)
                     </label>
                     <input
                       type="number"
@@ -465,7 +465,7 @@ export default function CotizacionPage() {
                     onChange={(e) => setForm((f) => ({ ...f, comentarios: e.target.value }))}
                     rows={3}
                     className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 resize-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Describe tu proyecto, plazos o referencias..."
+                    placeholder="Ej.: referencias de diseño, plazos deseados, integraciones…"
                   />
                 </div>
               </motion.section>
@@ -553,7 +553,7 @@ export default function CotizacionPage() {
                 {cotizacionEnviada ? (
                   <div className="flex items-center gap-2 text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
                     <CheckCircle className="w-5 h-5 shrink-0" />
-                    <p>Cotización enviada. Te contactaremos pronto.</p>
+                    <p>Hemos recibido tu cotización. Te responderemos lo antes posible.</p>
                   </div>
                 ) : (
                   <div className="flex flex-col sm:flex-row gap-3">
@@ -581,10 +581,10 @@ export default function CotizacionPage() {
                 )}
 
                 <p className="text-xs text-slate-500 text-center">
-                  Al enviar, recibimos tu solicitud en nuestro correo de seguimiento.
+                  Al enviar, tu solicitud llega a nuestro correo para seguimiento.
                 </p>
                 <Link href="/#contact" className="inline-flex items-center gap-2 text-slate-400 hover:text-white text-sm">
-                  ¿Prefieres hablar antes? Contactar
+                  ¿Prefieres hablarlo antes? Ir a contacto
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </motion.section>
@@ -608,7 +608,7 @@ export default function CotizacionPage() {
                 disabled={!puedeSiguiente}
                 className="ml-auto flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {paso === 3 ? 'Ver resumen' : 'Siguiente'}
+                {paso === 3 ? 'Ver presupuesto' : 'Siguiente'}
                 <ArrowRight className="w-4 h-4" />
               </button>
             ) : (

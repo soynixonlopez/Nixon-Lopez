@@ -57,7 +57,7 @@ const ServiceCTA = ({ serviceType, title, highlightedText, onQuoteClick }: Servi
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
             >
-              <TechLogo name="WhatsApp" size={28} />
+              <TechLogo name="WhatsApp" size={28} light />
               Contactar por WhatsApp
             </motion.button>
             

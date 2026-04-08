@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import '../styles/globals.css'
+import { SiteJsonLd } from '@/components/seo/SiteJsonLd'
+import { SITE_URL } from '@/lib/site-config'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -8,29 +10,55 @@ export const viewport: Viewport = {
   viewportFit: 'cover', /* permite safe-area-inset en dispositivos con notch */
 }
 
+const defaultTitle =
+  'NL Services | Desarrollo web, IA y automatización — Nixon López | Panamá'
+
+const defaultDescription =
+  'NL Services: desarrollo web profesional, ChatBots, e-commerce y automatizaciones con inteligencia artificial en Panamá. Nixon López — más de 5 años creando soluciones digitales para negocios. Cotización online.'
+
+const googleVerification = process.env.GOOGLE_SITE_VERIFICATION
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://nixonlopez.dev'),
-  title: 'Nixon López - Desarrollo Web con IA | ChatBots & Automatizaciones',
-  description: 'Especialista en desarrollo web con IA, integración de ChatBots y sistemas de automatización para negocios. 5 años de experiencia como desarrollador web e IT Teacher.',
-  keywords: 'desarrollo web, inteligencia artificial, chatbots, automatización, Nixon López, nixoncodes.ai, IT Teacher',
-  authors: [{ name: 'Nixon López' }],
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: defaultTitle,
+    template: `%s | NL Services`,
+  },
+  description: defaultDescription,
+  keywords: [
+    'NL Services',
+    'desarrollo web Panamá',
+    'páginas web Panamá',
+    'inteligencia artificial',
+    'chatbots',
+    'automatización negocios',
+    'Nixon López',
+    'nixoncodes.ai',
+    'e-commerce',
+    'sitio web profesional',
+    'desarrollador web',
+    'IT services Panamá',
+  ],
+  authors: [{ name: 'Nixon López', url: SITE_URL }],
   creator: 'Nixon López',
+  publisher: 'NL Services',
+  category: 'technology',
   icons: {
-    icon: '/favicon.png',
-    apple: '/favicon.png',
-    shortcut: '/favicon.png',
+    icon: [{ url: '/images/favicon.png', type: 'image/png' }],
+    apple: [{ url: '/images/favicon.png', type: 'image/png' }],
+    shortcut: '/images/favicon.png',
   },
   openGraph: {
-    title: 'Nixon López - Desarrollo Web con IA',
-    description: 'Especialista en desarrollo web con IA, ChatBots y automatizaciones para negocios',
-    url: 'https://nixonlopez.dev',
-    siteName: 'Nixon López Portfolio',
+    title: defaultTitle,
+    description: defaultDescription,
+    url: SITE_URL,
+    siteName: 'NL Services',
     images: [
       {
-        url: '/images/nixonprofile.png',
+        url: '/images/logonlservices.png',
         width: 1200,
         height: 630,
-        alt: 'Nixon López - Desarrollo Web con IA',
+        alt: 'NL Services — logo oficial',
       },
     ],
     locale: 'es_ES',
@@ -38,10 +66,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Nixon López - Desarrollo Web con IA',
-    description: 'Especialista en desarrollo web con IA, ChatBots y automatizaciones',
+    title: defaultTitle,
+    description: defaultDescription,
     creator: '@soynixonlopez',
-    images: ['/images/nixonprofile.png'],
+    images: ['/images/logonlservices.png'],
   },
   robots: {
     index: true,
@@ -54,9 +82,12 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  verification: {
-    google: 'your-google-verification-code',
+  alternates: {
+    canonical: SITE_URL,
   },
+  ...(googleVerification
+    ? { verification: { google: googleVerification } }
+    : {}),
 }
 
 export default function RootLayout({
@@ -72,6 +103,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
       <body className="font-sans antialiased">
+        <SiteJsonLd />
         <div className="min-h-screen w-full min-w-0 max-w-full overflow-x-hidden bg-background text-foreground">
           {children}
         </div>

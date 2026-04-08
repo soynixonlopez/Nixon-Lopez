@@ -27,7 +27,7 @@ const WhyChooseSection = () => {
   ]
 
   return (
-    <section ref={ref} className="py-20 bg-white dark:bg-slate-900 overflow-x-hidden">
+    <section id="why-choose" ref={ref} className="py-20 bg-white dark:bg-slate-900 overflow-x-hidden">
       <div className="container-padding">
         <motion.div
           className="text-center mb-16"

@@ -204,7 +204,7 @@ const HeroSection = () => {
                   window.open(whatsappUrl, '_blank')
                 }}
               >
-                <TechLogo name="WhatsApp" size={22} className="shrink-0" />
+                <TechLogo name="WhatsApp" size={22} className="shrink-0" light />
                 Contactar por WhatsApp
               </motion.button>
               

@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import Header from '@/components/Header'
 import HeroSection from '@/components/HeroSection'
+import SkillsSection from '@/components/SkillsSection'
 import WhyChooseSection from '@/components/WhyChooseSection'
 import ServicesSection from '@/components/ServicesSection'
 import AboutSection from '@/components/AboutSection'
@@ -36,8 +37,9 @@ export default function Home() {
       <Header />
       <main className="min-h-screen w-full min-w-0 overflow-x-hidden">
         <HeroSection />
-        <WhyChooseSection />
+        <SkillsSection />
         <ServicesSection />
+        <WhyChooseSection />
         <AboutSection />
         <ProjectsSection />
         <TestimonialsSection />
