@@ -62,7 +62,7 @@ const TechLogo: React.FC<TechLogoProps> = ({
     'Facebook': '#1877F2',  // Azul de Facebook
     'TikTok': '#ffffff',    // Negro de TikTok
     'YouTube': '#FF0000',   // Rojo de YouTube
-    'WhatsApp': '#25D366',  // Verde de WhatsApp
+    'WhatsApp': '#ffffff',  // Blanco para mejor contraste en botones
     
     // Frameworks y Librerías
     'React': '#61DAFB',     // Azul cian de React

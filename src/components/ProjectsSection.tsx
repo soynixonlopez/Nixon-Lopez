@@ -45,7 +45,9 @@ const ProjectsSection = () => {
     tobykids: 'https://tobykids.vercel.app',
     vipal: 'https://www.vipalglasspanama.com',
     quantico: 'https://www.quanticoglobalsystem.com',
-    'erp-website': '',
+    'erp-website': 'https://erpsa.vercel.app',
+    masterclass: 'https://www.carmengestilista/masterclass',
+    apradap: 'https://www.apradappanama.org',
   }
 
   /** Orden: más recientes primero (2026 → 2023). Años repartidos entre 2023 y 2026. */
@@ -53,7 +55,9 @@ const ProjectsSection = () => {
     { slug: 'sara', title: 'Sara Carryhau', image: '/proyectos-img/website-Sara.png', icon: Globe, year: '2026' },
     { slug: 'quantico', title: 'Quantico', image: '/proyectos-img/website-quantico.png', icon: Bot, year: '2026' },
     { slug: 'fotosonido', title: 'Foto Sonido', image: '/proyectos-img/website-fotosonido.png', icon: Globe, year: '2026' },
-    { slug: 'erp-website', title: 'ERP WebSite', image: '/proyectos-img/website-erp.png', icon: Globe, year: '2026' },
+    { slug: 'erp-website', title: 'EPR Website', image: '/proyectos-img/website-erp.png', icon: Globe, year: '2026' },
+    { slug: 'masterclass', title: 'Landing Page de Carmen Gonzalez Estilista', image: '/images/website-masterclass.png', icon: Globe, year: '2026' },
+    { slug: 'apradap', title: 'APRADAP', image: '/images/website-apradap.png', icon: Globe, year: '2026' },
     { slug: 'vipal', title: 'VIPAL', image: '/proyectos-img/website-vipal.png', icon: Globe, year: '2026' },
     { slug: 'nutrielys', title: 'Nutrielys', image: '/proyectos-img/website-nutrielys.png', icon: Globe, year: '2026' },
     { slug: 'marbi', title: 'Marbi', image: '/proyectos-img/website-marbi.png', icon: Globe, year: '2025' },

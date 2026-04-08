@@ -71,7 +71,7 @@ const AboutSection = () => {
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
           {/* Left Column - Enhanced Content */}
           <motion.div
-            className="space-y-10"
+            className="order-2 lg:order-2 space-y-10"
             initial={{ opacity: 0, x: -50 }}
             animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -50 }}
             transition={{ duration: 0.8, delay: 0.2 }}
@@ -156,7 +156,7 @@ const AboutSection = () => {
 
           {/* Enhanced Right Column - Image */}
           <motion.div
-            className="relative flex items-center justify-center h-full lg:sticky lg:top-24"
+            className="order-1 lg:order-1 relative flex items-center justify-center h-full lg:sticky lg:top-24"
             initial={{ opacity: 0, x: 50 }}
             animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }}
             transition={{ duration: 0.8, delay: 0.3 }}
@@ -174,7 +174,7 @@ const AboutSection = () => {
                 transition={{ duration: 0.3 }}
               >
                 <Image
-                  src="/images/AboutMePicture.png"
+                  src="/images/aboutNixon.png"
                   alt="Nixon López - Desarrollador Web Profesional"
                   width={800}
                   height={1000}
@@ -183,35 +183,40 @@ const AboutSection = () => {
                 />
               </motion.div>
 
-              {/* Social buttons below image */}
-              <motion.div
-                className="relative z-10 mt-6 w-full max-w-md mx-auto flex flex-col items-stretch justify-center gap-3"
-                initial={{ opacity: 0, y: 16 }}
-                animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-                transition={{ duration: 0.6, delay: 0.45 }}
-              >
-                <a
-                  href="https://www.linkedin.com/in/nixonlopez"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 bg-[#0A66C2] hover:bg-[#004182] text-white px-5 py-3 rounded-xl font-semibold shadow-lg transition-all duration-300 hover:-translate-y-0.5"
-                >
-                  <Linkedin className="w-5 h-5" />
-                  Ver mi LinkedIn
-                </a>
-                <a
-                  href="https://github.com/soynixonlopez"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-black text-white px-5 py-3 rounded-xl font-semibold shadow-lg transition-all duration-300 hover:-translate-y-0.5"
-                >
-                  <Github className="w-5 h-5" />
-                  Ver GitHub
-                </a>
-              </motion.div>
             </div>
           </motion.div>
         </div>
+
+        <motion.div
+          className="mt-12"
+          initial={{ opacity: 0, y: 16 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+          transition={{ duration: 0.6, delay: 0.45 }}
+        >
+          <h3 className="text-center text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Visita mis perfiles
+          </h3>
+          <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-center gap-4 rounded-2xl border border-gray-200/70 bg-white/70 p-4 shadow-lg backdrop-blur-sm dark:border-slate-700/70 dark:bg-slate-800/60">
+            <a
+              href="https://www.linkedin.com/in/nixonlopez"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-w-[220px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#0A66C2] to-[#004182] px-7 py-4 text-base font-bold text-white shadow-xl shadow-[#0A66C2]/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-[#0A66C2]/40"
+            >
+              <Linkedin className="h-5 w-5" />
+              Ver mi LinkedIn
+            </a>
+            <a
+              href="https://github.com/soynixonlopez"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-w-[220px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-700 px-7 py-4 text-base font-bold text-white shadow-xl shadow-slate-900/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-slate-900/40"
+            >
+              <Github className="h-5 w-5" />
+              Ver GitHub
+            </a>
+          </div>
+        </motion.div>
       </div>
     </section>
   )
