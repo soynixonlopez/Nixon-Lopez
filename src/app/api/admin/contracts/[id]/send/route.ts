@@ -4,6 +4,7 @@ import { ADMIN_EMAIL } from '@/lib/admin-constants'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
 import { generateContractPdfBuffer } from '@/lib/pdf/generateContractPdf'
 import { sendEmailWithAttachments } from '@/lib/mailer'
+import { escapeHtml } from '@/lib/utils'
 import type { ServiceContractRecord } from '@/lib/types/contract'
 
 export async function POST(
@@ -75,12 +76,4 @@ export async function POST(
 
   await supabase.from('service_contracts').update({ status: 'sent' }).eq('id', id)
   return NextResponse.json({ ok: true })
-}
-
-function escapeHtml(s: string) {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
 }

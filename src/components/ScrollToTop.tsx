@@ -1,6 +1,5 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { ChevronUp } from 'lucide-react'
 
@@ -28,22 +27,19 @@ const ScrollToTop = () => {
   }
 
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.button
-          className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+    <>
+      {isVisible ? (
+        <button
+          type="button"
+          className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 active:scale-95"
           onClick={scrollToTop}
-          initial={{ opacity: 0, scale: 0.8, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.8, y: 20 }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          transition={{ duration: 0.3 }}
+          aria-label="Volver arriba"
+          title="Volver arriba"
         >
           <ChevronUp className="w-5 h-5" />
-        </motion.button>
-      )}
-    </AnimatePresence>
+        </button>
+      ) : null}
+    </>
   )
 }
 

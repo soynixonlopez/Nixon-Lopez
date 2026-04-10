@@ -9,7 +9,9 @@
     "start": "next start",
     "lint": "eslint .",
     "trim-logo": "node scripts/trim-nl-logo.mjs",
-    "generate-logos": "node scripts/generate-logos.mjs"
+    "generate-logos": "node scripts/generate-logos.mjs",
+    "optimize-hero-profile": "node scripts/optimize-hero-profile.mjs",
+    "lighthouse:mobile-batch": "node scripts/lighthouse-mobile-batch.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",

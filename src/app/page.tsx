@@ -1,49 +1,18 @@
-'use client'
-
-import { useEffect } from 'react'
 import Header from '@/components/Header'
-import HeroSection from '@/components/HeroSection'
-import SkillsSection from '@/components/SkillsSection'
-import WhyChooseSection from '@/components/WhyChooseSection'
-import ServicesSection from '@/components/ServicesSection'
-import AboutSection from '@/components/AboutSection'
-import ProjectsSection from '@/components/ProjectsSection'
-import TestimonialsSection from '@/components/TestimonialsSection'
-import ContactSection from '@/components/ContactSection'
+import HeroSectionStatic from '@/components/HeroSectionStatic'
 import Footer from '@/components/Footer'
 import ScrollToTop from '@/components/ScrollToTop'
+import HashScroll from '@/components/HashScroll'
+import HomeBelowFold from '@/components/HomeBelowFold'
 
 export default function Home() {
-  useEffect(() => {
-    // Manejar scroll automático cuando se viene con hash
-    const handleHashScroll = () => {
-      const hash = window.location.hash
-      if (hash) {
-        // Esperar un poco para que la página se cargue completamente
-        setTimeout(() => {
-          const element = document.querySelector(hash)
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth' })
-          }
-        }, 100)
-      }
-    }
-
-    handleHashScroll()
-  }, [])
-
   return (
     <>
       <Header />
+      <HashScroll />
       <main className="min-h-screen w-full min-w-0 overflow-x-hidden">
-        <HeroSection />
-        <SkillsSection />
-        <ServicesSection />
-        <WhyChooseSection />
-        <AboutSection />
-        <ProjectsSection />
-        <TestimonialsSection />
-        <ContactSection />
+        <HeroSectionStatic />
+        <HomeBelowFold />
       </main>
       <Footer />
       <ScrollToTop />

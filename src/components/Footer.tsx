@@ -1,10 +1,11 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { X, Mail, Send } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import TechLogo from './TechLogo'
+import { rateLimitFriendlyMessage } from '@/lib/utils'
 
 const Footer = () => {
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false)
@@ -12,10 +13,11 @@ const Footer = () => {
   const [newsletterEmail, setNewsletterEmail] = useState('')
   const [isNewsletterSubmitting, setIsNewsletterSubmitting] = useState(false)
   const [isNewsletterSubmitted, setIsNewsletterSubmitted] = useState(false)
-  
+  const [newsletterError, setNewsletterError] = useState('')
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setNewsletterError('')
     setIsNewsletterSubmitting(true)
     try {
       const response = await fetch('/api/newsletter', {
@@ -26,17 +28,24 @@ const Footer = () => {
         }),
       })
       if (response.ok) {
-        setIsNewsletterSubmitting(false)
         setIsNewsletterSubmitted(true)
         setNewsletterEmail('')
         setTimeout(() => setIsNewsletterSubmitted(false), 3000)
+      } else if (response.status === 429) {
+        setNewsletterError(rateLimitFriendlyMessage(response.headers.get('Retry-After')))
       } else {
-        throw new Error('Error al suscribirse')
+        const data = (await response.json().catch(() => null)) as { error?: string } | null
+        setNewsletterError(
+          typeof data?.error === 'string'
+            ? data.error
+            : 'No se pudo completar la suscripción. Intenta de nuevo.'
+        )
       }
     } catch (error) {
       console.error('Error:', error)
+      setNewsletterError('No se pudo completar la suscripción. Intenta de nuevo.')
+    } finally {
       setIsNewsletterSubmitting(false)
-      alert('Hubo un error al suscribirse. Por favor, intenta de nuevo.')
     }
   }
 
@@ -101,13 +110,8 @@ const Footer = () => {
           <div className="grid md:grid-cols-4 gap-8">
             {/* Brand Section */}
             <div className="md:col-span-1">
-              <motion.div
-                className="flex items-center mb-6"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-              >
-                <img
+              <div className="flex items-center mb-6">
+                <Image
                   src="/images/logonlservices.png"
                   alt="NL Services — logo oficial"
                   className="h-8 w-auto max-h-9 object-contain object-left sm:h-9 sm:max-h-10"
@@ -115,57 +119,35 @@ const Footer = () => {
                   height={186}
                   sizes="(max-width: 768px) 85vw, 320px"
                 />
-              </motion.div>
+              </div>
               
-              <motion.p
-                className="text-gray-400 text-sm leading-relaxed mb-6"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-              >
+              <p className="text-gray-400 text-sm leading-relaxed mb-6">
                 5 años transformando negocios con tecnología de vanguardia. 
                 Especialista en IA, desarrollo web y automatizaciones.
-              </motion.p>
+              </p>
 
               {/* Social Links */}
-              <motion.div
-                className="flex space-x-4"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
+              <div className="flex space-x-4">
                 {socialLinks.map((social, index) => (
-                  <motion.a
+                  <a
                     key={social.name}
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`text-gray-400 ${social.color} transition-colors p-2 rounded-lg hover:bg-white/5`}
-                    whileHover={{ scale: 1.1, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
                   >
                     <TechLogo name={social.name} size={20} />
-                  </motion.a>
+                  </a>
                 ))}
-              </motion.div>
+              </div>
             </div>
 
             {/* Quick Links */}
             <div>
-              <motion.h3
-                className="font-semibold text-lg mb-6"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-              >
+              <h3 className="font-semibold text-lg mb-6">
                 Enlaces Rápidos
-              </motion.h3>
-              <motion.ul
-                className="space-y-3"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
+              </h3>
+              <ul className="space-y-3">
                 {quickLinks.map((link, index) => (
                   <li key={link.name}>
                     <button
@@ -176,25 +158,15 @@ const Footer = () => {
                     </button>
                   </li>
                 ))}
-              </motion.ul>
+              </ul>
             </div>
 
             {/* Services */}
             <div>
-              <motion.h3
-                className="font-semibold text-lg mb-6"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
+              <h3 className="font-semibold text-lg mb-6">
                 Servicios
-              </motion.h3>
-              <motion.ul
-                className="space-y-3"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-              >
+              </h3>
+              <ul className="space-y-3">
                 {services.map((service, index) => (
                   <li key={service.name}>
                     {service.href.startsWith('#') ? (
@@ -214,39 +186,33 @@ const Footer = () => {
                     )}
                   </li>
                 ))}
-              </motion.ul>
+              </ul>
             </div>
 
             {/* Newsletter */}
             <div>
-              <motion.h3
-                className="font-semibold text-lg mb-6"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-              >
+              <h3 className="font-semibold text-lg mb-6">
                 Newsletter
-              </motion.h3>
-              <motion.div
-                className="space-y-4"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-              >
+              </h3>
+              <div className="space-y-4">
                 <p className="text-gray-400 text-sm">
                   Mantente al día con las últimas tendencias en IA y desarrollo web.
                 </p>
                 
                 {isNewsletterSubmitted && (
-                  <motion.div
-                    className="bg-green-500/20 border border-green-500/30 rounded-lg p-3 flex items-center gap-2"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                  >
+                  <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-3 flex items-center gap-2">
                     <Mail className="w-4 h-4 text-green-400" />
                     <span className="text-green-400 text-sm">¡Suscrito exitosamente!</span>
-                  </motion.div>
+                  </div>
+                )}
+
+                {newsletterError && (
+                  <div
+                    role="alert"
+                    className="bg-amber-500/15 border border-amber-500/40 rounded-lg p-3 text-amber-100 text-sm"
+                  >
+                    {newsletterError}
+                  </div>
                 )}
 
                 <form onSubmit={handleNewsletterSubmit} className="space-y-3">
@@ -254,26 +220,23 @@ const Footer = () => {
                     <input
                       type="email"
                       value={newsletterEmail}
-                      onChange={(e) => setNewsletterEmail(e.target.value)}
+                      onChange={(e) => {
+                        setNewsletterEmail(e.target.value)
+                        setNewsletterError('')
+                      }}
                       placeholder="tu@email.com"
                       required
                       className="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-300 text-sm"
                     />
                   </div>
-                  <motion.button
+                  <button
                     type="submit"
                     disabled={isNewsletterSubmitting}
                     className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    whileHover={{ scale: isNewsletterSubmitting ? 1 : 1.02 }}
-                    whileTap={{ scale: isNewsletterSubmitting ? 1 : 0.98 }}
                   >
                     {isNewsletterSubmitting ? (
                       <>
-                        <motion.div
-                          className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        />
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         Suscribiendo...
                       </>
                     ) : (
@@ -282,13 +245,13 @@ const Footer = () => {
                         Suscribirse
                       </>
                     )}
-                  </motion.button>
+                  </button>
                 </form>
                 
                 <p className="text-gray-500 text-xs">
                   Sin spam. Cancela cuando quieras.
                 </p>
-              </motion.div>
+              </div>
             </div>
           </div>
         </div>
@@ -297,31 +260,26 @@ const Footer = () => {
         <div className="border-t border-gray-800">
           <div className="container-padding py-6">
             <div className="flex flex-col md:flex-row justify-between items-start">
-                          <motion.p
+            <p
               className="text-gray-400 text-sm mb-4 md:mb-0"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.6 }}
             >
               © {new Date().getFullYear()} Nixon López. Todos los derechos reservados.
-            </motion.p>
+            </p>
               
               <div className="flex items-center gap-6">
-                <motion.button
+                <button
                   onClick={() => setIsPrivacyModalOpen(true)}
                   className="text-gray-400 hover:text-white transition-colors text-sm underline"
-                  whileHover={{ y: -1 }}
                 >
                   Políticas de Privacidad
-                </motion.button>
+                </button>
                 
-                <motion.button
+                <button
                   onClick={() => setIsCookiesModalOpen(true)}
                   className="text-gray-400 hover:text-white transition-colors text-sm underline"
-                  whileHover={{ y: -1 }}
                 >
                   Políticas de Cookies
-                </motion.button>
+                </button>
                 
               </div>
             </div>
@@ -331,18 +289,12 @@ const Footer = () => {
 
       {/* Privacy Policy Modal */}
       {isPrivacyModalOpen && (
-        <motion.div
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
           onClick={() => setIsPrivacyModalOpen(false)}
         >
-          <motion.div
+          <div
             className="bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -405,7 +357,7 @@ const Footer = () => {
                 <h3 className="text-xl font-semibold text-white mb-3">6. Cambios en esta Política</h3>
                 <p className="text-sm leading-relaxed">
                   Podemos actualizar esta política de privacidad de vez en cuando. Te notificaremos cualquier cambio 
-                  significativo publicando la nueva política en este sitio y actualizando la fecha de "última actualización".
+                  significativo publicando la nueva política en este sitio y actualizando la fecha de &quot;última actualización&quot;.
                 </p>
               </div>
 
@@ -424,33 +376,25 @@ const Footer = () => {
 
             {/* Modal Footer */}
             <div className="flex justify-end p-6 border-t border-gray-700">
-              <motion.button
+              <button
                 onClick={() => setIsPrivacyModalOpen(false)}
                 className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 Cerrar
-              </motion.button>
+              </button>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
 
       {/* Cookies Policy Modal */}
       {isCookiesModalOpen && (
-        <motion.div
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
           onClick={() => setIsCookiesModalOpen(false)}
         >
-          <motion.div
+          <div
             className="bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -551,17 +495,15 @@ const Footer = () => {
 
             {/* Modal Footer */}
             <div className="flex justify-end p-6 border-t border-gray-700">
-              <motion.button
+              <button
                 onClick={() => setIsCookiesModalOpen(false)}
                 className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 Cerrar
-              </motion.button>
+              </button>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
     </footer>
   )

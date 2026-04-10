@@ -4,6 +4,7 @@ import { ADMIN_EMAIL } from '@/lib/admin-constants'
 import { generateInvoicePdfBuffer } from '@/lib/pdf/generateInvoicePdf'
 import { sendEmailWithAttachments } from '@/lib/mailer'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
+import { escapeHtml } from '@/lib/utils'
 import type { InvoiceLineRow, InvoiceRecord } from '@/lib/types/invoice'
 
 export async function POST(
@@ -113,12 +114,4 @@ export async function POST(
   }
 
   return NextResponse.json({ ok: true })
-}
-
-function escapeHtml(s: string) {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
 }

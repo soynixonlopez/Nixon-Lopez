@@ -2,6 +2,13 @@ import type { Metadata, Viewport } from 'next'
 import '../styles/globals.css'
 import { SiteJsonLd } from '@/components/seo/SiteJsonLd'
 import { SITE_URL } from '@/lib/site-config'
+import { Inter } from 'next/font/google'
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+})
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -44,9 +51,11 @@ export const metadata: Metadata = {
   publisher: 'NL Services',
   category: 'technology',
   icons: {
-    icon: [{ url: '/images/favicon.png', type: 'image/png' }],
-    apple: [{ url: '/images/favicon.png', type: 'image/png' }],
-    shortcut: '/images/favicon.png',
+    icon: [
+      { url: '/images/faviconweb.png', type: 'image/png' },
+    ],
+    apple: [{ url: '/images/faviconweb.png', type: 'image/png' }],
+    shortcut: '/images/faviconweb.png',
   },
   openGraph: {
     title: defaultTitle,
@@ -96,12 +105,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" suppressHydrationWarning data-scroll-behavior="smooth">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-      </head>
+    <html lang="es" suppressHydrationWarning data-scroll-behavior="smooth" className={inter.variable}>
       <body className="font-sans antialiased">
         <SiteJsonLd />
         <div className="min-h-screen w-full min-w-0 max-w-full overflow-x-hidden bg-background text-foreground">

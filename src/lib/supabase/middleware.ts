@@ -3,6 +3,21 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'info@nixonlopez.com'
 
+/** Evita redirección abierta tras login: solo rutas internas relativas bajo el mismo origen. */
+function safeAdminRedirectPath(next: string | null): string {
+  if (!next || typeof next !== 'string') return '/admin'
+  const t = next.trim()
+  if (
+    !t.startsWith('/') ||
+    t.startsWith('//') ||
+    /[\s\\]/.test(t) ||
+    /:/.test(t)
+  ) {
+    return '/admin'
+  }
+  return t
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -49,7 +64,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (isAdminLogin && user?.email === ADMIN_EMAIL) {
-    const next = request.nextUrl.searchParams.get('next') || '/admin'
+    const next = safeAdminRedirectPath(request.nextUrl.searchParams.get('next')) || '/admin'
     return NextResponse.redirect(new URL(next, request.url))
   }
 

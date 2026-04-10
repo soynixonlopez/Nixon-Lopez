@@ -30,6 +30,7 @@ import {
   PRICE_EMAIL_USD,
 } from '@/lib/quote-pricing'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
+import { rateLimitFriendlyMessage } from '@/lib/utils'
 
 const MAX_IMAGENES_POR_SITIO = 20
 const OBSERVACIONES_IMAGENES =
@@ -59,6 +60,7 @@ export default function CotizacionPage() {
   })
   const [enviando, setEnviando] = useState(false)
   const [cotizacionEnviada, setCotizacionEnviada] = useState(false)
+  const [envioError, setEnvioError] = useState('')
 
   const servicio = getService(form.tipoServicio)
   const needsPages = servicio?.needsPages ?? false
@@ -171,6 +173,7 @@ export default function CotizacionPage() {
   }
 
   const handleAceptarCotizacion = async () => {
+    setEnvioError('')
     setEnviando(true)
     try {
       const response = await fetch('/api/quote', {
@@ -208,11 +211,21 @@ export default function CotizacionPage() {
             : {}),
         }),
       })
-      if (response.ok) setCotizacionEnviada(true)
-      else throw new Error('Error')
+      if (response.ok) {
+        setCotizacionEnviada(true)
+      } else if (response.status === 429) {
+        setEnvioError(rateLimitFriendlyMessage(response.headers.get('Retry-After')))
+      } else {
+        const data = (await response.json().catch(() => null)) as { error?: string } | null
+        setEnvioError(
+          typeof data?.error === 'string'
+            ? data.error
+            : 'No se pudo enviar la cotización. Intenta de nuevo o contáctanos por contacto.'
+        )
+      }
     } catch (e) {
       console.error(e)
-      alert('No se pudo enviar la cotización. Intenta de nuevo o contáctanos.')
+      setEnvioError('No se pudo enviar la cotización. Intenta de nuevo o contáctanos.')
     } finally {
       setEnviando(false)
     }
@@ -556,7 +569,17 @@ export default function CotizacionPage() {
                     <p>Hemos recibido tu cotización. Te responderemos lo antes posible.</p>
                   </div>
                 ) : (
-                  <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex flex-col gap-3">
+                    {envioError && (
+                      <div
+                        role="alert"
+                        className="flex items-start gap-2 text-amber-100 bg-amber-500/15 border border-amber-500/40 rounded-xl p-4 text-sm"
+                      >
+                        <Info className="w-5 h-5 shrink-0 text-amber-400 mt-0.5" />
+                        <p>{envioError}</p>
+                      </div>
+                    )}
+                    <div className="flex flex-col sm:flex-row gap-3">
                     <button
                       type="button"
                       onClick={handlePrint}
@@ -577,6 +600,7 @@ export default function CotizacionPage() {
                         </>
                       )}
                     </button>
+                    </div>
                   </div>
                 )}
 

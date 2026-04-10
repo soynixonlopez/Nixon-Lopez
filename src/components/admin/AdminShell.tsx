@@ -84,7 +84,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           >
             {collapsed ? (
               <Image
-                src="/images/favicon.png"
+                src="/images/faviconweb.png"
                 alt=""
                 width={32}
                 height={32}

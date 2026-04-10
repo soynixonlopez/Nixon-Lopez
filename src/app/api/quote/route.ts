@@ -1,8 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendContactEmail } from '@/lib/mailer'
 import { createServiceRoleClient } from '@/lib/supabase/service'
+import {
+  checkRateLimit,
+  getClientIp,
+  getPublicRateLimitWindowMs,
+  getQuoteLimit,
+} from '@/lib/rate-limit'
+import { escapeHtml } from '@/lib/utils'
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request)
+  const windowMs = getPublicRateLimitWindowMs()
+  const limited = checkRateLimit(`quote:${ip}`, getQuoteLimit(), windowMs)
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: 'Demasiadas solicitudes. Espera un momento e intenta de nuevo.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(limited.retryAfterSec) },
+      }
+    )
+  }
+
   try {
     const body = (await request.json()) as Record<string, unknown>
     const nombre = String(body.nombre ?? '')
@@ -30,21 +50,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Correo inválido.' }, { status: 400 })
     }
 
+    const n = escapeHtml(nombre)
+    const a = escapeHtml(apellido)
+    const co = escapeHtml(correo)
+    const sv = escapeHtml(servicio)
+    const tot = escapeHtml(total)
+    const incl = escapeHtml(String(incluyeDominioHostingCorreo ?? ''))
+    const pas = escapeHtml(String(pasarelaPagos ?? ''))
+    const com =
+      typeof comentarios === 'string' && comentarios
+        ? escapeHtml(comentarios)
+        : ''
+    const obsI =
+      typeof observacionImagenes === 'string' && observacionImagenes
+        ? escapeHtml(observacionImagenes)
+        : ''
+    const obsH =
+      typeof observacionHostingDb === 'string' && observacionHostingDb
+        ? escapeHtml(observacionHostingDb)
+        : ''
+
     const subject = `Cotización aceptada - ${nombre} ${apellido}`
     const html = `
       <div style="font-family: Arial, sans-serif; padding: 20px; color: #111827;">
         <h2 style="margin-bottom: 12px;">Cotización aceptada</h2>
-        <p><strong>Cliente:</strong> ${nombre} ${apellido}</p>
-        <p><strong>Correo:</strong> ${correo}</p>
-        <p><strong>Servicio:</strong> ${servicio}</p>
-        ${cantidadPaginas ? `<p><strong>Cantidad de páginas:</strong> ${cantidadPaginas}</p>` : ''}
-        <p><strong>Incluye dominio/hosting/correo:</strong> ${incluyeDominioHostingCorreo}</p>
-        <p><strong>Pasarela de pagos:</strong> ${pasarelaPagos}</p>
-        <p><strong>Total:</strong> ${total}</p>
+        <p><strong>Cliente:</strong> ${n} ${a}</p>
+        <p><strong>Correo:</strong> ${co}</p>
+        <p><strong>Servicio:</strong> ${sv}</p>
+        ${cantidadPaginas ? `<p><strong>Cantidad de páginas:</strong> ${escapeHtml(String(cantidadPaginas))}</p>` : ''}
+        <p><strong>Incluye dominio/hosting/correo:</strong> ${incl}</p>
+        <p><strong>Pasarela de pagos:</strong> ${pas}</p>
+        <p><strong>Total:</strong> ${tot}</p>
         <p><strong>Fecha:</strong> ${new Date().toLocaleString('es-ES')}</p>
-        ${comentarios ? `<hr style="margin: 16px 0;" /><p style="white-space: pre-wrap;"><strong>Comentarios:</strong><br/>${comentarios}</p>` : ''}
-        ${observacionImagenes ? `<p><strong>Observación (imágenes):</strong> ${observacionImagenes}</p>` : ''}
-        ${observacionHostingDb ? `<p><strong>Observación (hosting/DB):</strong> ${observacionHostingDb}</p>` : ''}
+        ${com ? `<hr style="margin: 16px 0;" /><p style="white-space: pre-wrap;"><strong>Comentarios:</strong><br/>${com}</p>` : ''}
+        ${obsI ? `<p><strong>Observación (imágenes):</strong> ${obsI}</p>` : ''}
+        ${obsH ? `<p><strong>Observación (hosting/DB):</strong> ${obsH}</p>` : ''}
       </div>
     `
 

@@ -3,8 +3,6 @@
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { useRef, useState } from 'react'
 import {
-  ExternalLink,
-  Github,
   Eye,
   Sparkles,
   Globe,
@@ -12,19 +10,48 @@ import {
   Zap,
   GraduationCap,
   Building,
-  X,
   Calendar,
   Users,
-  TrendingUp,
   ChevronLeft,
   ChevronRight,
-  Play
 } from 'lucide-react'
+import Image from 'next/image'
 
 const ProjectsSection = () => {
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+
+  const getCloudinaryProjectImage = (opts: { localSrc: string; publicId?: string }) => {
+    const { localSrc, publicId } = opts
+    if (!cloudName) return localSrc
+
+    if (publicId) {
+      const encodedPublicId = publicId
+        .split('/')
+        .map((part) => encodeURIComponent(part))
+        .join('/')
+
+      return `https://res.cloudinary.com/${encodeURIComponent(cloudName)}/image/upload/f_auto,q_auto/${encodedPublicId}`
+    }
+
+    if (!localSrc.startsWith('/')) return localSrc
+
+    const filename = localSrc.split('/').pop() || ''
+    if (!filename) return localSrc
+
+    // Cloudinary public_id typically omits the extension
+    const publicIdName = filename.replace(/\.[^.]+$/, '')
+    const derivedPublicId = `nlservices/${publicIdName}`
+
+    const encodedPublicId = derivedPublicId
+      .split('/')
+      .map((part) => encodeURIComponent(part))
+      .join('/')
+
+    return `https://res.cloudinary.com/${encodeURIComponent(cloudName)}/image/upload/f_auto,q_auto/${encodedPublicId}`
+  }
+
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-100px" })
-  const [selectedProject, setSelectedProject] = useState<any>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState(0)
@@ -51,24 +78,162 @@ const ProjectsSection = () => {
   }
 
   /** Orden: más recientes primero (2026 → 2023). Años repartidos entre 2023 y 2026. */
-  const projectImageFiles = [
-    { slug: 'sara', title: 'Sara Carryhau', image: '/proyectos-img/website-Sara.png', icon: Globe, year: '2026' },
-    { slug: 'quantico', title: 'Quantico', image: '/proyectos-img/website-quantico.png', icon: Bot, year: '2026' },
-    { slug: 'fotosonido', title: 'Foto Sonido', image: '/proyectos-img/website-fotosonido.png', icon: Globe, year: '2026' },
-    { slug: 'erp-website', title: 'EPR Website', image: '/proyectos-img/website-erp.png', icon: Globe, year: '2026' },
-    { slug: 'masterclass', title: 'Landing Page de Carmen Gonzalez Estilista', image: '/images/website-masterclass.png', icon: Globe, year: '2026' },
-    { slug: 'apradap', title: 'APRADAP', image: '/images/website-apradap.png', icon: Globe, year: '2026' },
-    { slug: 'vipal', title: 'VIPAL', image: '/proyectos-img/website-vipal.png', icon: Globe, year: '2026' },
-    { slug: 'nutrielys', title: 'Nutrielys', image: '/proyectos-img/website-nutrielys.png', icon: Globe, year: '2026' },
-    { slug: 'marbi', title: 'Marbi', image: '/proyectos-img/website-marbi.png', icon: Globe, year: '2025' },
-    { slug: 'yurna', title: 'Yurna', image: '/proyectos-img/website-yurna.png', icon: Globe, year: '2025' },
-    { slug: 'alquilereventos', title: 'Alquiler de Eventos', image: '/proyectos-img/website-alquilereventos.png', icon: Zap, year: '2025' },
-    { slug: 'nixontours', title: 'Nixon Tours', image: '/proyectos-img/website-nixontours.png', icon: Globe, year: '2025' },
-    { slug: 'obip', title: 'OBIP', image: '/proyectos-img/website-obip.png', icon: Users, year: '2024' },
-    { slug: 'tobykids', title: 'Toby Kids', image: '/proyectos-img/website-tobykids.png', icon: Globe, year: '2024' },
-    { slug: 'python', title: 'Python', image: '/proyectos-img/website-python.png', icon: GraduationCap, year: '2024' },
-    { slug: 'realtors', title: 'Realtors', image: '/proyectos-img/website-realtors.png', icon: Building, year: '2023' },
-  ] as const
+  type ProjectImageFile = {
+    slug: string
+    title: string
+    image: string
+    icon: any
+    year: string
+    cloudinaryUrl?: string
+    cloudinaryPublicId?: string
+  }
+
+  const projectImageFiles: ProjectImageFile[] = [
+    {
+      slug: 'sara',
+      title: 'Sara Carryhau',
+      image: '/proyectos-img/website-Sara.png',
+      cloudinaryUrl:
+        'https://res.cloudinary.com/dewe5s4xv/image/upload/v1775828409/website-Sara_lgoqij.png',
+      icon: Globe,
+      year: '2026',
+    },
+    {
+      slug: 'quantico',
+      title: 'Quantico',
+      image: '/proyectos-img/website-quantico.png',
+      cloudinaryUrl:
+        'https://res.cloudinary.com/dewe5s4xv/image/upload/v1775828408/website-quantico_ivthee.png',
+      icon: Bot,
+      year: '2026',
+    },
+    {
+      slug: 'fotosonido',
+      title: 'Foto Sonido',
+      image: '/proyectos-img/website-fotosonido.png',
+      cloudinaryUrl:
+        'https://res.cloudinary.com/dewe5s4xv/image/upload/v1775828410/website-fotosonido_vxiizv.png',
+      icon: Globe,
+      year: '2026',
+    },
+    {
+      slug: 'erp-website',
+      title: 'EPR Website',
+      image: '/proyectos-img/website-erp.png',
+      cloudinaryUrl:
+        'https://res.cloudinary.com/dewe5s4xv/image/upload/v1775828409/website-erp_g6jz1u.png',
+      icon: Globe,
+      year: '2026',
+    },
+    {
+      slug: 'masterclass',
+      title: 'Landing Page de Carmen Gonzalez Estilista',
+      image: '/images/website-masterclass.png',
+      cloudinaryUrl:
+        'https://res.cloudinary.com/dewe5s4xv/image/upload/v1775828411/website-masterclass_iv1ix5.png',
+      icon: Globe,
+      year: '2026',
+    },
+    {
+      slug: 'apradap',
+      title: 'APRADAP',
+      image: '/images/website-apradap.png',
+      cloudinaryUrl:
+        'https://res.cloudinary.com/dewe5s4xv/image/upload/v1775828409/website-apradap_ax2agz.png',
+      icon: Globe,
+      year: '2026',
+    },
+    {
+      slug: 'vipal',
+      title: 'VIPAL',
+      image: '/proyectos-img/website-vipal.png',
+      cloudinaryUrl:
+        'https://res.cloudinary.com/dewe5s4xv/image/upload/v1775828409/website-vipal_sh26tk.png',
+      icon: Globe,
+      year: '2026',
+    },
+    {
+      slug: 'nutrielys',
+      title: 'Nutrielys',
+      image: '/proyectos-img/website-nutrielys.png',
+      cloudinaryUrl:
+        'https://res.cloudinary.com/dewe5s4xv/image/upload/v1775828411/website-nutrielys_ttwwxx.png',
+      icon: Globe,
+      year: '2026',
+    },
+    {
+      slug: 'marbi',
+      title: 'Marbi',
+      image: '/proyectos-img/website-marbi.png',
+      cloudinaryUrl:
+        'https://res.cloudinary.com/dewe5s4xv/image/upload/v1775828410/website-marbi_zhrtb2.png',
+      icon: Globe,
+      year: '2025',
+    },
+    {
+      slug: 'yurna',
+      title: 'Yurna',
+      image: '/proyectos-img/website-yurna.png',
+      cloudinaryUrl:
+        'https://res.cloudinary.com/dewe5s4xv/image/upload/v1775828409/website-yurna_vl6thk.png',
+      icon: Globe,
+      year: '2025',
+    },
+    {
+      slug: 'alquilereventos',
+      title: 'Alquiler de Eventos',
+      image: '/proyectos-img/website-alquilereventos.png',
+      cloudinaryUrl:
+        'https://res.cloudinary.com/dewe5s4xv/image/upload/v1775828410/website-alquilereventos_mmf90l.png',
+      icon: Zap,
+      year: '2025',
+    },
+    {
+      slug: 'nixontours',
+      title: 'Nixon Tours',
+      image: '/proyectos-img/website-nixontours.png',
+      cloudinaryUrl:
+        'https://res.cloudinary.com/dewe5s4xv/image/upload/v1775828411/website-nixontours_ob7wp2.png',
+      icon: Globe,
+      year: '2025',
+    },
+    {
+      slug: 'obip',
+      title: 'OBIP',
+      image: '/proyectos-img/website-obip.png',
+      cloudinaryUrl:
+        'https://res.cloudinary.com/dewe5s4xv/image/upload/v1775828408/website-obip_kgji7w.png',
+      icon: Users,
+      year: '2024',
+    },
+    {
+      slug: 'tobykids',
+      title: 'Toby Kids',
+      image: '/proyectos-img/website-tobykids.png',
+      cloudinaryUrl:
+        'https://res.cloudinary.com/dewe5s4xv/image/upload/v1775828409/website-tobykids_qinotp.png',
+      icon: Globe,
+      year: '2024',
+    },
+    {
+      slug: 'python',
+      title: 'Python',
+      image: '/proyectos-img/website-python.png',
+      cloudinaryUrl:
+        'https://res.cloudinary.com/dewe5s4xv/image/upload/v1775828408/website-python_tmd4my.png',
+      icon: GraduationCap,
+      year: '2024',
+    },
+    {
+      slug: 'realtors',
+      title: 'Realtors',
+      image: '/proyectos-img/website-realtors.png',
+      cloudinaryUrl:
+        'https://res.cloudinary.com/dewe5s4xv/image/upload/v1775828408/website-realtors_xihnef.png',
+      icon: Building,
+      year: '2023',
+    },
+  ]
 
   const projects = projectImageFiles.map((p, idx) => {
     const demo =
@@ -80,6 +245,8 @@ const ProjectsSection = () => {
       longDescription:
         `Proyecto ${p.title} desarrollado para una presencia digital profesional. Incluye diseño moderno, secciones clave y optimización para una excelente experiencia en móviles.`,
       image: p.image,
+      cloudinaryUrl: p.cloudinaryUrl,
+      cloudinaryPublicId: p.cloudinaryPublicId,
       icon: p.icon,
       gradient: 'from-indigo-500 to-purple-500',
       tags: ['Next.js', 'React', 'Tailwind'],
@@ -117,14 +284,6 @@ const ProjectsSection = () => {
 
   const prevSlide = () => {
     setCurrentIndex((prev) => (prev - 1 + totalSlides) % totalSlides)
-  }
-
-  const openProjectDetails = (project: any) => {
-    setSelectedProject(project)
-  }
-
-  const closeProjectDetails = () => {
-    setSelectedProject(null)
   }
 
   // Mouse drag handlers
@@ -201,29 +360,6 @@ const ProjectsSection = () => {
 
         {/* Carousel Container */}
         <div className="relative max-w-7xl mx-auto">
-          {/* Navigation Buttons */}
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 z-20">
-            <motion.button
-              onClick={prevSlide}
-              className="w-12 h-12 bg-white dark:bg-slate-800 shadow-xl rounded-full flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 border border-gray-200 dark:border-gray-600 transition-all duration-300"
-              whileHover={{ scale: 1.1, x: -2 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </motion.button>
-          </div>
-
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 z-20">
-            <motion.button
-              onClick={nextSlide}
-              className="w-12 h-12 bg-white dark:bg-slate-800 shadow-xl rounded-full flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 border border-gray-200 dark:border-gray-600 transition-all duration-300"
-              whileHover={{ scale: 1.1, x: 2 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <ChevronRight className="w-6 h-6" />
-            </motion.button>
-          </div>
-
           {/* Projects Grid */}
           <motion.div
             className="overflow-hidden px-4 cursor-grab active:cursor-grabbing select-none"
@@ -259,11 +395,24 @@ const ProjectsSection = () => {
                     >
                       {/* Imagen completa (sin recorte): la tarjeta se adapta al aspect ratio */}
                       <div className="relative w-full overflow-hidden rounded-t-2xl bg-slate-100 dark:bg-slate-900/80">
-                        <img 
-                          src={project.image} 
-                          alt={project.title}
-                          className="relative z-0 block w-full h-auto max-h-[min(75vh,720px)] object-contain object-center transition-transform duration-500 group-hover:scale-[1.02]"
-                        />
+                    <Image
+                      src={
+                        project.cloudinaryUrl ??
+                        getCloudinaryProjectImage({
+                          localSrc: project.image,
+                          publicId: project.cloudinaryPublicId,
+                        })
+                      }
+                      alt={project.title}
+                      width={1200}
+                      height={675}
+                      className="relative z-0 block w-full h-auto max-h-[min(75vh,720px)] object-contain object-center transition-transform duration-500 group-hover:scale-[1.02]"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      onError={(e) => {
+                        // fallback a imagen local si la URL externa falla
+                        ;(e.currentTarget as HTMLImageElement).src = project.image
+                      }}
+                    />
                         
                         {/* Título sobre franja inferior (no tapa toda la imagen) */}
                         <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/85 via-black/40 to-transparent pt-16 pb-4 px-4">
@@ -316,17 +465,6 @@ const ProjectsSection = () => {
                           </div>
                         </div>
                       </div>
-
-                      {/* Click Area para abrir modal */}
-                      <div 
-                        className="absolute inset-0 cursor-pointer z-10"
-                        onClick={(e) => {
-                          // Only open modal if not dragging
-                          if (!isDragging && Math.abs(dragOffset) < 10) {
-                            openProjectDetails(project)
-                          }
-                        }}
-                      />
                     </motion.div>
                   )
                 })}
@@ -334,229 +472,61 @@ const ProjectsSection = () => {
             </AnimatePresence>
           </motion.div>
 
-          {/* Dots Indicator */}
+          {/* Controles debajo (no se superponen a las tarjetas) */}
           <motion.div
-            className="flex justify-center mt-8 gap-2"
-            initial={{ opacity: 0 }}
-            animate={isInView ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            className="mt-10 flex flex-col items-center gap-4"
+            initial={{ opacity: 0, y: 10 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+            transition={{ duration: 0.6, delay: 0.35 }}
           >
-            {Array.from({ length: totalSlides }).map((_, index) => (
+            <div className="flex items-center justify-center gap-3">
               <motion.button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  index === currentIndex
-                    ? 'bg-indigo-500 scale-125'
-                    : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
-                }`}
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.8 }}
-              />
-            ))}
-          </motion.div>
+                type="button"
+                onClick={prevSlide}
+                className="w-11 h-11 bg-white dark:bg-slate-800 shadow-lg rounded-full flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 border border-gray-200 dark:border-gray-600 transition-all duration-300"
+                whileHover={{ scale: 1.06, y: -1 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label="Ver proyectos anteriores"
+                title="Anterior"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </motion.button>
 
-          {/* Slide Counter */}
-          <motion.div
-            className="text-center mt-4"
-            initial={{ opacity: 0 }}
-            animate={isInView ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-          >
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {currentIndex + 1} de {totalSlides} páginas
-            </span>
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalSlides }).map((_, index) => (
+                  <motion.button
+                    key={index}
+                    type="button"
+                    onClick={() => setCurrentIndex(index)}
+                    className={`h-2.5 rounded-full transition-all duration-300 ${
+                      index === currentIndex
+                        ? 'w-7 bg-indigo-500'
+                        : 'w-2.5 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                    }`}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    aria-label={`Ir a la página ${index + 1}`}
+                  />
+                ))}
+              </div>
+
+              <motion.button
+                type="button"
+                onClick={nextSlide}
+                className="w-11 h-11 bg-white dark:bg-slate-800 shadow-lg rounded-full flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 border border-gray-200 dark:border-gray-600 transition-all duration-300"
+                whileHover={{ scale: 1.06, y: -1 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label="Ver proyectos siguientes"
+                title="Siguiente"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </motion.button>
+            </div>
           </motion.div>
         </div>
 
 
       </div>
-
-      {/* Enhanced Modal */}
-      <AnimatePresence>
-        {selectedProject && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={closeProjectDetails}
-          >
-            <motion.div
-              className="relative bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-              initial={{ scale: 0.8, opacity: 0, y: 50 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.8, opacity: 0, y: 50 }}
-              transition={{ duration: 0.4, type: "spring", stiffness: 300, damping: 30 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Close Button */}
-              <button
-                onClick={closeProjectDetails}
-                className="absolute top-6 right-6 z-10 w-10 h-10 bg-white/90 dark:bg-slate-700/90 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-slate-700 transition-colors duration-300 shadow-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              {/* Modal Header con imagen - cubriendo todo el espacio superior */}
-              <div className="relative h-96 overflow-hidden bg-gray-100 dark:bg-slate-700">
-                {/* Imagen de fondo - se ve completa sin recortar */}
-                <img 
-                  src={selectedProject.image} 
-                  alt={selectedProject.title}
-                  className="w-full h-full object-contain object-center"
-                />
-                {/* Overlay con gradiente elegante */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
-                
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-8">
-                  <motion.div
-                    className="w-20 h-20 mx-auto mb-4 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30 shadow-xl"
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ delay: 0.2, duration: 0.6, type: "spring" }}
-                  >
-                    <selectedProject.icon className="w-10 h-10 text-white" />
-                  </motion.div>
-                  <motion.h2
-                    className="text-3xl md:text-4xl font-bold mb-4 text-center drop-shadow-2xl"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3, duration: 0.5 }}
-                  >
-                    {selectedProject.title}
-                  </motion.h2>
-                  <motion.div
-                    className="flex items-center justify-center gap-4 text-sm opacity-90 flex-wrap"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4, duration: 0.5 }}
-                  >
-                    <div className="flex items-center gap-1 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
-                      <Users className="w-4 h-4" />
-                      {selectedProject.client}
-                    </div>
-                    <div className="flex items-center gap-1 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
-                      <Calendar className="w-4 h-4" />
-                      {selectedProject.duration}
-                    </div>
-                    <div className="flex items-center gap-1 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
-                      <TrendingUp className="w-4 h-4" />
-                      {selectedProject.year}
-                    </div>
-                  </motion.div>
-                </div>
-              </div>
-
-              <div className="p-8">
-                {/* Description */}
-                <motion.div
-                  className="mb-8"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1, duration: 0.5 }}
-                >
-                  <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                    {selectedProject.longDescription}
-                  </p>
-                </motion.div>
-
-                {/* Metrics */}
-                <motion.div
-                  className="mb-8"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.5 }}
-                >
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                    Resultados Medibles
-                  </h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    {Object.entries(selectedProject.metrics).map(([key, value]: [string, any], index) => (
-                      <motion.div
-                        key={key}
-                        className="text-center p-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-700 dark:to-slate-800 rounded-xl"
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.3 + index * 0.1, duration: 0.5 }}
-                      >
-                        <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mb-1">
-                          {value}
-                        </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400 capitalize">
-                          {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-
-                {/* Features */}
-                <motion.div
-                  className="mb-8"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.5 }}
-                >
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                    Características Principales
-                  </h3>
-                  <div className="grid md:grid-cols-2 gap-3">
-                    {selectedProject.features.map((feature: any, index: number) => (
-                      <motion.div
-                        key={index}
-                        className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-700 rounded-lg"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.5 + index * 0.05, duration: 0.3 }}
-                      >
-                        <div className="w-2 h-2 bg-indigo-500 rounded-full flex-shrink-0" />
-                        <span className="text-gray-700 dark:text-gray-300">{feature}</span>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-
-                {/* Action Buttons */}
-                <motion.div
-                  className="flex gap-4"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8, duration: 0.5 }}
-                >
-                  <motion.a
-                    href={selectedProject.links.demo}
-                    className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-4 rounded-xl font-semibold text-center hover:shadow-lg hover:shadow-indigo-500/25 transition-all duration-300 flex items-center justify-center gap-2"
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Play className="w-5 h-5" />
-                    Ver Demo en Vivo
-                  </motion.a>
-                  <motion.a
-                    href={selectedProject.links.github}
-                    className="px-6 py-4 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-slate-700 transition-all duration-300 flex items-center gap-2"
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Github className="w-5 h-5" />
-                    Código
-                  </motion.a>
-                  <motion.a
-                    href={selectedProject.links.case}
-                    className="px-6 py-4 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-slate-700 transition-all duration-300 flex items-center gap-2"
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <ExternalLink className="w-5 h-5" />
-                    Caso de Estudio
-                  </motion.a>
-                </motion.div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </section>
   )
 }

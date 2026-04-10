@@ -11,6 +11,7 @@ import {
   CheckCircle,
 } from 'lucide-react'
 import TechLogo from './TechLogo'
+import { rateLimitFriendlyMessage } from '@/lib/utils'
 
 const SERVICIOS = [
   { id: 'web-profesional', label: 'Sitio web profesional (básico para servicios)' },
@@ -69,8 +70,15 @@ const ContactSection = () => {
           descripcion: ''
         })
         setTimeout(() => setIsSubmitted(false), 5000)
+      } else if (response.status === 429) {
+        setError(rateLimitFriendlyMessage(response.headers.get('Retry-After')))
       } else {
-        throw new Error('Error al enviar el mensaje')
+        const data = (await response.json().catch(() => null)) as { error?: string } | null
+        setError(
+          typeof data?.error === 'string'
+            ? data.error
+            : 'No se pudo enviar el mensaje. Por favor, intenta de nuevo.'
+        )
       }
     } catch (err) {
       console.error('Error:', err)

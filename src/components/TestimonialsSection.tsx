@@ -89,9 +89,12 @@ const TestimonialsSection = () => {
           <div className="absolute left-4 top-1/2 -translate-y-1/2 z-20">
             <motion.button
               onClick={prevTestimonial}
+              type="button"
               className="w-12 h-12 bg-white dark:bg-slate-800 shadow-lg rounded-full flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-blue-500 hover:text-white transition-all duration-300 border border-gray-200 dark:border-gray-600"
               whileHover={{ scale: 1.1, x: -2 }}
               whileTap={{ scale: 0.9 }}
+              aria-label="Testimonio anterior"
+              title="Anterior"
             >
               <ChevronLeft size={20} />
             </motion.button>
@@ -100,9 +103,12 @@ const TestimonialsSection = () => {
           <div className="absolute right-4 top-1/2 -translate-y-1/2 z-20">
             <motion.button
               onClick={nextTestimonial}
+              type="button"
               className="w-12 h-12 bg-white dark:bg-slate-800 shadow-lg rounded-full flex items-center justify-center text-gray-700 dark:text-gray-300 hover:bg-blue-500 hover:text-white transition-all duration-300 border border-gray-200 dark:border-gray-600"
               whileHover={{ scale: 1.1, x: 2 }}
               whileTap={{ scale: 0.9 }}
+              aria-label="Siguiente testimonio"
+              title="Siguiente"
             >
               <ChevronRight size={20} />
             </motion.button>
@@ -128,7 +134,7 @@ const TestimonialsSection = () => {
 
                 {/* Testimonial Text */}
                 <blockquote className="text-lg md:text-xl text-gray-700 dark:text-gray-300 mb-8 leading-relaxed italic max-w-3xl mx-auto">
-                  "{currentTestimonial.content}"
+                  &quot;{currentTestimonial.content}&quot;
                 </blockquote>
 
                 {/* Client Info */}
@@ -136,9 +142,9 @@ const TestimonialsSection = () => {
                   <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl mb-4">
                     {currentTestimonial.name.charAt(0)}
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
                     {currentTestimonial.name}
-                  </h4>
+                  </p>
                 </div>
               </motion.div>
             </AnimatePresence>
@@ -150,14 +156,24 @@ const TestimonialsSection = () => {
               <motion.button
                 key={index}
                 onClick={() => setCurrentIndex(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                type="button"
+                className={`h-10 w-10 rounded-full transition-all duration-300 grid place-items-center ${
                   index === currentIndex
-                    ? 'bg-blue-500 scale-125'
-                    : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                    ? 'bg-blue-500/15'
+                    : 'bg-transparent hover:bg-gray-200/60 dark:hover:bg-gray-700/40'
                 }`}
                 whileHover={{ scale: 1.2 }}
                 whileTap={{ scale: 0.8 }}
-              />
+                aria-label={`Ir al testimonio ${index + 1} de ${testimonials.length}`}
+                title={`Testimonio ${index + 1}`}
+              >
+                <span
+                  className={`h-2.5 w-2.5 rounded-full transition-all duration-300 ${
+                    index === currentIndex ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
+                  }`}
+                  aria-hidden
+                />
+              </motion.button>
             ))}
           </div>
         </div>
