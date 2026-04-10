@@ -144,18 +144,17 @@ const Header = () => {
         >
           <div className="flex flex-col h-full overflow-y-auto">
             {/* Header del menú móvil */}
-            <div className="flex items-center justify-between px-4 py-4 sm:p-5 border-b border-white/10 shrink-0">
-              <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center justify-between px-4 py-4 sm:p-5 border-b border-white/10 shrink-0 gap-2">
+              <div className="flex items-center min-w-0 flex-1">
                 <Image
                   src="/images/logonlservices.png"
                   alt="NL Services — logo oficial"
-                  className="h-6 w-auto max-h-7 object-contain object-left shrink-0 sm:h-7 sm:max-h-8"
+                  className="h-6 w-auto max-h-7 object-contain object-left shrink-0 sm:h-7 sm:max-h-8 max-w-[min(100%,11rem)]"
                   width={1057}
                   height={186}
                   sizes="160px"
                   priority={false}
                 />
-                <span className="text-white font-semibold text-sm sm:text-base truncate">Menú</span>
               </div>
               <button
                 onClick={() => setIsMenuOpen(false)}
@@ -169,11 +168,16 @@ const Header = () => {
             {/* Navegación */}
             <div className="flex-1 px-4 py-6 sm:px-5 sm:py-8 overflow-y-auto">
               <div className="space-y-1">
-                {menuItems.map((item) => (
+                {menuItems.map((item, index) => (
                   <button
                     key={item.name}
                     onClick={() => scrollToSection(item.href)}
-                    className="w-full text-left text-gray-300 hover:text-white transition-all duration-200 py-3.5 px-4 rounded-lg hover:bg-white/5 active:bg-white/10 group min-h-[48px] flex items-center"
+                    style={{
+                      animationDelay: isMenuOpen ? `${index * 45}ms` : undefined,
+                    }}
+                    className={`w-full text-left text-gray-300 hover:text-white transition-all duration-200 py-3.5 px-4 rounded-lg hover:bg-white/5 active:bg-white/10 group min-h-[48px] flex items-center ${
+                      isMenuOpen ? 'max-md:motion-safe:animate-mobile-nav-in' : ''
+                    }`}
                   >
                     <div className="flex items-center space-x-3">
                       <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
@@ -184,7 +188,12 @@ const Header = () => {
               </div>
 
               {/* Botón Cotizar */}
-              <div className="mt-6 pt-5 border-t border-white/10">
+              <div
+                className={`mt-6 pt-5 border-t border-white/10 ${
+                  isMenuOpen ? 'max-md:motion-safe:animate-mobile-nav-in' : ''
+                }`}
+                style={{ animationDelay: isMenuOpen ? `${menuItems.length * 45}ms` : undefined }}
+              >
                 <button
                   onClick={redirectToCotizacion}
                   className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3.5 rounded-xl font-semibold text-base hover:shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 min-h-[48px]"

@@ -51,7 +51,7 @@ export default async function AdminDashboardPage() {
   ]
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 w-full min-w-0">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
           <TrendingUp className="w-8 h-8 text-indigo-400" />
@@ -61,11 +61,12 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {cards.map((c) => (
+        {cards.map((c, i) => (
           <Link
             key={c.label}
             href={c.href}
-            className="rounded-2xl border border-slate-800 bg-slate-900/50 p-6 hover:border-indigo-500/50 transition-colors"
+            style={{ animationDelay: `${i * 65}ms` }}
+            className="rounded-2xl border border-slate-800 bg-slate-900/50 p-6 hover:border-indigo-500/50 transition-colors max-md:motion-safe:animate-soft-rise"
           >
             <div className="flex items-start justify-between">
               <div>

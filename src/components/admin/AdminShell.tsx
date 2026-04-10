@@ -205,7 +205,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </button>
           <span className="font-semibold">Panel</span>
         </header>
-        <main className="flex-1 overflow-x-auto p-4 sm:p-6 md:p-8 print:p-0 print:bg-white">{children}</main>
+        <main className="flex-1 w-full min-w-0 overflow-x-hidden overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-6 md:p-8 print:p-0 print:overflow-visible print:bg-white">
+          {children}
+        </main>
       </div>
     </div>
   )

@@ -32,11 +32,22 @@ module.exports = {
         'float': 'float 3s ease-in-out infinite',
         'glow': 'glow 2s ease-in-out infinite alternate',
         'scroll-infinite': 'scroll-infinite 30s linear infinite',
+        /** Solo móvil (clases max-md:) — entrada suave sin saturar desktop */
+        'soft-rise': 'softRise 0.55s ease-out both',
+        'mobile-nav-in': 'mobileNavIn 0.4s ease-out both',
       },
       keyframes: {
         fadeIn: {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
+        },
+        softRise: {
+          '0%': { opacity: '0', transform: 'translateY(14px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        mobileNavIn: {
+          '0%': { opacity: '0', transform: 'translateX(8px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
         },
         slideUp: {
           '0%': { transform: 'translateY(100px)', opacity: '0' },

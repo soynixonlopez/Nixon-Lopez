@@ -13,7 +13,7 @@ export default async function CotizacionesPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
+    <div className="space-y-8 max-w-6xl mx-auto w-full min-w-0">
       <div className="text-center sm:text-left">
         <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Cotizaciones</h1>
         <p className="text-slate-400 text-sm mt-2 max-w-2xl mx-auto sm:mx-0">
@@ -29,7 +29,7 @@ export default async function CotizacionesPage() {
       <Link
         href="/admin/cotizacion-nueva"
         aria-label="Crear cotización"
-        className="fixed bottom-6 right-6 z-20 inline-flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-2xl shadow-indigo-900/40 transition-transform hover:scale-105"
+        className="fixed z-20 inline-flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-2xl shadow-indigo-900/40 transition-transform hover:scale-105 bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))] sm:bottom-6 sm:right-6"
       >
         <Plus className="h-6 w-6" />
       </Link>

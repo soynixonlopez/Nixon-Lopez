@@ -21,7 +21,7 @@ export default function HeroSectionStatic() {
 
       <div className="relative z-10 container-padding h-full pt-[calc(3.5rem+env(safe-area-inset-top,0px))] sm:pt-[calc(4rem+env(safe-area-inset-top,0px))] md:pt-20 pb-0">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center md:items-stretch h-full w-full min-w-0">
-          <div className="min-w-0 text-center md:text-left flex flex-col justify-center h-full">
+          <div className="min-w-0 text-center md:text-left flex flex-col justify-center h-full max-md:motion-safe:animate-soft-rise">
             <div className="mb-6">
               <span className="text-blue-400 font-mono text-2xl tracking-wider">
                 ¿Tu Negocio Necesita Más Clientes?
@@ -65,7 +65,7 @@ export default function HeroSectionStatic() {
             </div>
           </div>
 
-          <div className="flex min-w-0 justify-center md:justify-end h-full relative overflow-hidden">
+          <div className="flex min-w-0 justify-center md:justify-end h-full relative overflow-hidden max-md:motion-safe:animate-soft-rise max-md:motion-safe:[animation-delay:120ms]">
             <div className="relative w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl xl:max-w-3xl h-[500px] sm:h-[600px] md:h-full overflow-hidden">
               <picture className="block h-full w-full">
                 <source srcSet="/images/nixonprofile.avif" type="image/avif" sizes={HERO_IMG_SIZES} />

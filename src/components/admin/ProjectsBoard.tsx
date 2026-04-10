@@ -125,9 +125,9 @@ export function ProjectsBoard({ projects }: { projects: Project[] }) {
   const finalizedCount = filtered.filter((p) => p.status === 'completed').length
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
-        <div className="grid gap-3 md:grid-cols-[1fr_220px_auto]">
+    <div className="space-y-4 w-full min-w-0">
+      <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 min-w-0">
+        <div className="grid gap-3 md:grid-cols-[1fr_220px_auto] min-w-0">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -158,9 +158,9 @@ export function ProjectsBoard({ projects }: { projects: Project[] }) {
           return (
             <article
               key={p.id}
-              className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 space-y-3"
+              className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 space-y-3 min-w-0 overflow-hidden"
             >
-              <div className="grid gap-3 lg:grid-cols-[1.2fr_1fr_180px_180px_180px_auto] lg:items-end">
+              <div className="grid gap-3 lg:grid-cols-[1.2fr_1fr_180px_180px_180px_auto] lg:items-end min-w-0">
                 <label className="block">
                   <span className="text-[11px] text-slate-500">Nombre del proyecto</span>
                   {isEditing ? (
