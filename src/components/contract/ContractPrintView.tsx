@@ -144,33 +144,54 @@ export function ContractPrintView({ contract }: { contract: ServiceContractRecor
           __________ del año ______.
         </p>
         <div className="grid sm:grid-cols-2 gap-8 mt-10">
-          <div>
-            <p className="font-semibold">EL PRESTADOR</p>
-            <p>
-              <KeyField>NL Services</KeyField>
-            </p>
-            <p className="mt-1 text-xs text-slate-600">
-              RUC <KeyField>{INVOICE_BRANDING.ruc}</KeyField>
-            </p>
-            <p className="mt-8">Firma: ____________________________</p>
-            <p>
-              Nombre: <KeyField>Nixon Jill Lopez Hernandez</KeyField>
-            </p>
-          </div>
-          <div>
-            <p className="font-semibold">EL CLIENTE</p>
-            <p>
-              <KeyField>{contract.client_name}</KeyField>
-            </p>
-            {contract.client_address ? (
-              <p className="mt-1 text-xs text-slate-600">
-                Domicilio: <KeyField>{contract.client_address}</KeyField>
+          <div className="space-y-6">
+            <div>
+              <p className="font-semibold">EL PRESTADOR</p>
+              <p>
+                <KeyField>{INVOICE_BRANDING.publicName}</KeyField>
               </p>
-            ) : null}
-            <p className="mt-8">Firma: ____________________________</p>
-            <p>
-              Cédula / RUC: <KeyField>{contract.client_tax_id || '____________________'}</KeyField>
-            </p>
+              <p className="mt-1 text-xs text-slate-600">
+                RUC <KeyField>{INVOICE_BRANDING.ruc}</KeyField>
+              </p>
+            </div>
+            <div>
+              <div className="border-b border-slate-900 min-h-[2.25rem]" aria-hidden />
+              <p className="mt-1 text-xs text-slate-600">Firma</p>
+            </div>
+            <div>
+              <div className="border-b border-slate-900 min-h-[2.25rem]" aria-hidden />
+              <p className="mt-1 text-xs text-slate-600">Nombre (letra de molde)</p>
+              <p className="mt-2 font-bold">
+                <KeyField>{INVOICE_BRANDING.signatoryLegalName}</KeyField>
+              </p>
+            </div>
+          </div>
+          <div className="space-y-6">
+            <div>
+              <p className="font-semibold">EL CLIENTE</p>
+              <p>
+                <KeyField>{contract.client_name}</KeyField>
+              </p>
+              {contract.client_address ? (
+                <p className="mt-1 text-xs text-slate-600">
+                  Domicilio: <KeyField>{contract.client_address}</KeyField>
+                </p>
+              ) : null}
+            </div>
+            <div>
+              <div className="border-b border-slate-900 min-h-[2.25rem]" aria-hidden />
+              <p className="mt-1 text-xs text-slate-600">Firma</p>
+            </div>
+            <div>
+              <div className="border-b border-slate-900 min-h-[2.25rem]" aria-hidden />
+              <p className="mt-1 text-xs text-slate-600">Nombre (letra de molde)</p>
+              <p className="mt-2 font-bold">
+                <KeyField>{contract.client_name}</KeyField>
+              </p>
+              <p className="mt-2 text-sm">
+                Cédula / RUC: <KeyField>{contract.client_tax_id || '________________________'}</KeyField>
+              </p>
+            </div>
           </div>
         </div>
       </footer>

@@ -26,6 +26,8 @@ export const INVOICE_BRANDING = {
   /** Texto legal corto (pie de documento) */
   legalNote:
     'Documento emitido a efectos informativos y de cobro. Conserve este comprobante para sus registros.',
+  /** Firmante que representa al prestador en contratos impresos / PDF */
+  signatoryLegalName: 'Nixon Jill Lopez Hernandez',
 } as const
 
 export function documentTitle(kind: 'prefactura' | 'final') {

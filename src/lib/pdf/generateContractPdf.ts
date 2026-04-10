@@ -271,36 +271,86 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
     drawParagraph(contract.custom_notes)
   }
 
-  if (y < M + 120) {
+  if (y < M + 200) {
     page = pdf.addPage([W, H])
     y = H - M
   }
   drawTitle('FIRMA DE LAS PARTES')
   const cityLine = `En la ciudad de ${contract.city || '________________'}, a los ____ dias del mes de __________ del ano ______.`
   drawParagraph(cityLine)
-  y -= 10
-  page.drawText('EL PRESTADOR', { x: M, y, size: 10, font: bold, color: text })
-  page.drawText('EL CLIENTE', { x: W / 2 + 20, y, size: 10, font: bold, color: text })
-  y -= 22
-  page.drawText('NL Services', { x: M, y, size: 10, font: bold, color: text })
-  const cn = contract.client_name
-  const cw = bold.widthOfTextAtSize(cn, 10)
-  page.drawText(cn, { x: W / 2 + 20, y, size: 10, font: bold, color: text })
-  page.drawLine({
-    start: { x: W / 2 + 20, y: y - 1.2 },
-    end: { x: W / 2 + 20 + cw, y: y - 1.2 },
-    thickness: 0.45,
-    color: text,
-  })
-  y -= 14
-  page.drawText(`RUC ${INVOICE_BRANDING.ruc}`, { x: M, y, size: 9, font, color: muted })
-  y -= 34
-  page.drawText('Firma: ____________________________', { x: M, y, size: 9, font, color: text })
-  page.drawText('Firma: ____________________________', { x: W / 2 + 20, y, size: 9, font, color: text })
-  y -= 14
-  page.drawText('Nombre: Nixon Jill Lopez Hernandez', { x: M, y, size: 9, font: bold, color: text })
-  const idLabel = `Cedula / RUC: ${contract.client_tax_id || '____________________'}`
-  page.drawText(idLabel, { x: W / 2 + 20, y, size: 9, font: bold, color: text })
+  y -= 8
+
+  const colL = M
+  const colR = W / 2 + 28
+  const sigW = W / 2 - M - 40
+  const clientName = contract.client_name
+  const prestadorNombre = INVOICE_BRANDING.signatoryLegalName
+
+  const drawHLine = (x0: number, yLine: number) => {
+    page.drawLine({
+      start: { x: x0, y: yLine },
+      end: { x: x0 + sigW, y: yLine },
+      thickness: 0.65,
+      color: text,
+    })
+  }
+
+  page.drawText('EL PRESTADOR', { x: colL, y, size: 10, font: bold, color: text })
+  page.drawText('EL CLIENTE', { x: colR, y, size: 10, font: bold, color: text })
+  y -= 18
+  page.drawText(INVOICE_BRANDING.publicName, { x: colL, y, size: 10, font: bold, color: text })
+  page.drawText(clientName, { x: colR, y, size: 10, font: bold, color: text })
+  y -= 12
+  page.drawText(`RUC ${INVOICE_BRANDING.ruc}`, { x: colL, y, size: 9, font, color: muted })
+  let yAfterRucRow = y
+  if (contract.client_address?.trim()) {
+    const addr = contract.client_address.trim()
+    const addrLines = wrapText(addr, sigW, font, 8).slice(0, 2)
+    let yAddr = y
+    for (let i = 0; i < addrLines.length; i++) {
+      page.drawText(addrLines[i], { x: colR, y: yAddr, size: 8, font, color: muted })
+      if (i < addrLines.length - 1) yAddr -= 10
+    }
+    yAfterRucRow = yAddr
+  }
+  y = yAfterRucRow - 14
+
+  // Línea 1: firma (ambas partes)
+  drawHLine(colL, y)
+  drawHLine(colR, y)
+  y -= 9
+  page.drawText('Firma', { x: colL, y, size: 8, font, color: muted })
+  page.drawText('Firma', { x: colR, y, size: 8, font, color: muted })
+  y -= 20
+
+  // Línea 2: nombre en letra de molde (espacio para escribir + referencia impresa debajo)
+  drawHLine(colL, y)
+  drawHLine(colR, y)
+  y -= 9
+  page.drawText('Nombre (letra de molde)', { x: colL, y, size: 8, font, color: muted })
+  page.drawText('Nombre (letra de molde)', { x: colR, y, size: 8, font, color: muted })
+  y -= 12
+
+  const nameLinesP = wrapText(prestadorNombre, sigW, bold, 9)
+  const nameLinesC = wrapText(clientName, sigW, bold, 9)
+  for (let i = 0; i < Math.max(nameLinesP.length, nameLinesC.length); i++) {
+    if (y < M + 48) {
+      page = pdf.addPage([W, H])
+      y = H - M
+    }
+    if (nameLinesP[i]) {
+      page.drawText(nameLinesP[i], { x: colL, y, size: 9, font: bold, color: text })
+    }
+    if (nameLinesC[i]) {
+      page.drawText(nameLinesC[i], { x: colR, y, size: 9, font: bold, color: text })
+    }
+    y -= 11
+  }
+  y -= 4
+  page.drawText(
+    `Cedula / RUC: ${contract.client_tax_id || '________________________'}`,
+    { x: colR, y, size: 9, font, color: text }
+  )
 
   return pdf.save()
 }
