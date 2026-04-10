@@ -208,7 +208,7 @@ const Header = () => {
             <div className="px-4 py-4 sm:p-5 border-t border-white/10 shrink-0">
               <div className="text-center text-gray-400 text-sm">
                 <p>Desarrollo Web & IA</p>
-                <p className="text-xs mt-1">© 2025 Nixon López</p>
+                <p className="text-xs mt-1">© {new Date().getFullYear()} Nixon López</p>
               </div>
             </div>
           </div>
