@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     siteName: 'NL Services',
     locale: 'es_ES',
     type: 'website',
-    images: [{ url: '/images/logonlservices.png', alt: 'NL Services logo' }],
+    images: [{ url: '/images/logoweb.png', alt: 'Nixon López — logo' }],
   },
   twitter: {
     card: 'summary_large_image',

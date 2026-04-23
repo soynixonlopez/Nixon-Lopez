@@ -12,8 +12,8 @@ const graph = {
       name: SITE_NAME,
       alternateName: ['Nixon López', 'Nixon López — desarrollo web'],
       url: SITE_URL,
-      logo: `${SITE_URL}/images/logonlservices.png`,
-      image: `${SITE_URL}/images/logonlservices.png`,
+      logo: `${SITE_URL}/images/logoweb.png`,
+      image: `${SITE_URL}/images/logoweb.png`,
       description: SITE_NAME_FULL,
       address: {
         '@type': 'PostalAddress',

@@ -65,10 +65,10 @@ export const metadata: Metadata = {
     siteName: 'NL Services',
     images: [
       {
-        url: '/images/logonlservices.png',
-        width: 1200,
-        height: 630,
-        alt: 'NL Services — logo oficial',
+        url: '/images/logoweb.png',
+        width: 1306,
+        height: 199,
+        alt: 'Nixon López — logo',
       },
     ],
     locale: 'es_ES',
@@ -79,7 +79,7 @@ export const metadata: Metadata = {
     title: defaultTitle,
     description: defaultDescription,
     creator: '@soynixonlopez',
-    images: ['/images/logonlservices.png'],
+    images: ['/images/logoweb.png'],
   },
   robots: {
     index: true,

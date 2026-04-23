@@ -3,7 +3,7 @@
  */
 export const INVOICE_BRANDING = {
   /** Texto alternativo del logo (accesibilidad) */
-  logoAlt: 'NL Services — Desarrollo web e IA',
+  logoAlt: 'Nixon López — desarrollo web e IA',
   /** Nombre comercial bajo el logo en documentos */
   businessName: 'NL Services',
   /** Nombre corto para correos y asuntos */
@@ -16,7 +16,7 @@ export const INVOICE_BRANDING = {
   addressLine2: 'Edificio Mirador 50',
   country: 'República de Panamá',
   /** Logo en /public (ruta absoluta para <Image> y PDF) */
-  logoPath: '/images/logonlservices.png',
+  logoPath: '/images/logoweb.png',
   email: 'info@nixonlopez.com',
   /** Deja vacío para ocultar en el PDF/vista */
   phone: '',

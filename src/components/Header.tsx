@@ -82,11 +82,11 @@ const Header = () => {
             className="flex items-center shrink-0 min-w-0 max-w-[min(62vw,11rem)] sm:max-w-[min(52vw,12.5rem)] md:max-w-[min(40vw,14rem)]"
           >
             <Image
-              src="/images/logonlservices.png"
-              alt="NL Services — logo oficial"
+              src="/images/logoweb.png"
+              alt="Nixon López — logo"
               className="h-6 w-auto max-h-7 object-contain object-left sm:h-7 sm:max-h-8 md:h-7 md:max-h-9 lg:h-8 lg:max-h-9"
-              width={1057}
-              height={186}
+              width={1306}
+              height={199}
               sizes="(max-width: 768px) 72vw, 320px"
               priority
             />
@@ -147,11 +147,11 @@ const Header = () => {
             <div className="flex items-center justify-between px-4 py-4 sm:p-5 border-b border-white/10 shrink-0 gap-2">
               <div className="flex items-center min-w-0 flex-1">
                 <Image
-                  src="/images/logonlservices.png"
-                  alt="NL Services — logo oficial"
+                  src="/images/logoweb.png"
+                  alt="Nixon López — logo"
                   className="h-6 w-auto max-h-7 object-contain object-left shrink-0 sm:h-7 sm:max-h-8 max-w-[min(100%,11rem)]"
-                  width={1057}
-                  height={186}
+                  width={1306}
+                  height={199}
                   sizes="160px"
                   priority={false}
                 />

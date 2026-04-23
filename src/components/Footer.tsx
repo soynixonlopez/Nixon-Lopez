@@ -110,11 +110,11 @@ const Footer = () => {
             <div className="md:col-span-1">
               <div className="flex items-center mb-6">
                 <Image
-                  src="/images/logonlservices.png"
-                  alt="NL Services — logo oficial"
+                  src="/images/logoweb.png"
+                  alt="Nixon López — logo"
                   className="h-8 w-auto max-h-9 object-contain object-left sm:h-9 sm:max-h-10"
-                  width={1057}
-                  height={186}
+                  width={1306}
+                  height={199}
                   sizes="(max-width: 768px) 85vw, 320px"
                 />
               </div>

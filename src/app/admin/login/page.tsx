@@ -47,10 +47,10 @@ function LoginForm() {
       <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900/80 p-8 shadow-xl">
         <div className="flex justify-center mb-6">
           <Image
-            src="/images/logonlservices.png"
-            alt="NL Services — logo oficial"
-            width={1057}
-            height={186}
+            src="/images/logoweb.png"
+            alt="Nixon López — logo"
+            width={1306}
+            height={199}
             className="h-8 w-auto max-w-full object-contain sm:h-9"
             priority
           />

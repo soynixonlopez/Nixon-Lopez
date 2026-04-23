@@ -93,10 +93,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               />
             ) : (
               <Image
-                src="/images/logonlservices.png"
-                alt="NL Services"
-                width={1057}
-                height={186}
+                src="/images/logoweb.png"
+                alt="Nixon López — logo"
+                width={1306}
+                height={199}
                 className="h-6 w-auto max-w-[min(100%,9rem)] object-contain object-left"
                 priority
               />
