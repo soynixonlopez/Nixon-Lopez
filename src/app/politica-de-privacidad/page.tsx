@@ -35,7 +35,7 @@ export default function PoliticaDePrivacidadPage() {
           <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center" />
         </div>
         <div className="container-padding">
-          <div className="relative z-10 max-w-5xl">
+          <div className="relative z-10 mx-auto w-full max-w-6xl">
             <div className="mb-10">
               <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/15 to-purple-600/15 border border-white/10 text-slate-200 px-4 py-2 rounded-full text-sm">
                 <Shield className="w-4 h-4 text-blue-400" />
