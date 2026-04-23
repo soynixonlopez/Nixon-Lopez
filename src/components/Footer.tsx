@@ -1,15 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Mail, Send } from 'lucide-react'
+import { Mail, Send } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import TechLogo from './TechLogo'
 import { rateLimitFriendlyMessage } from '@/lib/utils'
 
 const Footer = () => {
-  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false)
-  const [isCookiesModalOpen, setIsCookiesModalOpen] = useState(false)
   const [newsletterEmail, setNewsletterEmail] = useState('')
   const [isNewsletterSubmitting, setIsNewsletterSubmitting] = useState(false)
   const [isNewsletterSubmitted, setIsNewsletterSubmitted] = useState(false)
@@ -267,244 +265,25 @@ const Footer = () => {
             </p>
               
               <div className="flex items-center gap-6">
-                <button
-                  onClick={() => setIsPrivacyModalOpen(true)}
+                <Link
+                  href="/politica-de-privacidad"
                   className="text-gray-400 hover:text-white transition-colors text-sm underline"
                 >
-                  Políticas de Privacidad
-                </button>
+                  Política de Privacidad
+                </Link>
                 
-                <button
-                  onClick={() => setIsCookiesModalOpen(true)}
+                <Link
+                  href="/politica-de-cookies"
                   className="text-gray-400 hover:text-white transition-colors text-sm underline"
                 >
-                  Políticas de Cookies
-                </button>
+                  Política de Cookies
+                </Link>
                 
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Privacy Policy Modal */}
-      {isPrivacyModalOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={() => setIsPrivacyModalOpen(false)}
-        >
-          <div
-            className="bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              <h2 className="text-2xl font-bold text-white">Políticas de Privacidad</h2>
-              <button
-                onClick={() => setIsPrivacyModalOpen(false)}
-                className="text-gray-400 hover:text-white transition-colors p-2"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            {/* Modal Content */}
-            <div className="p-6 text-gray-300 space-y-4">
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-3">1. Información que Recopilamos</h3>
-                <p className="text-sm leading-relaxed">
-                  Recopilamos información que nos proporcionas directamente, como cuando te contactas a través de nuestro formulario, 
-                  envías un correo electrónico o nos contactas de otra manera. Esta información puede incluir tu nombre, dirección 
-                  de correo electrónico y cualquier otra información que decidas proporcionar.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-3">2. Uso de la Información</h3>
-                <p className="text-sm leading-relaxed">
-                  Utilizamos la información que recopilamos para responder a tus consultas, proporcionar servicios, mejorar nuestro 
-                  sitio web y comunicarnos contigo sobre nuestros servicios. No vendemos, alquilamos ni compartimos tu información 
-                  personal con terceros sin tu consentimiento.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-3">3. Cookies y Tecnologías Similares</h3>
-                <p className="text-sm leading-relaxed">
-                  Nuestro sitio web puede utilizar cookies y tecnologías similares para mejorar tu experiencia de navegación. 
-                  Puedes configurar tu navegador para rechazar cookies, pero esto puede afectar la funcionalidad del sitio.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-3">4. Seguridad de la Información</h3>
-                <p className="text-sm leading-relaxed">
-                  Implementamos medidas de seguridad apropiadas para proteger tu información personal contra acceso no autorizado, 
-                  alteración, divulgación o destrucción. Sin embargo, ningún método de transmisión por Internet es 100% seguro.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-3">5. Tus Derechos</h3>
-                <p className="text-sm leading-relaxed">
-                  Tienes derecho a acceder, corregir o eliminar tu información personal. También puedes optar por no recibir 
-                  comunicaciones de marketing. Para ejercer estos derechos, contáctanos a través de la información de contacto 
-                  proporcionada en este sitio.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-3">6. Cambios en esta Política</h3>
-                <p className="text-sm leading-relaxed">
-                  Podemos actualizar esta política de privacidad de vez en cuando. Te notificaremos cualquier cambio 
-                  significativo publicando la nueva política en este sitio y actualizando la fecha de &quot;última actualización&quot;.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-3">7. Contacto</h3>
-                <p className="text-sm leading-relaxed">
-                  Si tienes preguntas sobre esta política de privacidad o nuestras prácticas de privacidad, 
-                  contáctanos en: soynixonlopez@gmail.com
-                </p>
-              </div>
-
-              <div className="text-xs text-gray-500 pt-4 border-t border-gray-700">
-                <p>Última actualización: {new Date().toLocaleDateString('es-ES')}</p>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="flex justify-end p-6 border-t border-gray-700">
-              <button
-                onClick={() => setIsPrivacyModalOpen(false)}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Cookies Policy Modal */}
-      {isCookiesModalOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={() => setIsCookiesModalOpen(false)}
-        >
-          <div
-            className="bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              <h2 className="text-2xl font-bold text-white">Políticas de Cookies</h2>
-              <button
-                onClick={() => setIsCookiesModalOpen(false)}
-                className="text-gray-400 hover:text-white transition-colors p-2"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            {/* Modal Content */}
-            <div className="p-6 text-gray-300 space-y-4">
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-3">1. ¿Qué son las Cookies?</h3>
-                <p className="text-sm leading-relaxed">
-                  Las cookies son pequeños archivos de texto que se almacenan en tu dispositivo cuando visitas nuestro sitio web. 
-                  Estas cookies nos ayudan a mejorar tu experiencia de navegación, recordar tus preferencias y analizar cómo 
-                  utilizas nuestro sitio.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-3">2. Tipos de Cookies que Utilizamos</h3>
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="text-lg font-medium text-white mb-2">Cookies Esenciales</h4>
-                    <p className="text-sm leading-relaxed">
-                      Estas cookies son necesarias para el funcionamiento básico del sitio web y no se pueden desactivar. 
-                      Incluyen cookies de sesión, seguridad y funcionalidad básica.
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-medium text-white mb-2">Cookies de Rendimiento</h4>
-                    <p className="text-sm leading-relaxed">
-                      Nos ayudan a entender cómo los visitantes interactúan con nuestro sitio web, proporcionando información 
-                      sobre las páginas visitadas, tiempo de permanencia y posibles errores.
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-medium text-white mb-2">Cookies de Funcionalidad</h4>
-                    <p className="text-sm leading-relaxed">
-                      Permiten que el sitio web recuerde las elecciones que haces (como tu nombre de usuario, idioma o región) 
-                      y proporcionan características mejoradas y más personales.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-3">3. Cookies de Terceros</h3>
-                <p className="text-sm leading-relaxed">
-                  Nuestro sitio puede utilizar servicios de terceros como Google Analytics, redes sociales o herramientas 
-                  de marketing. Estas empresas pueden establecer sus propias cookies en tu dispositivo. Te recomendamos 
-                  revisar las políticas de privacidad de estos servicios.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-3">4. Gestión de Cookies</h3>
-                <p className="text-sm leading-relaxed">
-                  Puedes controlar y gestionar las cookies a través de la configuración de tu navegador. La mayoría de 
-                  los navegadores te permiten rechazar cookies o recibir una notificación antes de que se instale una cookie. 
-                  Sin embargo, ten en cuenta que deshabilitar ciertas cookies puede afectar la funcionalidad del sitio.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-3">5. Cookies en Dispositivos Móviles</h3>
-                <p className="text-sm leading-relaxed">
-                  Si accedes a nuestro sitio desde un dispositivo móvil, también utilizamos cookies para optimizar tu 
-                  experiencia. Puedes gestionar estas cookies a través de la configuración de tu navegador móvil.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-3">6. Actualizaciones de esta Política</h3>
-                <p className="text-sm leading-relaxed">
-                  Podemos actualizar esta política de cookies de vez en cuando para reflejar cambios en nuestras prácticas 
-                  o por otras razones operativas, legales o regulatorias. Te recomendamos revisar esta página periódicamente.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-3">7. Contacto</h3>
-                <p className="text-sm leading-relaxed">
-                  Si tienes preguntas sobre nuestra política de cookies o cómo utilizamos las cookies en nuestro sitio, 
-                  contáctanos en: soynixonlopez@gmail.com
-                </p>
-              </div>
-
-              <div className="text-xs text-gray-500 pt-4 border-t border-gray-700">
-                <p>Última actualización: {new Date().toLocaleDateString('es-ES')}</p>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="flex justify-end p-6 border-t border-gray-700">
-              <button
-                onClick={() => setIsCookiesModalOpen(false)}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </footer>
   )
 }
