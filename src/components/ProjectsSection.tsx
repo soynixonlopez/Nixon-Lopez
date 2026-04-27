@@ -71,7 +71,7 @@ const ProjectsSection = () => {
     yurna: 'https://www.yurnafinance.com',
     tobykids: 'https://tobykids.vercel.app',
     vipal: 'https://www.vipalglasspanama.com',
-    quantico: 'https://www.quanticoglobalsystem.com',
+    quantico: 'https://www.quanticoglobalsystems.com',
     'erp-website': 'https://erpsa.vercel.app',
     masterclass: 'https://www.carmengestilista/masterclass',
     apradap: 'https://www.apradappanama.org',
