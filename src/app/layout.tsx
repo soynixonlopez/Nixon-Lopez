@@ -19,10 +19,10 @@ export const viewport: Viewport = {
 }
 
 const defaultTitle =
-  'NL Services | Desarrollo web, IA y automatización — Nixon López | Panamá'
+  'Nixon Lopez Services | Desarrollo web, IA y automatización — Nixon López | Panamá'
 
 const defaultDescription =
-  'NL Services: desarrollo web profesional, ChatBots, e-commerce y automatizaciones con inteligencia artificial en Panamá. Nixon López — más de 5 años creando soluciones digitales para negocios. Cotización online.'
+  'Nixon Lopez Services: desarrollo web profesional, ChatBots, e-commerce y automatizaciones con inteligencia artificial en Panamá. Nixon López — más de 5 años creando soluciones digitales para negocios. Cotización online.'
 
 const googleVerification = process.env.GOOGLE_SITE_VERIFICATION
 
@@ -30,11 +30,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: defaultTitle,
-    template: `%s | NL Services`,
+    template: `%s | Nixon Lopez Services`,
   },
   description: defaultDescription,
   keywords: [
-    'NL Services',
+    'Nixon Lopez Services',
     'desarrollo web Panamá',
     'páginas web Panamá',
     'inteligencia artificial',
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'Nixon López', url: SITE_URL }],
   creator: 'Nixon López',
-  publisher: 'NL Services',
+  publisher: 'Nixon Lopez Services',
   category: 'technology',
   icons: {
     icon: [
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     title: defaultTitle,
     description: defaultDescription,
     url: SITE_URL,
-    siteName: 'NL Services',
+    siteName: 'Nixon Lopez Services',
     images: [
       {
         url: '/images/logoweb.png',

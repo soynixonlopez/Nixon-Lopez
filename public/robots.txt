@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://nixonlopez.dev/sitemap.xml
+Sitemap: https://nixonlopez.com/sitemap.xml

@@ -107,7 +107,7 @@ export function buildContractIntroSegments(contract: ServiceContractRecord): Con
     {
       kind: 'text',
       value:
-        'NL Services, empresa dedicada al desarrollo de sistemas, sitios web y aplicaciones móviles para negocios y empresas en la República de Panamá, con RUC No. ',
+        'Nixon Lopez Services, empresa dedicada al desarrollo de sistemas, sitios web y aplicaciones móviles para negocios y empresas en la República de Panamá, con RUC No. ',
     },
     { kind: 'key', value: INVOICE_BRANDING.ruc },
     { kind: 'text', value: ', correo electrónico: ' },

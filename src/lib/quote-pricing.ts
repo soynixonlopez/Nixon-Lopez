@@ -1,4 +1,4 @@
-/** Catálogo y reglas de cotización pública (NL Services) + opciones del panel admin. */
+/** Catálogo y reglas de cotización pública (Nixon Lopez Services) + opciones del panel admin. */
 
 export const MAX_INCLUDED_PAGES = 5
 export const PRICE_EXTRA_PAGE_USD = 25

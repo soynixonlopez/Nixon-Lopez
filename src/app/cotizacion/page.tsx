@@ -111,7 +111,7 @@ export default function CotizacionPage() {
           `<tr><td style="padding:10px;border-bottom:1px solid #e2e8f0;">${escapeHtml(l.label)}</td><td style="padding:10px;text-align:right;border-bottom:1px solid #e2e8f0;white-space:nowrap;">$${l.amount.toFixed(2)}</td></tr>`
       )
       .join('')
-    ventana.document.write(`<!DOCTYPE html><html><head><title>Cotización — NL Services</title>
+    ventana.document.write(`<!DOCTYPE html><html><head><title>Cotización — Nixon Lopez Services</title>
       <style>
         *{box-sizing:border-box}
         body{font-family:system-ui,sans-serif;padding:20px;color:#0f172a;max-width:860px;margin:0 auto;background:#fff}
@@ -566,7 +566,11 @@ export default function CotizacionPage() {
                 {cotizacionEnviada ? (
                   <div className="flex items-center gap-2 text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
                     <CheckCircle className="w-5 h-5 shrink-0" />
-                    <p>Hemos recibido tu cotización. Te responderemos lo antes posible.</p>
+                    <p>
+                      Hemos recibido tu cotización. Revisa tu correo: te enviamos el resumen y el contrato en
+                      PDF, con el enlace para enviarlo por WhatsApp cuando lo tengas listo. Te responderemos lo
+                      antes posible.
+                    </p>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-3">

@@ -80,7 +80,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             className="min-w-0 flex-1 font-bold flex items-center gap-2"
             onClick={() => setOpen(false)}
             title="Inicio del panel"
-            aria-label="NL Services — panel de administración"
+            aria-label="Nixon Lopez Services — panel de administración"
           >
             {collapsed ? (
               <Image

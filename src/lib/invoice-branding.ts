@@ -5,9 +5,9 @@ export const INVOICE_BRANDING = {
   /** Texto alternativo del logo (accesibilidad) */
   logoAlt: 'Nixon López — desarrollo web e IA',
   /** Nombre comercial bajo el logo en documentos */
-  businessName: 'NL Services',
+  businessName: 'Nixon Lopez Services',
   /** Nombre corto para correos y asuntos */
-  publicName: 'NL Services',
+  publicName: 'Nixon Lopez Services',
   /** Línea de actividad bajo el nombre comercial */
   businessSubtitle: 'Desarrollo web, automatización e IA',
   /** RUC Panamá */
@@ -20,7 +20,7 @@ export const INVOICE_BRANDING = {
   email: 'info@nixonlopez.com',
   /** Deja vacío para ocultar en el PDF/vista */
   phone: '',
-  website: 'https://nixonlopez.dev',
+  website: 'https://nixonlopez.com',
   /** Color principal (encabezados, barra total) — slate-800 / azul corporativo */
   accentHex: '#1e3a5f',
   /** Texto legal corto (pie de documento) */

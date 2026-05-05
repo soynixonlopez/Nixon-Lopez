@@ -17,7 +17,7 @@ import {
 export const metadata: Metadata = {
   title: 'Política de Cookies',
   description:
-    'Política de Cookies de NL Services (Nixon López). Información sobre cookies, tecnologías similares, finalidad, terceros y cómo gestionarlas.',
+    'Política de Cookies de Nixon Lopez Services (Nixon López). Información sobre cookies, tecnologías similares, finalidad, terceros y cómo gestionarlas.',
   alternates: { canonical: `${SITE_URL}/politica-de-cookies` },
   robots: { index: true, follow: true },
 }

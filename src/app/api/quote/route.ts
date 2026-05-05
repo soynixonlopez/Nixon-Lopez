@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sendContactEmail } from '@/lib/mailer'
+import { sendContactEmail, sendEmailWithAttachments } from '@/lib/mailer'
 import { createServiceRoleClient } from '@/lib/supabase/service'
 import {
   checkRateLimit,
@@ -8,6 +8,29 @@ import {
   getQuoteLimit,
 } from '@/lib/rate-limit'
 import { escapeHtml } from '@/lib/utils'
+import { generateContractPdfBuffer } from '@/lib/pdf/generateContractPdf'
+import { generateQuoteSummaryPdfBuffer, type QuoteSummaryLine } from '@/lib/pdf/generateQuoteSummaryPdf'
+import {
+  buildQuoteClientConfirmationContent,
+  buildSyntheticContractRecordForQuotePdf,
+} from '@/lib/quote-client-confirmation-email'
+import { INVOICE_BRANDING } from '@/lib/invoice-branding'
+
+function parseQuoteLines(body: Record<string, unknown>): QuoteSummaryLine[] {
+  const raw = body.breakdown
+  if (!raw || typeof raw !== 'object' || raw === null) return []
+  const lines = (raw as { lines?: unknown }).lines
+  if (!Array.isArray(lines)) return []
+  const out: QuoteSummaryLine[] = []
+  for (const item of lines) {
+    if (!item || typeof item !== 'object') continue
+    const label = typeof (item as { label?: unknown }).label === 'string' ? (item as { label: string }).label : ''
+    const amountRaw = (item as { amount?: unknown }).amount
+    const amount = typeof amountRaw === 'number' && Number.isFinite(amountRaw) ? amountRaw : 0
+    if (label || amount) out.push({ label: label || 'Ítem', amount })
+  }
+  return out
+}
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request)
@@ -40,6 +63,7 @@ export async function POST(request: NextRequest) {
     const observacionHostingDb = body.observacionHostingDb
     const tieneDominio = body.tieneDominio
     const tieneCorreo = body.tieneCorreo
+    const monthly = body.monthly === true
 
     if (!nombre || !apellido || !correo || !servicio || !total) {
       return NextResponse.json({ error: 'Faltan datos requeridos para la cotización.' }, { status: 400 })
@@ -49,6 +73,59 @@ export async function POST(request: NextRequest) {
     if (!emailRegex.test(correo)) {
       return NextResponse.json({ error: 'Correo inválido.' }, { status: 400 })
     }
+
+    const supabaseAdmin = createServiceRoleClient()
+    if (!supabaseAdmin) {
+      return NextResponse.json(
+        { error: 'Servicio no disponible. Intenta más tarde.' },
+        { status: 503 }
+      )
+    }
+
+    const pages = cantidadPaginas ? parseInt(String(cantidadPaginas), 10) : null
+    const incluyeStr = String(incluyeDominioHostingCorreo ?? '')
+    const includesDomainOrEmailInBudget =
+      incluyeStr.includes('Sí') ||
+      incluyeStr.includes('presupuesto') ||
+      tieneDominio === 'no' ||
+      tieneCorreo === 'no'
+    const pasarelaStr = String(pasarelaPagos ?? '')
+    const includesPasarela =
+      pasarelaStr.startsWith('Sí') ||
+      pasarelaStr.includes('add-on') ||
+      pasarelaStr.includes('Servicio pasarela')
+
+    const totalAmount = typeof totalNumeric === 'number' && Number.isFinite(totalNumeric) ? totalNumeric : null
+
+    const { data: inserted, error: insertError } = await supabaseAdmin
+      .from('quotes')
+      .insert({
+        source: 'website',
+        status: 'new',
+        client_first_name: nombre,
+        client_last_name: apellido,
+        client_email: correo,
+        service_id: typeof tipoServicio === 'string' ? tipoServicio : null,
+        service_label: servicio || null,
+        quantity_pages: Number.isFinite(pages) ? pages : null,
+        includes_domain_hosting_email: includesDomainOrEmailInBudget,
+        payment_gateway_included: includesPasarela,
+        total_amount: totalAmount,
+        subtotal: totalAmount,
+        comments: typeof comentarios === 'string' ? comentarios : null,
+        raw_payload: body,
+        email_notified_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single()
+
+    if (insertError || !inserted) {
+      console.error('Supabase quotes insert:', insertError?.message)
+      return NextResponse.json({ error: 'No se pudo registrar la cotización. Intenta de nuevo.' }, { status: 500 })
+    }
+
+    const quoteId = (inserted as { id: string }).id
+    const quoteLines = parseQuoteLines(body)
 
     const n = escapeHtml(nombre)
     const a = escapeHtml(apellido)
@@ -81,6 +158,7 @@ export async function POST(request: NextRequest) {
         <p><strong>Incluye dominio/hosting/correo:</strong> ${incl}</p>
         <p><strong>Pasarela de pagos:</strong> ${pas}</p>
         <p><strong>Total:</strong> ${tot}</p>
+        <p><strong>Ref. interna:</strong> ${escapeHtml(quoteId.slice(0, 8).toUpperCase())}</p>
         <p><strong>Fecha:</strong> ${new Date().toLocaleString('es-ES')}</p>
         ${com ? `<hr style="margin: 16px 0;" /><p style="white-space: pre-wrap;"><strong>Comentarios:</strong><br/>${com}</p>` : ''}
         ${obsI ? `<p><strong>Observación (imágenes):</strong> ${obsI}</p>` : ''}
@@ -94,44 +172,66 @@ export async function POST(request: NextRequest) {
       replyTo: correo,
     })
 
-    const supabaseAdmin = createServiceRoleClient()
-    if (supabaseAdmin) {
-      try {
-        const pages = cantidadPaginas ? parseInt(String(cantidadPaginas), 10) : null
-        const incluyeStr = String(incluyeDominioHostingCorreo ?? '')
-        const includesDomainOrEmailInBudget =
-          incluyeStr.includes('Sí') ||
-          incluyeStr.includes('presupuesto') ||
-          tieneDominio === 'no' ||
-          tieneCorreo === 'no'
-        const pasarelaStr = String(pasarelaPagos ?? '')
-        const includesPasarela =
-          pasarelaStr.startsWith('Sí') ||
-          pasarelaStr.includes('add-on') ||
-          pasarelaStr.includes('Servicio pasarela')
-        const { error: dbError } = await supabaseAdmin.from('quotes').insert({
-          source: 'website',
-          status: 'new',
-          client_first_name: nombre,
-          client_last_name: apellido,
-          client_email: correo,
-          service_id: typeof tipoServicio === 'string' ? tipoServicio : null,
-          service_label: servicio || null,
-          quantity_pages: Number.isFinite(pages) ? pages : null,
-          includes_domain_hosting_email: includesDomainOrEmailInBudget,
-          payment_gateway_included: includesPasarela,
-          total_amount: typeof totalNumeric === 'number' ? totalNumeric : null,
-          subtotal: typeof totalNumeric === 'number' ? totalNumeric : null,
-          comments: typeof comentarios === 'string' ? comentarios : null,
-          raw_payload: body,
-          email_notified_at: new Date().toISOString(),
-        })
-        if (dbError) {
-          console.error('Supabase quotes insert:', dbError.message)
-        }
-      } catch (dbErr) {
-        console.error('Supabase quotes insert (excepción):', dbErr)
-      }
+    try {
+      const synthetic = buildSyntheticContractRecordForQuotePdf({
+        quoteId,
+        nombre,
+        apellido,
+        correo,
+        servicio,
+        tipoServicio: typeof tipoServicio === 'string' ? tipoServicio : null,
+        totalNumeric: typeof totalNumeric === 'number' && Number.isFinite(totalNumeric) ? totalNumeric : 0,
+      })
+
+      const [quotePdf, contractPdf] = await Promise.all([
+        generateQuoteSummaryPdfBuffer({
+          quoteId,
+          clientFirstName: nombre.trim(),
+          clientLastName: apellido.trim(),
+          clientEmail: correo.trim(),
+          serviceLabel: servicio,
+          createdAtIso: new Date().toISOString(),
+          lines: quoteLines,
+          total: typeof totalNumeric === 'number' && Number.isFinite(totalNumeric) ? totalNumeric : 0,
+          monthly,
+        }),
+        generateContractPdfBuffer(synthetic),
+      ])
+
+      const ref = quoteId.slice(0, 8).toUpperCase()
+      const clientPayload = buildQuoteClientConfirmationContent({
+        nombre,
+        apellido,
+        correo,
+        servicio,
+        totalDisplay: total,
+        cantidadPaginas: cantidadPaginas ? String(cantidadPaginas) : undefined,
+        incluyeDominioHostingCorreo: String(incluyeDominioHostingCorreo ?? ''),
+        pasarelaPagos: String(pasarelaPagos ?? ''),
+        comentarios: typeof comentarios === 'string' && comentarios.trim() ? comentarios.trim() : undefined,
+        quoteId,
+        monthly,
+      })
+
+      await sendEmailWithAttachments({
+        to: correo,
+        subject: clientPayload.subject,
+        html: clientPayload.html,
+        text: clientPayload.text,
+        replyTo: INVOICE_BRANDING.email,
+        attachments: [
+          {
+            filename: `Cotizacion-Nixon-Lopez-Services-${ref}.pdf`,
+            content: Buffer.from(quotePdf),
+          },
+          {
+            filename: `Contrato-borrador-${ref}.pdf`,
+            content: Buffer.from(contractPdf),
+          },
+        ],
+      })
+    } catch (clientMailErr) {
+      console.error('Correo al cliente (cotización/contrato):', clientMailErr)
     }
 
     return NextResponse.json({ ok: true }, { status: 200 })

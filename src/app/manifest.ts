@@ -2,10 +2,10 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'NL Services — Desarrollo web e IA',
-    short_name: 'NL Services',
+    name: 'Nixon Lopez Services — Desarrollo web e IA',
+    short_name: 'Nixon Lopez Services',
     description:
-      'NL Services: desarrollo web, ChatBots, e-commerce y automatizaciones con IA en Panamá.',
+      'Nixon Lopez Services: desarrollo web, ChatBots, e-commerce y automatizaciones con IA en Panamá.',
     start_url: '/',
     display: 'standalone',
     background_color: '#0f172a',

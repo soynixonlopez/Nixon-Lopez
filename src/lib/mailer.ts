@@ -68,6 +68,8 @@ export async function sendEmail({ subject, html, replyTo, to }: MailPayload) {
 type AttachmentPayload = {
   subject: string
   html: string
+  /** Versión texto plano (mejor entregabilidad y accesibilidad). */
+  text?: string
   to: string
   replyTo?: string
   attachments: { filename: string; content: Buffer }[]
@@ -77,6 +79,7 @@ type AttachmentPayload = {
 export async function sendEmailWithAttachments({
   subject,
   html,
+  text,
   to,
   replyTo,
   attachments,
@@ -88,6 +91,7 @@ export async function sendEmailWithAttachments({
     to,
     subject,
     html,
+    text,
     replyTo,
     attachments: attachments.map((a) => ({
       filename: a.filename,

@@ -102,7 +102,7 @@ Panel interno con **Supabase Auth** (solo el correo administrador definido en la
 | `/admin/facturas/[id]` | Vista profesional (1 página), imprimir/PDF, enviar por correo con PDF |
 | `/admin/facturas/[id]/edit` | Editar datos, líneas y estado |
 
-Datos fiscales y logo en el documento: edita `src/lib/invoice-branding.ts` (NL Services, RUC, dirección, logo en `/public/images/…`). El envío por correo con adjunto usa la misma configuración SMTP que el resto del sitio.
+Datos fiscales y logo en el documento: edita `src/lib/invoice-branding.ts` (Nixon Lopez Services, RUC, dirección, logo en `/public/images/…`). El envío por correo con adjunto usa la misma configuración SMTP que el resto del sitio.
 
 Si cambias el correo del administrador, actualiza la función `is_admin()` en SQL y, si aplica, `ADMIN_EMAIL` / `src/lib/admin-constants.ts`.
 

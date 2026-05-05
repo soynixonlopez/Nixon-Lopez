@@ -18,7 +18,7 @@ import {
 export const metadata: Metadata = {
   title: 'Política de Privacidad',
   description:
-    'Política de Privacidad de NL Services (Nixon López). Información sobre tratamiento de datos, finalidades, bases legales, derechos y contacto.',
+    'Política de Privacidad de Nixon Lopez Services (Nixon López). Información sobre tratamiento de datos, finalidades, bases legales, derechos y contacto.',
   alternates: { canonical: `${SITE_URL}/politica-de-privacidad` },
   robots: { index: true, follow: true },
 }
@@ -48,7 +48,7 @@ export default function PoliticaDePrivacidadPage() {
                 Última actualización: {LAST_UPDATED}
               </p>
               <p className="text-slate-300/90 text-base leading-relaxed mt-5 max-w-3xl">
-                En NL Services usamos tus datos solo para <strong>responderte</strong>, <strong>cotizar</strong> y <strong>dar seguimiento</strong> a tus solicitudes,
+                En Nixon Lopez Services usamos tus datos solo para <strong>responderte</strong>, <strong>cotizar</strong> y <strong>dar seguimiento</strong> a tus solicitudes,
                 proteger el sitio contra abuso y medir resultados de campañas. Aquí te explicamos qué recopilamos, para qué y cómo ejercer tus derechos.
               </p>
             </div>
@@ -128,7 +128,7 @@ export default function PoliticaDePrivacidadPage() {
                 </h2>
                 <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
                   <p className="text-sm leading-relaxed">
-                    Este sitio web es operado por <strong>NL Services</strong> (Nixon López). Para consultas relacionadas con
+                    Este sitio web es operado por <strong>Nixon Lopez Services</strong> (Nixon López). Para consultas relacionadas con
                     privacidad puedes escribir a{' '}
                     <a className="underline hover:text-white" href={`mailto:${CONTACT_EMAIL}`}>
                       {CONTACT_EMAIL}
