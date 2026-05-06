@@ -10,6 +10,14 @@ const W = 595.28
 const H = 841.89
 const M = 48
 
+function centerTextX(
+  text: string,
+  font: { widthOfTextAtSize: (t: string, s: number) => number },
+  size: number
+) {
+  return (W - font.widthOfTextAtSize(text, size)) / 2
+}
+
 function hexToRgb01(hex: string) {
   const h = hex.replace('#', '')
   return {
@@ -142,8 +150,8 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
     const maxW = 170
     const scale = maxW / img.width
     const ih = img.height * scale
-    page.drawImage(img, { x: M, y: y - ih, width: maxW, height: ih })
-    y -= ih + 24
+    page.drawImage(img, { x: (W - maxW) / 2, y: y - ih, width: maxW, height: ih })
+    y -= ih + 28
   } catch {
     // ignore logo embedding failure — deja espacio coherente con el bloque del título
     y -= 16
@@ -152,18 +160,25 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
   const contractTitle = 'CONTRATO DE PRESTACION DE SERVICIOS TECNOLOGICOS'
   const titleLines = wrapText(contractTitle, maxWidth, bold, 11)
   for (const line of titleLines) {
-    page.drawText(line, { x: M, y, size: 11, font: bold, color: accent })
+    page.drawText(line, {
+      x: centerTextX(line, bold, 11),
+      y,
+      size: 11,
+      font: bold,
+      color: accent,
+    })
     y -= 15
   }
-  y -= 8
-  page.drawText(`No. ${contract.contract_number}`, {
-    x: M,
+  y -= 10
+  const contractNoLine = `No. ${contract.contract_number}`
+  page.drawText(contractNoLine, {
+    x: centerTextX(contractNoLine, bold, 10),
     y,
     size: 10,
     font: bold,
     color: muted,
   })
-  y -= 28
+  y -= 30
 
   const drawParagraph = (p: string, size = 10, spacing = 17) => {
     const lines = wrapText(p, maxWidth, font, size)
