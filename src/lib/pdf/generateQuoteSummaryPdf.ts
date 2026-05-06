@@ -69,7 +69,7 @@ export async function generateQuoteSummaryPdfBuffer(input: QuoteSummaryPdfInput)
   const textColor = rgb(0.15, 0.18, 0.22)
   const muted = rgb(0.38, 0.42, 0.48)
 
-  let cursorY = 52
+  let cursorY = 48
   const logoPath = path.join(process.cwd(), 'public', INVOICE_BRANDING.logoPath.replace(/^\//, ''))
   try {
     const logoBytes = fs.readFileSync(logoPath)
@@ -78,7 +78,7 @@ export async function generateQuoteSummaryPdfBuffer(input: QuoteSummaryPdfInput)
     const scale = maxW / img.width
     const h = img.height * scale
     page.drawImage(img, { x: M, y: yTop(page, cursorY + h), width: maxW, height: h })
-    cursorY += h + 10
+    cursorY += h + 22
   } catch {
     cursorY += 4
   }
@@ -87,7 +87,7 @@ export async function generateQuoteSummaryPdfBuffer(input: QuoteSummaryPdfInput)
   const title = 'COTIZACIÓN'
   page.drawText(title, {
     x: PAGE_W - M - fontBold.widthOfTextAtSize(title, 20),
-    y: yTop(page, 50),
+    y: yTop(page, 54),
     size: 20,
     font: fontBold,
     color: accent,
@@ -105,7 +105,7 @@ export async function generateQuoteSummaryPdfBuffer(input: QuoteSummaryPdfInput)
     font: fontBold,
     color: accent,
   })
-  cursorY += 16
+  cursorY += 22
 
   page.drawText(`Ref. ${ref} · ${dateStr}`, {
     x: M,
@@ -114,10 +114,10 @@ export async function generateQuoteSummaryPdfBuffer(input: QuoteSummaryPdfInput)
     font,
     color: muted,
   })
-  cursorY += 28
+  cursorY += 36
 
   const maxW = PAGE_W - M * 2
-  const drawP = (t: string, size = 10, bold = false, gap = 12) => {
+  const drawP = (t: string, size = 10, bold = false, gap = 14) => {
     const f = bold ? fontBold : font
     for (const line of wrapText(t, maxW, f, size)) {
       page.drawText(line, { x: M, y: yTop(page, cursorY), size, font: f, color: textColor })
@@ -125,14 +125,14 @@ export async function generateQuoteSummaryPdfBuffer(input: QuoteSummaryPdfInput)
     }
   }
 
-  drawP('Cliente', 9, true, 10)
-  drawP(`${input.clientFirstName} ${input.clientLastName}`, 11, false, 14)
-  drawP(input.clientEmail, 9, false, 18)
-  drawP('Servicio', 9, true, 10)
-  drawP(input.serviceLabel, 10, false, 20)
+  drawP('Cliente', 9, true, 12)
+  drawP(`${input.clientFirstName} ${input.clientLastName}`, 11, false, 16)
+  drawP(input.clientEmail, 9, false, 22)
+  drawP('Servicio', 9, true, 12)
+  drawP(input.serviceLabel, 10, false, 24)
 
   page.drawText('Detalle', { x: M, y: yTop(page, cursorY), size: 10, font: fontBold, color: accent })
-  cursorY += 16
+  cursorY += 20
 
   const rows = input.lines.length
     ? input.lines
@@ -153,19 +153,19 @@ export async function generateQuoteSummaryPdfBuffer(input: QuoteSummaryPdfInput)
           color: textColor,
         })
       }
-      cursorY += 11
+      cursorY += 13
     }
-    cursorY += 4
+    cursorY += 6
   }
 
-  cursorY += 8
+  cursorY += 12
   page.drawLine({
     start: { x: M, y: yTop(page, cursorY) },
     end: { x: PAGE_W - M, y: yTop(page, cursorY) },
     thickness: 0.5,
     color: accent,
   })
-  cursorY += 14
+  cursorY += 18
 
   const totalLabel = input.monthly ? 'Total estimado (mensual)' : 'Total estimado'
   const totalStr = `${fmtMoney(input.total)}${input.monthly ? '/mes' : ''}`
@@ -177,13 +177,13 @@ export async function generateQuoteSummaryPdfBuffer(input: QuoteSummaryPdfInput)
     font: fontBold,
     color: accent,
   })
-  cursorY += 36
+  cursorY += 40
 
   const foot =
     '* Montos referenciales según lo indicado en el formulario. No constituye factura. Conserve este documento.'
   for (const line of wrapText(foot, maxW, font, 8)) {
     page.drawText(line, { x: M, y: yTop(page, cursorY), size: 8, font, color: muted })
-    cursorY += 10
+    cursorY += 12
   }
 
   return pdf.save()

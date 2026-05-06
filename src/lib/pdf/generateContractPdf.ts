@@ -134,6 +134,7 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
   let page = pdf.addPage([W, H])
   let y = H - M
 
+  const maxWidth = W - M * 2
   const logoPath = path.join(process.cwd(), 'public', INVOICE_BRANDING.logoPath.replace(/^\//, ''))
   try {
     const bytes = fs.readFileSync(logoPath)
@@ -142,27 +143,29 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
     const scale = maxW / img.width
     const ih = img.height * scale
     page.drawImage(img, { x: M, y: y - ih, width: maxW, height: ih })
+    y -= ih + 24
   } catch {
-    // ignore logo embedding failure
+    // ignore logo embedding failure — deja espacio coherente con el bloque del título
+    y -= 16
   }
-  page.drawText('CONTRATO DE PRESTACION DE SERVICIOS TECNOLOGICOS', {
-    x: W - M - bold.widthOfTextAtSize('CONTRATO DE PRESTACION DE SERVICIOS TECNOLOGICOS', 11),
-    y: y - 8,
-    size: 11,
-    font: bold,
-    color: accent,
-  })
+
+  const contractTitle = 'CONTRATO DE PRESTACION DE SERVICIOS TECNOLOGICOS'
+  const titleLines = wrapText(contractTitle, maxWidth, bold, 11)
+  for (const line of titleLines) {
+    page.drawText(line, { x: M, y, size: 11, font: bold, color: accent })
+    y -= 15
+  }
+  y -= 8
   page.drawText(`No. ${contract.contract_number}`, {
-    x: W - M - bold.widthOfTextAtSize(`No. ${contract.contract_number}`, 10),
-    y: y - 24,
+    x: M,
+    y,
     size: 10,
     font: bold,
     color: muted,
   })
-  y -= 70
+  y -= 28
 
-  const maxWidth = W - M * 2
-  const drawParagraph = (p: string, size = 10, spacing = 14) => {
+  const drawParagraph = (p: string, size = 10, spacing = 17) => {
     const lines = wrapText(p, maxWidth, font, size)
     for (const line of lines) {
       if (y < M + 80) {
@@ -172,7 +175,7 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
       page.drawText(line, { x: M, y, size, font, color: text })
       y -= spacing
     }
-    y -= 6
+    y -= 12
   }
 
   const drawTitle = (t: string) => {
@@ -180,12 +183,13 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
       page = pdf.addPage([W, H])
       y = H - M
     }
+    y -= 6
     page.drawText(t, { x: M, y, size: 10, font: bold, color: accent })
-    y -= 16
+    y -= 22
   }
 
   const drawBullets = (items: string[]) => {
-    for (const it of items) drawParagraph(`- ${it}`)
+    for (const it of items) drawParagraph(`- ${it}`, 10, 17)
   }
 
   const drawPaymentBlock = (title: string, rows: { label: string; value: string; key?: boolean }[]) => {
@@ -193,8 +197,9 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
       page = pdf.addPage([W, H])
       y = H - M
     }
+    y -= 4
     page.drawText(title.toUpperCase(), { x: M, y, size: 9, font: bold, color: accent })
-    y -= 12
+    y -= 18
     const labelW = 130
     for (const r of rows) {
       if (y < M + 60) {
@@ -213,15 +218,15 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
           color: text,
         })
       }
-      y -= 12
+      y -= 15
     }
-    y -= 8
+    y -= 14
   }
 
   {
-    const r = drawWrappedRichIntro(page, pdf, introWords, M, y, maxWidth, font, bold, 10, 13, text, M + 72)
+    const r = drawWrappedRichIntro(page, pdf, introWords, M, y, maxWidth, font, bold, 10, 16, text, M + 72)
     page = r.page
-    y = r.y - 10
+    y = r.y - 18
   }
 
   drawTitle('PRIMERA: OBJETO DEL CONTRATO')

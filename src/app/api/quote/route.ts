@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as Record<string, unknown>
     const nombre = String(body.nombre ?? '')
     const apellido = String(body.apellido ?? '')
-    const correo = String(body.correo ?? '')
+    const correo = String(body.correo ?? '').trim()
     const tipoServicio = body.tipoServicio
     const servicio = String(body.servicio ?? '')
     const cantidadPaginas = body.cantidadPaginas
@@ -172,6 +172,7 @@ export async function POST(request: NextRequest) {
       replyTo: correo,
     })
 
+    let clientEmailSent = false
     try {
       const synthetic = buildSyntheticContractRecordForQuotePdf({
         quoteId,
@@ -213,12 +214,20 @@ export async function POST(request: NextRequest) {
         monthly,
       })
 
+      const noPdfBcc = process.env.QUOTE_CLIENT_PDF_NO_BCC === 'true' || process.env.QUOTE_CLIENT_PDF_NO_BCC === '1'
+      const explicitBcc = process.env.QUOTE_CLIENT_PDF_BCC?.trim()
+      const bccQuotePdf = noPdfBcc
+        ? undefined
+        : explicitBcc || process.env.CONTACT_EMAIL_TO || 'info@nixonlopez.com'
+
       await sendEmailWithAttachments({
         to: correo,
         subject: clientPayload.subject,
         html: clientPayload.html,
         text: clientPayload.text,
         replyTo: INVOICE_BRANDING.email,
+        bcc: bccQuotePdf,
+        messageIdPrefix: `quote.${quoteId}`,
         attachments: [
           {
             filename: `Cotizacion-Nixon-Lopez-Services-${ref}.pdf`,
@@ -230,11 +239,12 @@ export async function POST(request: NextRequest) {
           },
         ],
       })
+      clientEmailSent = true
     } catch (clientMailErr) {
       console.error('Correo al cliente (cotización/contrato):', clientMailErr)
     }
 
-    return NextResponse.json({ ok: true }, { status: 200 })
+    return NextResponse.json({ ok: true, clientEmailSent }, { status: 200 })
   } catch (error) {
     console.error('Error enviando cotización:', error)
     return NextResponse.json(

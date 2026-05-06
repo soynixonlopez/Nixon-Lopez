@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto'
 import nodemailer from 'nodemailer'
 
 type MailPayload = {
@@ -39,6 +40,14 @@ function getTransporter() {
   return transporter
 }
 
+/** Dominio del remitente para Message-ID (mejor alineación con SPF/DMARC en filtros empresariales). */
+function domainFromFromHeader(from: string): string {
+  const angle = from.match(/<([^>]+)>/)
+  const addr = (angle ? angle[1] : from).trim()
+  const at = addr.lastIndexOf('@')
+  return at >= 0 ? addr.slice(at + 1) : 'nixonlopez.com'
+}
+
 export async function sendContactEmail({ subject, html, replyTo }: MailPayload) {
   const to = process.env.CONTACT_EMAIL_TO || 'info@nixonlopez.com'
   const from = process.env.SMTP_FROM || process.env.SMTP_USER || 'info@nixonlopez.com'
@@ -72,6 +81,13 @@ type AttachmentPayload = {
   text?: string
   to: string
   replyTo?: string
+  /** Copia oculta (p. ej. correo del negocio como respaldo del envío al cliente). */
+  bcc?: string
+  /**
+   * Prefijo estable para Message-ID (sin caracteres raros); se concatena con entropía.
+   * Mejora la trazabilidad y el dominio del ID coincide con el remitente.
+   */
+  messageIdPrefix?: string
   attachments: { filename: string; content: Buffer }[]
 }
 
@@ -82,17 +98,27 @@ export async function sendEmailWithAttachments({
   text,
   to,
   replyTo,
+  bcc,
+  messageIdPrefix,
   attachments,
 }: AttachmentPayload) {
   const from = process.env.SMTP_FROM || process.env.SMTP_USER || 'info@nixonlopez.com'
+  const domain = domainFromFromHeader(from)
+  const idBase =
+    messageIdPrefix?.replace(/[^a-zA-Z0-9._-]+/g, '') || 'mail'
+  const messageId = `${idBase}.${randomBytes(8).toString('hex')}@${domain}`
 
   await getTransporter().sendMail({
     from,
     to,
+    bcc: bcc || undefined,
     subject,
     html,
     text,
     replyTo,
+    headers: {
+      'Message-ID': `<${messageId}>`,
+    },
     attachments: attachments.map((a) => ({
       filename: a.filename,
       content: a.content,

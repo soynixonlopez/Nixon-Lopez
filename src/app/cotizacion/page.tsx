@@ -60,6 +60,8 @@ export default function CotizacionPage() {
   })
   const [enviando, setEnviando] = useState(false)
   const [cotizacionEnviada, setCotizacionEnviada] = useState(false)
+  /** false = cotización guardada pero falló el correo con PDFs al cliente */
+  const [correoPdfOk, setCorreoPdfOk] = useState(true)
   const [envioError, setEnvioError] = useState('')
 
   const servicio = getService(form.tipoServicio)
@@ -212,6 +214,8 @@ export default function CotizacionPage() {
         }),
       })
       if (response.ok) {
+        const data = (await response.json().catch(() => ({}))) as { clientEmailSent?: boolean }
+        setCorreoPdfOk(data.clientEmailSent !== false)
         setCotizacionEnviada(true)
       } else if (response.status === 429) {
         setEnvioError(rateLimitFriendlyMessage(response.headers.get('Retry-After')))
@@ -564,14 +568,34 @@ export default function CotizacionPage() {
                 </div>
 
                 {cotizacionEnviada ? (
-                  <div className="flex items-center gap-2 text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
-                    <CheckCircle className="w-5 h-5 shrink-0" />
-                    <p>
-                      Hemos recibido tu cotización. Revisa tu correo: te enviamos el resumen y el contrato en
-                      PDF, con el enlace para enviarlo por WhatsApp cuando lo tengas listo. Te responderemos lo
-                      antes posible.
-                    </p>
-                  </div>
+                  correoPdfOk ? (
+                    <div className="flex items-center gap-2 text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
+                      <CheckCircle className="w-5 h-5 shrink-0" />
+                      <p>
+                        Hemos recibido tu cotización. Revisa tu correo: te enviamos el resumen y el contrato en
+                        PDF, con el enlace para enviarlo por WhatsApp cuando lo tengas listo. Te responderemos lo
+                        antes posible.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2 text-amber-100 bg-amber-500/10 border border-amber-500/35 rounded-xl p-4">
+                      <div className="flex items-start gap-2">
+                        <Info className="w-5 h-5 shrink-0 text-amber-400 mt-0.5" />
+                        <p>
+                          Tu cotización quedó registrada, pero <strong className="font-semibold">no pudimos entregar el correo con los PDFs</strong> a{' '}
+                          <span className="break-all">{form.correo}</span>. Revisa la carpeta de spam o correo no deseado;
+                          en algunas empresas los adjuntos son filtrados.
+                        </p>
+                      </div>
+                      <p className="text-sm text-slate-300 pl-7">
+                        Escríbenos a{' '}
+                        <a href={`mailto:${INVOICE_BRANDING.email}`} className="text-blue-300 hover:underline break-all">
+                          {INVOICE_BRANDING.email}
+                        </a>{' '}
+                        indicando tu nombre y este correo; te reenviamos los archivos manualmente.
+                      </p>
+                    </div>
+                  )
                 ) : (
                   <div className="flex flex-col gap-3">
                     {envioError && (
