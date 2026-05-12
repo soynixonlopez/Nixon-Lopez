@@ -54,7 +54,7 @@ export const QUOTE_SERVICES: ServiceDef[] = [
   {
     id: 'wordpress-tienda-20',
     label: 'Desarrollo web con WordPress — tienda (20 o más productos)',
-    price: 350,
+    price: 300,
     needsPages: true,
     needsDomainEmail: true,
     wordpressDomainHosting: true,
@@ -76,7 +76,7 @@ export const QUOTE_SERVICES: ServiceDef[] = [
   {
     id: 'marketplace-10',
     label: 'Marketplace — hasta 10 productos',
-    price: 17,
+    price: 170,
     needsPages: false,
     needsDomainEmail: true,
   },
@@ -146,6 +146,26 @@ export const QUOTE_SERVICES: ServiceDef[] = [
   },
 ]
 
+/** Montos si el cliente indica que no tiene dominio y no tiene el segundo rubro (correo o hosting 1.er año en WordPress). */
+export function getQuoteAddonIfMissing(service: ServiceDef | undefined): {
+  domainUsd: number
+  secondUsd: number
+  isWordPressHosting: boolean
+} {
+  if (service?.wordpressDomainHosting) {
+    return {
+      domainUsd: PRICE_WORDPRESS_DOMAIN_USD,
+      secondUsd: PRICE_WORDPRESS_HOSTING_FIRST_YEAR_USD,
+      isWordPressHosting: true,
+    }
+  }
+  return {
+    domainUsd: PRICE_DOMAIN_USD,
+    secondUsd: PRICE_EMAIL_USD,
+    isWordPressHosting: false,
+  }
+}
+
 export function getService(id: string): ServiceDef | undefined {
   return QUOTE_SERVICES.find((s) => s.id === id)
 }
@@ -176,22 +196,19 @@ export function calculateQuoteLines(input: {
   }
 
   if (s.needsDomainEmail) {
-    const domainUsd = s.wordpressDomainHosting ? PRICE_WORDPRESS_DOMAIN_USD : PRICE_DOMAIN_USD
-    const secondUsd = s.wordpressDomainHosting
-      ? PRICE_WORDPRESS_HOSTING_FIRST_YEAR_USD
-      : PRICE_EMAIL_USD
+    const add = getQuoteAddonIfMissing(s)
     const domainLine = 'Dominio (incluido en presupuesto)'
-    const secondLine = s.wordpressDomainHosting
+    const secondLine = add.isWordPressHosting
       ? 'Hosting — 1.er año (incluido en presupuesto)'
       : 'Correo profesional (incluido en presupuesto)'
 
     if (input.tieneDominio === 'no') {
-      lines.push({ label: domainLine, amount: domainUsd })
-      total += domainUsd
+      lines.push({ label: domainLine, amount: add.domainUsd })
+      total += add.domainUsd
     }
     if (input.tieneCorreo === 'no') {
-      lines.push({ label: secondLine, amount: secondUsd })
-      total += secondUsd
+      lines.push({ label: secondLine, amount: add.secondUsd })
+      total += add.secondUsd
     }
   }
 
@@ -202,6 +219,52 @@ export function calculateQuoteLines(input: {
   }
 
   return { lines, total }
+}
+
+/** Totales del panel admin alineados con la cotización pública (catálogo `QUOTE_SERVICES`). */
+export function computeAdminQuoteCatalogTotals(input: {
+  serviceId: string
+  cantidadPaginas: number
+  tieneDominio: YesNo
+  tieneCorreo: YesNo
+  incluirPasarelaAddon?: boolean
+  /** Si se informa, sustituye solo el importe de la primera línea (servicio) del catálogo. */
+  baseOverrideUsd?: number | null
+}): { lines: QuoteLine[]; subtotal: number; extrasTotal: number; total: number } | null {
+  const s = getService(input.serviceId)
+  if (!s) return null
+  const pages = s.needsPages
+    ? Math.max(1, Math.min(50, input.cantidadPaginas || MAX_INCLUDED_PAGES))
+    : MAX_INCLUDED_PAGES
+  let { lines, total } = calculateQuoteLines({
+    serviceId: input.serviceId,
+    cantidadPaginas: pages,
+    tieneDominio: input.tieneDominio,
+    tieneCorreo: input.tieneCorreo,
+    incluirPasarelaAddon: input.incluirPasarelaAddon ?? false,
+  })
+  if (
+    input.baseOverrideUsd != null &&
+    Number.isFinite(input.baseOverrideUsd) &&
+    input.baseOverrideUsd >= 0 &&
+    lines.length > 0
+  ) {
+    const oldBase = lines[0].amount
+    const override = input.baseOverrideUsd
+    lines = lines.map((l, i) => (i === 0 ? { ...l, amount: override } : l))
+    total += override - oldBase
+  }
+  let extrasTotal = 0
+  let subtotal = 0
+  for (const line of lines) {
+    const extra =
+      line.label.startsWith('Dominio') ||
+      line.label.startsWith('Correo') ||
+      line.label.startsWith('Hosting')
+    if (extra) extrasTotal += line.amount
+    else subtotal += line.amount
+  }
+  return { lines, subtotal, extrasTotal, total }
 }
 
 // --- Panel admin: tipos de servicio manuales (valores en service_id / raw_payload) ---
@@ -247,6 +310,8 @@ export function computeManualQuoteTotals(params: {
 
 export function serviceTypeLabel(value: string | null | undefined): string {
   if (!value) return ''
+  const cat = getService(value)
+  if (cat) return cat.label
   const o = ADMIN_SERVICE_TYPE_OPTIONS.find((x) => x.value === value)
   return o?.label ?? value
 }

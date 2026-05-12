@@ -6,9 +6,53 @@ import { createClient } from '@/lib/supabase/client'
 import { FolderPlus } from 'lucide-react'
 import {
   ADMIN_SERVICE_TYPE_OPTIONS,
+  computeAdminQuoteCatalogTotals,
   computeManualQuoteTotals,
+  getQuoteAddonIfMissing,
+  getService,
+  MAX_INCLUDED_PAGES,
+  QUOTE_SERVICES,
   type YesNo,
 } from '@/lib/quote-pricing'
+
+const CATALOG_OTHER = 'other'
+
+function resolveEditorTotals(form: {
+  service_type: string
+  base_amount: string
+  quantity_pages: string | number
+  has_domain: YesNo
+  has_professional_email: YesNo
+}) {
+  const catalog =
+    form.service_type && form.service_type !== CATALOG_OTHER ? getService(form.service_type) : undefined
+  const baseTrim = form.base_amount.trim()
+  const baseParsed = baseTrim === '' ? NaN : parseFloat(form.base_amount)
+  if (catalog) {
+    const q = form.quantity_pages === '' ? MAX_INCLUDED_PAGES : Number(form.quantity_pages)
+    const pages = Number.isFinite(q) ? Math.min(50, Math.max(1, q)) : MAX_INCLUDED_PAGES
+    const baseOverride = baseTrim !== '' && Number.isFinite(baseParsed) ? baseParsed : null
+    const t = computeAdminQuoteCatalogTotals({
+      serviceId: form.service_type,
+      cantidadPaginas: pages,
+      tieneDominio: form.has_domain,
+      tieneCorreo: form.has_professional_email,
+      incluirPasarelaAddon: false,
+      baseOverrideUsd: baseOverride,
+    })
+    if (t) return { ...t, mode: 'catalog' as const, catalog }
+  }
+  const manualBase = Number.isFinite(baseParsed) ? Math.max(0, baseParsed) : 0
+  return {
+    ...computeManualQuoteTotals({
+      baseAmount: manualBase,
+      hasDomain: form.has_domain,
+      hasProfessionalEmail: form.has_professional_email,
+    }),
+    mode: 'manual' as const,
+    catalog: undefined,
+  }
+}
 
 type Quote = Record<string, unknown> & {
   id: string
@@ -81,30 +125,40 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
     comments: quote.comments ?? '',
   })
 
-  const pricing = useMemo(() => {
-    const base = form.base_amount === '' ? 0 : Number(form.base_amount)
-    return computeManualQuoteTotals({
-      baseAmount: Number.isFinite(base) ? base : 0,
-      hasDomain: form.has_domain,
-      hasProfessionalEmail: form.has_professional_email,
-    })
-  }, [form.base_amount, form.has_domain, form.has_professional_email])
+  const catalogSvc = useMemo(
+    () =>
+      form.service_type && form.service_type !== CATALOG_OTHER ? getService(form.service_type) : undefined,
+    [form.service_type],
+  )
+  const quoteAddOns = useMemo(() => getQuoteAddonIfMissing(catalogSvc), [catalogSvc])
+
+  const pricing = useMemo(() => resolveEditorTotals(form), [
+    form.base_amount,
+    form.has_domain,
+    form.has_professional_email,
+    form.quantity_pages,
+    form.service_type,
+  ])
 
   async function save() {
     setSaving(true)
     const supabase = createClient()
     const baseNum = form.base_amount === '' ? 0 : Number(form.base_amount)
-    const { lines, subtotal, extrasTotal, total } = computeManualQuoteTotals({
-      baseAmount: Number.isFinite(baseNum) ? baseNum : 0,
-      hasDomain: form.has_domain,
-      hasProfessionalEmail: form.has_professional_email,
-    })
+    const { lines, subtotal, extrasTotal, total, mode, catalog } = resolveEditorTotals(form)
+    const baseAmountStored =
+      mode === 'catalog' && lines[0]
+        ? lines[0].amount
+        : form.base_amount.trim() === ''
+          ? 0
+          : baseNum
     const raw_payload = mergeRawPayload(quote.raw_payload, {
       manual: true,
+      catalog: mode === 'catalog',
+      monthly: catalog?.monthly ?? false,
       service_type: form.service_type || null,
       has_domain: form.has_domain || null,
       has_professional_email: form.has_professional_email || null,
-      base_amount: Number.isFinite(baseNum) ? baseNum : 0,
+      base_amount: Number.isFinite(baseAmountStored) ? baseAmountStored : 0,
       breakdown: { lines },
     })
     const { error } = await supabase
@@ -255,18 +309,44 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
           />
         </label>
         <label className="sm:col-span-2">
-          <span className="text-xs text-slate-400">Tipo de servicio</span>
+          <span className="text-xs text-slate-400">Servicio (catálogo web o categoría)</span>
           <select
             value={form.service_type}
-            onChange={(e) => setForm((f) => ({ ...f, service_type: e.target.value }))}
+            onChange={(e) => {
+              const v = e.target.value
+              setForm((f) => {
+                if (!v) return { ...f, service_type: '', base_amount: '' }
+                if (v === CATALOG_OTHER) {
+                  return { ...f, service_type: CATALOG_OTHER, base_amount: f.base_amount }
+                }
+                const s = getService(v)
+                if (!s) return { ...f, service_type: v }
+                return {
+                  ...f,
+                  service_type: v,
+                  service_label: s.label,
+                  base_amount: String(s.price),
+                  quantity_pages: s.needsPages ? String(Math.max(1, MAX_INCLUDED_PAGES)) : '',
+                }
+              })
+            }}
             className="mt-1 w-full min-w-0 rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
           >
             <option value="">—</option>
-            {ADMIN_SERVICE_TYPE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
+            {QUOTE_SERVICES.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label} — ${s.price}
+                {s.monthly ? '/mes' : ''}
               </option>
             ))}
+            <option value={CATALOG_OTHER}>Otro — precio manual</option>
+            <optgroup label="Categoría genérica (legado)">
+              {ADMIN_SERVICE_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </optgroup>
           </select>
         </label>
         <label className="sm:col-span-2">
@@ -277,6 +357,20 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
             className="mt-1 w-full min-w-0 rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
           />
         </label>
+        <div className="sm:col-span-2 rounded-lg border border-slate-700/80 bg-slate-950/40 px-3 py-2 text-xs text-slate-500 leading-relaxed">
+          {catalogSvc?.wordpressDomainHosting ? (
+            <>
+              <strong className="text-slate-300">WordPress</strong>: si marca «No» en dominio se suman{' '}
+              <strong className="text-indigo-300">$20</strong>; si «No» en hosting,{' '}
+              <strong className="text-indigo-300">$40</strong> el primer año (misma regla que la web).
+            </>
+          ) : (
+            <>
+              Sin dominio: <strong className="text-indigo-300">+$15</strong>. Sin correo profesional:{' '}
+              <strong className="text-indigo-300">+$10</strong> (o montos del catálogo si aplica).
+            </>
+          )}
+        </div>
         <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <span className="text-xs text-slate-400">¿Tiene dominio?</span>
@@ -288,13 +382,15 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
                   onClick={() => setForm((f) => ({ ...f, has_domain: value }))}
                   className={`min-h-[44px] px-4 py-2 rounded-lg border text-sm ${form.has_domain === value ? 'border-indigo-500 bg-indigo-500/20 text-white' : 'border-slate-700 text-slate-300'}`}
                 >
-                  {value === 'si' ? 'Sí' : 'No'}
+                  {value === 'si' ? 'Sí' : `No (+$${quoteAddOns.domainUsd})`}
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <span className="text-xs text-slate-400">¿Correo profesional?</span>
+            <span className="text-xs text-slate-400">
+              {catalogSvc?.wordpressDomainHosting ? '¿Tiene hosting? (1.er año)' : '¿Correo profesional?'}
+            </span>
             <div className="mt-1 flex flex-wrap gap-2">
               {(['si', 'no'] as const).map((value) => (
                 <button
@@ -303,7 +399,7 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
                   onClick={() => setForm((f) => ({ ...f, has_professional_email: value }))}
                   className={`min-h-[44px] px-4 py-2 rounded-lg border text-sm ${form.has_professional_email === value ? 'border-indigo-500 bg-indigo-500/20 text-white' : 'border-slate-700 text-slate-300'}`}
                 >
-                  {value === 'si' ? 'Sí' : 'No'}
+                  {value === 'si' ? 'Sí' : `No (+$${quoteAddOns.secondUsd})`}
                 </button>
               ))}
             </div>

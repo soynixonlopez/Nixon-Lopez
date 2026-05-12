@@ -1,15 +1,60 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Check, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import {
-  ADMIN_SERVICE_TYPE_OPTIONS,
+  computeAdminQuoteCatalogTotals,
   computeManualQuoteTotals,
   FEE_NO_DOMAIN_USD,
   FEE_NO_PROFESSIONAL_EMAIL_USD,
+  getQuoteAddonIfMissing,
+  getService,
+  MAX_INCLUDED_PAGES,
+  PRICE_WORDPRESS_DOMAIN_USD,
+  PRICE_WORDPRESS_HOSTING_FIRST_YEAR_USD,
+  QUOTE_SERVICES,
+  serviceTypeLabel,
 } from '@/lib/quote-pricing'
+
+const CATALOG_OTHER = 'other'
+
+function resolveTotals(form: {
+  service_type: string
+  service_label: string
+  total_amount: string
+  quantity_pages: string
+  has_domain: '' | 'si' | 'no'
+  has_professional_email: '' | 'si' | 'no'
+}) {
+  const catalog = form.service_type && form.service_type !== CATALOG_OTHER ? getService(form.service_type) : undefined
+  const baseTrim = form.total_amount.trim()
+  const baseAmount = baseTrim === '' ? NaN : parseFloat(form.total_amount)
+  if (catalog) {
+    const pages = form.quantity_pages ? parseInt(form.quantity_pages, 10) : MAX_INCLUDED_PAGES
+    const baseOverride = baseTrim !== '' && Number.isFinite(baseAmount) ? baseAmount : null
+    const catTotals = computeAdminQuoteCatalogTotals({
+      serviceId: form.service_type,
+      cantidadPaginas: Number.isFinite(pages) ? pages : MAX_INCLUDED_PAGES,
+      tieneDominio: form.has_domain,
+      tieneCorreo: form.has_professional_email,
+      incluirPasarelaAddon: false,
+      baseOverrideUsd: baseOverride,
+    })
+    if (catTotals) return { ...catTotals, mode: 'catalog' as const, catalog }
+  }
+  const manualBase = Number.isFinite(baseAmount) ? Math.max(0, baseAmount) : 0
+  return {
+    ...computeManualQuoteTotals({
+      baseAmount: manualBase,
+      hasDomain: form.has_domain,
+      hasProfessionalEmail: form.has_professional_email,
+    }),
+    mode: 'manual' as const,
+    catalog: undefined,
+  }
+}
 
 export default function NuevaCotizacionPage() {
   const router = useRouter()
@@ -40,18 +85,33 @@ export default function NuevaCotizacionPage() {
     { id: 4, title: 'Revisión' },
   ]
 
-  const serviceTypeOptions = ADMIN_SERVICE_TYPE_OPTIONS
+  const catalogSvc = useMemo(
+    () => (form.service_type && form.service_type !== CATALOG_OTHER ? getService(form.service_type) : undefined),
+    [form.service_type],
+  )
+
+  const needsDomainBlock = Boolean(catalogSvc?.needsDomainEmail)
+  const needsPagesField = Boolean(catalogSvc?.needsPages)
+  const quoteAddOns = getQuoteAddonIfMissing(catalogSvc)
+
+  const isOther = form.service_type === CATALOG_OTHER
+
+  const domainOk = isOther
+    ? Boolean(form.has_domain) && Boolean(form.has_professional_email)
+    : !needsDomainBlock || (Boolean(form.has_domain) && Boolean(form.has_professional_email))
+
+  const pagesOk =
+    !needsPagesField ||
+    (form.quantity_pages !== '' &&
+      Number(form.quantity_pages) >= 1 &&
+      Number(form.quantity_pages) <= 50)
 
   const canGoNextStep =
     (step === 1 &&
       form.client_first_name.trim() &&
       form.client_last_name.trim() &&
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.client_email)) ||
-    (step === 2 &&
-      form.service_type &&
-      form.service_label.trim() &&
-      form.has_domain &&
-      form.has_professional_email) ||
+    (step === 2 && Boolean(form.service_type) && form.service_label.trim() && domainOk && pagesOk) ||
     step === 3
 
   const stepProgress = ((step - 1) / (steps.length - 1)) * 100
@@ -60,12 +120,13 @@ export default function NuevaCotizacionPage() {
     e.preventDefault()
     setLoading(true)
     const supabase = createClient()
-    const baseAmount = form.total_amount ? parseFloat(form.total_amount) : 0
-    const { lines, subtotal, extrasTotal, total } = computeManualQuoteTotals({
-      baseAmount,
-      hasDomain: form.has_domain,
-      hasProfessionalEmail: form.has_professional_email,
-    })
+    const { lines, subtotal, extrasTotal, total, mode, catalog } = resolveTotals(form)
+    const baseAmountStored =
+      mode === 'catalog' && lines[0]
+        ? lines[0].amount
+        : form.total_amount.trim() === ''
+          ? 0
+          : parseFloat(form.total_amount)
     const { data, error } = await supabase
       .from('quotes')
       .insert({
@@ -86,11 +147,13 @@ export default function NuevaCotizacionPage() {
         internal_notes: form.internal_notes || null,
         raw_payload: {
           manual: true,
+          catalog: mode === 'catalog',
+          monthly: catalog?.monthly ?? false,
           service_type: form.service_type || null,
           has_domain: form.has_domain || null,
           has_professional_email: form.has_professional_email || null,
           has_hosting: form.has_hosting || null,
-          base_amount: baseAmount,
+          base_amount: Number.isFinite(baseAmountStored) ? baseAmountStored : 0,
           breakdown: { lines },
         },
       })
@@ -187,21 +250,61 @@ export default function NuevaCotizacionPage() {
 
           {step === 2 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-white">Tipo de servicio y alcance</h2>
+              <h2 className="text-lg font-semibold text-white">Servicio del catálogo y alcance</h2>
               <label className="block">
-                <span className="text-xs text-slate-400">Tipo de servicio *</span>
+                <span className="text-xs text-slate-400">Servicio (mismo listado que la cotización web) *</span>
                 <select
                   value={form.service_type}
-                  onChange={(e) => setForm((f) => ({ ...f, service_type: e.target.value }))}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    setForm((f) => {
+                      if (!v) {
+                        return {
+                          ...f,
+                          service_type: '',
+                          service_label: '',
+                          total_amount: '',
+                          quantity_pages: '',
+                        }
+                      }
+                      if (v === CATALOG_OTHER) {
+                        return {
+                          ...f,
+                          service_type: CATALOG_OTHER,
+                          service_label: '',
+                          total_amount: '',
+                          quantity_pages: '',
+                          has_domain: '',
+                          has_professional_email: '',
+                        }
+                      }
+                      const s = getService(v)
+                      if (!s) return { ...f, service_type: v }
+                      return {
+                        ...f,
+                        service_type: v,
+                        service_label: s.label,
+                        total_amount: String(s.price),
+                        quantity_pages: s.needsPages ? String(Math.max(1, MAX_INCLUDED_PAGES)) : '',
+                        has_domain: '',
+                        has_professional_email: '',
+                      }
+                    })
+                  }}
                   className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
                   required
                 >
-                  <option value="">Selecciona una opción</option>
-                  {serviceTypeOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  <option value="">Selecciona un servicio</option>
+                  {QUOTE_SERVICES.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.label} — ${s.price}
+                      {s.monthly ? '/mes' : ''}
+                    </option>
                   ))}
+                  <option value={CATALOG_OTHER}>Otro — precio y descripción manual</option>
                 </select>
               </label>
+
               <label className="block">
                 <span className="text-xs text-slate-400">Servicio / descripción *</span>
                 <input
@@ -212,47 +315,75 @@ export default function NuevaCotizacionPage() {
                 />
               </label>
 
-              <p className="text-xs text-slate-500 rounded-lg border border-slate-700/80 bg-slate-950/40 px-3 py-2 leading-relaxed">
-                Si el cliente <strong className="text-slate-300">no tiene dominio</strong>, se suman{' '}
-                <strong className="text-indigo-300">${FEE_NO_DOMAIN_USD} USD</strong>. Si{' '}
-                <strong className="text-slate-300">no tiene correo profesional</strong> para el proyecto, se suman{' '}
-                <strong className="text-indigo-300">${FEE_NO_PROFESSIONAL_EMAIL_USD} USD</strong>. Si ya los tiene, solo
-                aplica el precio base.
-              </p>
+              {isOther ? (
+                <p className="text-xs text-slate-500 rounded-lg border border-slate-700/80 bg-slate-950/40 px-3 py-2 leading-relaxed">
+                  Modo manual: si el cliente <strong className="text-slate-300">no tiene dominio</strong>, se suman{' '}
+                  <strong className="text-indigo-300">${FEE_NO_DOMAIN_USD} USD</strong>. Si{' '}
+                  <strong className="text-slate-300">no tiene correo profesional</strong>, se suman{' '}
+                  <strong className="text-indigo-300">${FEE_NO_PROFESSIONAL_EMAIL_USD} USD</strong>. El campo “Hosting” es
+                  solo informativo y no cambia el total.
+                </p>
+              ) : catalogSvc?.wordpressDomainHosting ? (
+                <p className="text-xs text-slate-500 rounded-lg border border-slate-700/80 bg-slate-950/40 px-3 py-2 leading-relaxed">
+                  <strong className="text-slate-300">WordPress</strong> (tarifas en presupuesto): dominio{' '}
+                  <strong className="text-indigo-300">${PRICE_WORDPRESS_DOMAIN_USD} USD</strong> si no lo tiene; hosting{' '}
+                  <strong className="text-indigo-300">${PRICE_WORDPRESS_HOSTING_FIRST_YEAR_USD} USD</strong> el{' '}
+                  <strong className="text-slate-300">primer año</strong> si no tiene hosting listo.
+                </p>
+              ) : catalogSvc?.needsDomainEmail ? (
+                <p className="text-xs text-slate-500 rounded-lg border border-slate-700/80 bg-slate-950/40 px-3 py-2 leading-relaxed">
+                  Sin dominio: <strong className="text-indigo-300">+${FEE_NO_DOMAIN_USD} USD</strong>. Sin correo
+                  profesional: <strong className="text-indigo-300">+${FEE_NO_PROFESSIONAL_EMAIL_USD} USD</strong>. Misma
+                  lógica que en la web pública.
+                </p>
+              ) : form.service_type ? (
+                <p className="text-xs text-slate-500 rounded-lg border border-slate-700/80 bg-slate-950/40 px-3 py-2 leading-relaxed">
+                  Este servicio no añade cargos automáticos de dominio/correo en el desglose.
+                </p>
+              ) : null}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="min-w-0">
-                  <span className="text-xs text-slate-400 block">¿Tiene dominio? *</span>
-                  <div className="mt-1 flex flex-wrap gap-2">
-                    {(['si', 'no'] as const).map((value) => (
-                      <button
-                        type="button"
-                        key={value}
-                        onClick={() => setForm((f) => ({ ...f, has_domain: value }))}
-                        className={`min-h-[44px] px-4 py-2 rounded-lg border text-sm shrink-0 ${form.has_domain === value ? 'border-indigo-500 bg-indigo-500/20 text-white' : 'border-slate-700 text-slate-300'}`}
-                      >
-                        {value === 'si' ? 'Sí' : 'No'}
-                      </button>
-                    ))}
+              {(isOther || needsDomainBlock) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="min-w-0">
+                    <span className="text-xs text-slate-400 block">¿Tiene dominio? *</span>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      {(['si', 'no'] as const).map((value) => (
+                        <button
+                          type="button"
+                          key={value}
+                          onClick={() => setForm((f) => ({ ...f, has_domain: value }))}
+                          className={`min-h-[44px] px-4 py-2 rounded-lg border text-sm shrink-0 ${form.has_domain === value ? 'border-indigo-500 bg-indigo-500/20 text-white' : 'border-slate-700 text-slate-300'}`}
+                        >
+                          {value === 'si' ? 'Sí' : `No (+$${quoteAddOns.domainUsd})`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-xs text-slate-400 block">
+                      {catalogSvc?.wordpressDomainHosting
+                        ? '¿Tiene hosting para el sitio? *'
+                        : '¿Tiene correo profesional? *'}
+                    </span>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      {(['si', 'no'] as const).map((value) => (
+                        <button
+                          type="button"
+                          key={value}
+                          onClick={() => setForm((f) => ({ ...f, has_professional_email: value }))}
+                          className={`min-h-[44px] px-4 py-2 rounded-lg border text-sm shrink-0 ${form.has_professional_email === value ? 'border-indigo-500 bg-indigo-500/20 text-white' : 'border-slate-700 text-slate-300'}`}
+                        >
+                          {value === 'si' ? 'Sí' : `No (+$${quoteAddOns.secondUsd})`}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
+              )}
+
+              {isOther && (
                 <div className="min-w-0">
-                  <span className="text-xs text-slate-400 block">¿Tiene correo profesional? *</span>
-                  <div className="mt-1 flex flex-wrap gap-2">
-                    {(['si', 'no'] as const).map((value) => (
-                      <button
-                        type="button"
-                        key={value}
-                        onClick={() => setForm((f) => ({ ...f, has_professional_email: value }))}
-                        className={`min-h-[44px] px-4 py-2 rounded-lg border text-sm shrink-0 ${form.has_professional_email === value ? 'border-indigo-500 bg-indigo-500/20 text-white' : 'border-slate-700 text-slate-300'}`}
-                      >
-                        {value === 'si' ? 'Sí' : 'No'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="min-w-0 sm:col-span-2 lg:col-span-1">
-                  <span className="text-xs text-slate-400 block">¿Tiene hosting?</span>
+                  <span className="text-xs text-slate-400 block">¿Tiene hosting? (informativo)</span>
                   <div className="mt-1 flex flex-wrap gap-2">
                     {(['si', 'no'] as const).map((value) => (
                       <button
@@ -266,21 +397,26 @@ export default function NuevaCotizacionPage() {
                     ))}
                   </div>
                 </div>
-              </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <label className="min-w-0">
-                  <span className="text-xs text-slate-400">Cantidad de páginas</span>
-                  <input
-                    type="number"
-                    min={1}
-                    value={form.quantity_pages}
-                    onChange={(e) => setForm((f) => ({ ...f, quantity_pages: e.target.value }))}
-                    className="mt-1 w-full min-w-0 rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
-                  />
-                </label>
-                <label className="min-w-0">
-                  <span className="text-xs text-slate-400">Precio base (USD)</span>
+                {(needsPagesField || isOther) && (
+                  <label className="min-w-0">
+                    <span className="text-xs text-slate-400">
+                      {needsPagesField ? 'Cantidad de páginas *' : 'Cantidad de páginas (opcional)'}
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={form.quantity_pages}
+                      onChange={(e) => setForm((f) => ({ ...f, quantity_pages: e.target.value }))}
+                      className="mt-1 w-full min-w-0 rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+                    />
+                  </label>
+                )}
+                <label className={`min-w-0 ${needsPagesField || isOther ? '' : 'sm:col-span-2'}`}>
+                  <span className="text-xs text-slate-400">Precio base del servicio (USD)</span>
                   <input
                     type="number"
                     step="0.01"
@@ -289,7 +425,11 @@ export default function NuevaCotizacionPage() {
                     onChange={(e) => setForm((f) => ({ ...f, total_amount: e.target.value }))}
                     className="mt-1 w-full min-w-0 rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
                   />
-                  <span className="mt-1 block text-[11px] text-slate-500">Sin incluir dominio ni correo; esos cargos se calculan abajo en el total.</span>
+                  <span className="mt-1 block text-[11px] text-slate-500">
+                    {catalogSvc
+                      ? 'Puedes ajustar el importe; dominio/hosting o correo se calculan aparte según el servicio.'
+                      : 'Sin incluir dominio ni correo en modo manual; esos cargos se suman al total.'}
+                  </span>
                 </label>
               </div>
             </div>
@@ -336,12 +476,12 @@ export default function NuevaCotizacionPage() {
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-white">Revisión final</h2>
               {(() => {
-                const baseAmount = form.total_amount ? parseFloat(form.total_amount) : 0
-                const { lines, subtotal, extrasTotal, total } = computeManualQuoteTotals({
-                  baseAmount,
-                  hasDomain: form.has_domain,
-                  hasProfessionalEmail: form.has_professional_email,
-                })
+                const { lines, subtotal, extrasTotal, total, mode, catalog } = resolveTotals(form)
+                const revCatalog =
+                  form.service_type && form.service_type !== CATALOG_OTHER ? getService(form.service_type) : undefined
+                const revAddOns = getQuoteAddonIfMissing(revCatalog)
+                const domainNoFee = revAddOns.domainUsd
+                const secondNoFee = revAddOns.secondUsd
                 return (
                   <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 sm:p-4 space-y-3 text-sm overflow-x-auto">
                     <p className="text-slate-200 break-words">
@@ -357,28 +497,39 @@ export default function NuevaCotizacionPage() {
                       <span className="text-slate-400">Empresa:</span> {form.company || '-'}
                     </p>
                     <p className="text-slate-200 break-words">
-                      <span className="text-slate-400">Tipo de servicio:</span>{' '}
-                      {serviceTypeOptions.find((s) => s.value === form.service_type)?.label || '-'}
+                      <span className="text-slate-400">Servicio (catálogo):</span>{' '}
+                      {serviceTypeLabel(form.service_type) || '-'}
                     </p>
                     <p className="text-slate-200 break-words">
-                      <span className="text-slate-400">Servicio:</span> {form.service_label || '-'}
+                      <span className="text-slate-400">Descripción:</span> {form.service_label || '-'}
                     </p>
-                    <p className="text-slate-200">
-                      <span className="text-slate-400">Dominio (cliente):</span>{' '}
-                      {form.has_domain ? (form.has_domain === 'si' ? 'Sí' : `No (+$${FEE_NO_DOMAIN_USD})`) : '-'}
+                    <p className="text-xs text-slate-500">
+                      Cálculo: {mode === 'catalog' ? 'Catálogo web (precios alineados)' : 'Manual (dominio $15 + correo $10)'}
                     </p>
-                    <p className="text-slate-200">
-                      <span className="text-slate-400">Correo profesional:</span>{' '}
-                      {form.has_professional_email
-                        ? form.has_professional_email === 'si'
-                          ? 'Sí'
-                          : `No (+$${FEE_NO_PROFESSIONAL_EMAIL_USD})`
-                        : '-'}
-                    </p>
-                    <p className="text-slate-200">
-                      <span className="text-slate-400">Hosting:</span>{' '}
-                      {form.has_hosting ? (form.has_hosting === 'si' ? 'Sí' : 'No') : '-'}
-                    </p>
+                    {(form.service_type === CATALOG_OTHER || revCatalog?.needsDomainEmail) && (
+                      <>
+                        <p className="text-slate-200">
+                          <span className="text-slate-400">Dominio (cliente):</span>{' '}
+                          {form.has_domain ? (form.has_domain === 'si' ? 'Sí' : `No (+$${domainNoFee})`) : '-'}
+                        </p>
+                        <p className="text-slate-200">
+                          <span className="text-slate-400">
+                            {revCatalog?.wordpressDomainHosting ? 'Hosting (1.er año):' : 'Correo profesional:'}
+                          </span>{' '}
+                          {form.has_professional_email
+                            ? form.has_professional_email === 'si'
+                              ? 'Sí'
+                              : `No (+$${secondNoFee})`
+                            : '-'}
+                        </p>
+                      </>
+                    )}
+                    {form.service_type === CATALOG_OTHER && (
+                      <p className="text-slate-200">
+                        <span className="text-slate-400">Hosting (nota):</span>{' '}
+                        {form.has_hosting ? (form.has_hosting === 'si' ? 'Sí' : 'No') : '-'}
+                      </p>
+                    )}
                     <p className="text-slate-200">
                       <span className="text-slate-400">Páginas:</span> {form.quantity_pages || '-'}
                     </p>
@@ -401,6 +552,7 @@ export default function NuevaCotizacionPage() {
                       </p>
                       <p className="mt-2 text-lg font-bold text-white">
                         Total USD: ${total.toFixed(2)}
+                        {catalog?.monthly ? '/mes' : ''}
                       </p>
                     </div>
                     <p className="text-slate-200">

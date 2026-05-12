@@ -23,13 +23,10 @@ import Image from 'next/image'
 import {
   QUOTE_SERVICES,
   calculateQuoteLines,
+  getQuoteAddonIfMissing,
   getService,
   MAX_INCLUDED_PAGES,
   PRICE_EXTRA_PAGE_USD,
-  PRICE_DOMAIN_USD,
-  PRICE_EMAIL_USD,
-  PRICE_WORDPRESS_DOMAIN_USD,
-  PRICE_WORDPRESS_HOSTING_FIRST_YEAR_USD,
 } from '@/lib/quote-pricing'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
 import { rateLimitFriendlyMessage } from '@/lib/utils'
@@ -71,9 +68,10 @@ export default function CotizacionPage() {
   const needsDomainEmail = servicio?.needsDomainEmail ?? false
   const esPasarelaSolo = form.tipoServicio === 'pasarela'
   const monthly = servicio?.monthly ?? false
-  const wordpressExtras = Boolean(servicio?.wordpressDomainHosting)
-  const domainAddonUsd = wordpressExtras ? PRICE_WORDPRESS_DOMAIN_USD : PRICE_DOMAIN_USD
-  const secondAddonUsd = wordpressExtras ? PRICE_WORDPRESS_HOSTING_FIRST_YEAR_USD : PRICE_EMAIL_USD
+  const quoteAddOns = getQuoteAddonIfMissing(servicio)
+  const wordpressExtras = quoteAddOns.isWordPressHosting
+  const domainAddonUsd = quoteAddOns.domainUsd
+  const secondAddonUsd = quoteAddOns.secondUsd
 
   const { lines, total } = calculateQuoteLines({
     serviceId: form.tipoServicio,
