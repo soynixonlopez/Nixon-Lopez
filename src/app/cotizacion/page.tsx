@@ -28,6 +28,8 @@ import {
   PRICE_EXTRA_PAGE_USD,
   PRICE_DOMAIN_USD,
   PRICE_EMAIL_USD,
+  PRICE_WORDPRESS_DOMAIN_USD,
+  PRICE_WORDPRESS_HOSTING_FIRST_YEAR_USD,
 } from '@/lib/quote-pricing'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
 import { rateLimitFriendlyMessage } from '@/lib/utils'
@@ -69,6 +71,9 @@ export default function CotizacionPage() {
   const needsDomainEmail = servicio?.needsDomainEmail ?? false
   const esPasarelaSolo = form.tipoServicio === 'pasarela'
   const monthly = servicio?.monthly ?? false
+  const wordpressExtras = Boolean(servicio?.wordpressDomainHosting)
+  const domainAddonUsd = wordpressExtras ? PRICE_WORDPRESS_DOMAIN_USD : PRICE_DOMAIN_USD
+  const secondAddonUsd = wordpressExtras ? PRICE_WORDPRESS_HOSTING_FIRST_YEAR_USD : PRICE_EMAIL_USD
 
   const { lines, total } = calculateQuoteLines({
     serviceId: form.tipoServicio,
@@ -190,7 +195,9 @@ export default function CotizacionPage() {
           cantidadPaginas: needsPages ? String(form.cantidadPaginas) : '',
           incluyeDominioHostingCorreo:
             needsDomainEmail && (form.tieneDominio === 'no' || form.tieneCorreo === 'no')
-              ? 'Sí (dominio/correo en presupuesto)'
+              ? wordpressExtras
+                ? 'Sí (dominio $20 y hosting 1.er año $40 en presupuesto)'
+                : 'Sí (dominio/correo en presupuesto)'
               : 'No aplica',
           pasarelaPagos:
             !esPasarelaSolo && needsPages && form.incluirPasarelaAddon
@@ -421,13 +428,17 @@ export default function CotizacionPage() {
                                 : 'border-white/15 text-slate-400'
                             }`}
                           >
-                            {op === 'si' ? 'Sí' : `No (+$${PRICE_DOMAIN_USD})`}
+                            {op === 'si' ? 'Sí' : `No (+$${domainAddonUsd})`}
                           </button>
                         ))}
                       </div>
                     </div>
                     <div>
-                      <span className="block text-sm font-medium text-slate-300 mb-2">¿Correo profesional?</span>
+                      <span className="block text-sm font-medium text-slate-300 mb-2">
+                        {wordpressExtras
+                          ? '¿Ya tienes hosting para el sitio? (1.er año en presupuesto si no)'
+                          : '¿Correo profesional?'}
+                      </span>
                       <div className="flex gap-2">
                         {(['si', 'no'] as const).map((op) => (
                           <button
@@ -440,7 +451,7 @@ export default function CotizacionPage() {
                                 : 'border-white/15 text-slate-400'
                             }`}
                           >
-                            {op === 'si' ? 'Sí' : `No (+$${PRICE_EMAIL_USD})`}
+                            {op === 'si' ? 'Sí' : `No (+$${secondAddonUsd})`}
                           </button>
                         ))}
                       </div>

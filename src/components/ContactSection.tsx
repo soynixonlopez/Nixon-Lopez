@@ -12,17 +12,10 @@ import {
 } from 'lucide-react'
 import TechLogo from './TechLogo'
 import { rateLimitFriendlyMessage } from '@/lib/utils'
+import { QUOTE_SERVICES } from '@/lib/quote-pricing'
 
 const SERVICIOS = [
-  { id: 'web-profesional', label: 'Sitio web profesional (básico para servicios)' },
-  { id: 'landing', label: 'Landing Page' },
-  { id: 'web-completo', label: 'Sitio web completo (5 páginas)' },
-  { id: 'marketplace', label: 'Sitio web de marketplace' },
-  { id: 'empresarial', label: 'Sitio web administrativo / empresarial' },
-  { id: 'meta-ads', label: 'Publicidad en Meta Ads' },
-  { id: 'google-ads', label: 'Publicidad en Google Ads' },
-  { id: 'formularios', label: 'Implementación de Formularios y Reservas' },
-  { id: 'automatizacion', label: 'Automatizaciones con IA' },
+  ...QUOTE_SERVICES.map((s) => ({ id: s.id, label: s.label })),
   { id: 'otro', label: 'Otro servicio' },
 ]
 

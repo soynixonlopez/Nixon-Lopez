@@ -6,7 +6,11 @@ export const PRICE_DOMAIN_USD = 15
 export const PRICE_EMAIL_USD = 10
 export const PRICE_PASARELA_ADDON_USD = 200
 
-/** Alias para textos del flujo admin (mismos montos que cotización pública) */
+/** Dominio + hosting 1.er año (presupuesto) para proyectos WordPress en la cotización pública */
+export const PRICE_WORDPRESS_DOMAIN_USD = 20
+export const PRICE_WORDPRESS_HOSTING_FIRST_YEAR_USD = 40
+
+/** Alias para textos del flujo admin (mismos montos que cotización pública estándar) */
 export const FEE_NO_DOMAIN_USD = PRICE_DOMAIN_USD
 export const FEE_NO_PROFESSIONAL_EMAIL_USD = PRICE_EMAIL_USD
 
@@ -16,8 +20,10 @@ export type ServiceDef = {
   price: number
   /** Incluye sección de páginas (máx. 5 base, +$25 c/u) */
   needsPages: boolean
-  /** Preguntar dominio / correo si no los tiene */
+  /** Preguntar dominio y segundo rubro (correo profesional, o hosting 1.er año si es WordPress) */
   needsDomainEmail: boolean
+  /** Si true: dominio $20 y hosting $40 (1.er año) en lugar de dominio $15 + correo $10 */
+  wordpressDomainHosting?: boolean
   /** Precio mensual (ej. publicidad) */
   monthly?: boolean
 }
@@ -25,22 +31,52 @@ export type ServiceDef = {
 export const QUOTE_SERVICES: ServiceDef[] = [
   {
     id: 'web-negocio',
-    label: 'Desarrollo web — negocios de servicios',
-    price: 80,
+    label: 'Sitio web de servicios profesionales',
+    price: 85,
     needsPages: true,
     needsDomainEmail: true,
   },
   {
-    id: 'app-movil',
-    label: 'App móvil sencilla — negocios',
-    price: 300,
-    needsPages: false,
-    needsDomainEmail: false,
+    id: 'rediseno-web',
+    label: 'Rediseño web completo',
+    price: 200,
+    needsPages: true,
+    needsDomainEmail: true,
+  },
+  {
+    id: 'wordpress',
+    label: 'Diseño web con WordPress — servicios profesionales',
+    price: 200,
+    needsPages: true,
+    needsDomainEmail: true,
+    wordpressDomainHosting: true,
+  },
+  {
+    id: 'wordpress-tienda-20',
+    label: 'Desarrollo web con WordPress — tienda (20 o más productos)',
+    price: 350,
+    needsPages: true,
+    needsDomainEmail: true,
+    wordpressDomainHosting: true,
+  },
+  {
+    id: 'landing',
+    label: 'Landing page',
+    price: 150,
+    needsPages: true,
+    needsDomainEmail: true,
+  },
+  {
+    id: 'blog',
+    label: 'Blog de artículos',
+    price: 150,
+    needsPages: true,
+    needsDomainEmail: true,
   },
   {
     id: 'marketplace-10',
-    label: 'Marketplace — hasta 10 productos o servicios',
-    price: 150,
+    label: 'Marketplace — hasta 10 productos',
+    price: 17,
     needsPages: false,
     needsDomainEmail: true,
   },
@@ -52,32 +88,25 @@ export const QUOTE_SERVICES: ServiceDef[] = [
     needsDomainEmail: true,
   },
   {
-    id: 'landing',
-    label: 'Landing page',
-    price: 150,
-    needsPages: true,
-    needsDomainEmail: true,
-  },
-  {
-    id: 'wordpress',
-    label: 'Desarrollo con WordPress',
-    price: 200,
-    needsPages: true,
-    needsDomainEmail: true,
-  },
-  {
-    id: 'mantenimiento',
-    label: 'Mantenimiento de sistemas ya creados',
-    price: 50,
+    id: 'app-movil',
+    label: 'App móvil sencilla',
+    price: 500,
     needsPages: false,
     needsDomainEmail: false,
   },
   {
-    id: 'blog',
-    label: 'Blog de artículos',
-    price: 150,
-    needsPages: true,
-    needsDomainEmail: true,
+    id: 'app-movil-pasarela',
+    label: 'App móvil con pasarela de pago',
+    price: 700,
+    needsPages: false,
+    needsDomainEmail: false,
+  },
+  {
+    id: 'app-movil-marketplace-pasarela',
+    label: 'App móvil con marketplace y pasarela de pago',
+    price: 1000,
+    needsPages: false,
+    needsDomainEmail: false,
   },
   {
     id: 'pasarela',
@@ -92,6 +121,13 @@ export const QUOTE_SERVICES: ServiceDef[] = [
     price: 300,
     needsPages: false,
     needsDomainEmail: true,
+  },
+  {
+    id: 'mantenimiento',
+    label: 'Mantenimiento de sistemas ya creados',
+    price: 50,
+    needsPages: false,
+    needsDomainEmail: false,
   },
   {
     id: 'automatizacion-ia',
@@ -140,13 +176,22 @@ export function calculateQuoteLines(input: {
   }
 
   if (s.needsDomainEmail) {
+    const domainUsd = s.wordpressDomainHosting ? PRICE_WORDPRESS_DOMAIN_USD : PRICE_DOMAIN_USD
+    const secondUsd = s.wordpressDomainHosting
+      ? PRICE_WORDPRESS_HOSTING_FIRST_YEAR_USD
+      : PRICE_EMAIL_USD
+    const domainLine = 'Dominio (incluido en presupuesto)'
+    const secondLine = s.wordpressDomainHosting
+      ? 'Hosting — 1.er año (incluido en presupuesto)'
+      : 'Correo profesional (incluido en presupuesto)'
+
     if (input.tieneDominio === 'no') {
-      lines.push({ label: 'Dominio (incluido en presupuesto)', amount: PRICE_DOMAIN_USD })
-      total += PRICE_DOMAIN_USD
+      lines.push({ label: domainLine, amount: domainUsd })
+      total += domainUsd
     }
     if (input.tieneCorreo === 'no') {
-      lines.push({ label: 'Correo profesional (incluido en presupuesto)', amount: PRICE_EMAIL_USD })
-      total += PRICE_EMAIL_USD
+      lines.push({ label: secondLine, amount: secondUsd })
+      total += secondUsd
     }
   }
 
