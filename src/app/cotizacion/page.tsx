@@ -413,10 +413,11 @@ export default function CotizacionPage() {
                 )}
 
                 {needsDomainEmail && (
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
+                  <div className="grid gap-4 sm:grid-cols-2 sm:items-stretch">
+                    <div className="flex flex-col sm:h-full">
                       <span className="block text-sm font-medium text-slate-300 mb-2">¿Ya tienes dominio?</span>
-                      <div className="flex gap-2">
+                      <div className="hidden min-h-0 sm:block sm:flex-1" aria-hidden />
+                      <div className="mt-auto flex gap-2">
                         {(['si', 'no'] as const).map((op) => (
                           <button
                             key={op}
@@ -433,13 +434,21 @@ export default function CotizacionPage() {
                         ))}
                       </div>
                     </div>
-                    <div>
-                      <span className="block text-sm font-medium text-slate-300 mb-2">
-                        {wordpressExtras
-                          ? '¿Ya tienes hosting para el sitio? (1.er año en presupuesto si no)'
-                          : '¿Correo profesional?'}
-                      </span>
-                      <div className="flex gap-2">
+                    <div className="flex flex-col sm:h-full">
+                      {wordpressExtras ? (
+                        <>
+                          <span className="block text-sm font-medium text-slate-300 mb-1">
+                            ¿Ya tienes hosting para el sitio?
+                          </span>
+                          <span className="block text-xs text-slate-500 mb-2 leading-snug">
+                            Si no, el 1.er año de hosting va en presupuesto (+${secondAddonUsd}).
+                          </span>
+                        </>
+                      ) : (
+                        <span className="block text-sm font-medium text-slate-300 mb-2">¿Correo profesional?</span>
+                      )}
+                      <div className="hidden min-h-0 sm:block sm:flex-1" aria-hidden />
+                      <div className="mt-auto flex gap-2">
                         {(['si', 'no'] as const).map((op) => (
                           <button
                             key={op}
