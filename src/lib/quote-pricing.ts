@@ -450,7 +450,7 @@ export function combineQuoteServiceSnapshots(services: QuoteServiceSnapshot[]): 
   const mixedBilling = clean.some((service) => service.monthly !== firstMonthly)
   const lines = clean.flatMap((service) =>
     service.lines.map((line, index) => ({
-      label: clean.length === 1 ? line.label : index === 0 ? service.label : `${service.label} · ${line.label}`,
+      label: clean.length === 1 ? line.label : index === 0 ? service.label : `• ${line.label}`,
       amount: line.amount,
     }))
   )
