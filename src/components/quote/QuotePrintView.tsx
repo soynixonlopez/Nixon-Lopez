@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
+import { extractQuoteServiceSnapshots } from '@/lib/quote-pricing'
 
 type QuoteRow = Record<string, unknown> & {
   id: string
@@ -51,6 +52,7 @@ const statusEs: Record<string, string> = {
 export function QuotePrintView({ quote }: { quote: QuoteRow }) {
   const accent = INVOICE_BRANDING.accentHex
   const breakdown = parseBreakdown(quote.raw_payload)
+  const services = extractQuoteServiceSnapshots(quote.raw_payload)
   const total = quote.total_amount != null ? Number(quote.total_amount) : 0
   const monthly =
     typeof quote.raw_payload === 'object' &&
@@ -126,6 +128,34 @@ export function QuotePrintView({ quote }: { quote: QuoteRow }) {
           {quote.client_phone ? <p className="text-slate-600 break-words">{quote.client_phone}</p> : null}
         </div>
       </div>
+
+      {services.length > 0 ? (
+        <div className="px-4 sm:px-8 pb-5 sm:pb-6 print:px-6 min-w-0">
+          <h3 className="text-sm font-bold text-slate-800 mb-3" style={{ color: accent }}>
+            Servicios incluidos
+          </h3>
+          <div className="space-y-3">
+            {services.map((service, index) => (
+              <div key={`${service.serviceId}-${index}`} className="rounded-lg border border-slate-200 p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                  <p className="font-semibold text-slate-900">{service.label}</p>
+                  <p className="text-sm font-semibold text-slate-700">
+                    ${service.total.toFixed(2)}
+                    {monthly ? ' / mes' : ''}
+                  </p>
+                </div>
+                {service.offerPoints.length > 0 ? (
+                  <ul className="mt-3 list-disc pl-5 space-y-1 text-sm text-slate-700">
+                    {service.offerPoints.map((point) => (
+                      <li key={point}>{point}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <div className="px-4 sm:px-8 pb-5 sm:pb-6 print:px-6 min-w-0">
         <h3 className="text-sm font-bold text-slate-800 mb-3" style={{ color: accent }}>

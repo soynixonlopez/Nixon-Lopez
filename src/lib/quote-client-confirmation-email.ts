@@ -3,6 +3,7 @@ import { SITE_URL } from '@/lib/site-config'
 import { buildWhatsAppContractHandoffUrl } from '@/lib/site-contact'
 import { escapeHtml } from '@/lib/utils'
 import type { ServiceContractRecord } from '@/lib/types/contract'
+import type { QuoteServiceSnapshot } from '@/lib/quote-pricing'
 
 export function buildSyntheticContractRecordForQuotePdf(params: {
   quoteId: string
@@ -12,6 +13,7 @@ export function buildSyntheticContractRecordForQuotePdf(params: {
   servicio: string
   tipoServicio: string | null
   totalNumeric: number
+  selectedServices?: QuoteServiceSnapshot[]
 }): ServiceContractRecord {
   const now = new Date().toISOString()
   return {
@@ -33,7 +35,10 @@ export function buildSyntheticContractRecordForQuotePdf(params: {
     signed_date: null,
     custom_notes:
       'Borrador generado desde tu cotización en línea. Completa cédula o RUC y domicilio donde aplique, imprime, firma y envía el PDF por WhatsApp siguiendo el enlace del correo.',
-    terms_payload: null,
+    terms_payload:
+      params.selectedServices && params.selectedServices.length > 0
+        ? { selected_services: params.selectedServices }
+        : null,
   }
 }
 

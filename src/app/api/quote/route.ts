@@ -15,6 +15,7 @@ import {
   buildSyntheticContractRecordForQuotePdf,
 } from '@/lib/quote-client-confirmation-email'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
+import { extractQuoteServiceSnapshots } from '@/lib/quote-pricing'
 
 function parseQuoteLines(body: Record<string, unknown>): QuoteSummaryLine[] {
   const raw = body.breakdown
@@ -61,9 +62,8 @@ export async function POST(request: NextRequest) {
     const comentarios = body.comentarios
     const observacionImagenes = body.observacionImagenes
     const observacionHostingDb = body.observacionHostingDb
-    const tieneDominio = body.tieneDominio
-    const tieneCorreo = body.tieneCorreo
     const monthly = body.monthly === true
+    const selectedServices = extractQuoteServiceSnapshots(body)
 
     if (!nombre || !apellido || !correo || !servicio || !total) {
       return NextResponse.json({ error: 'Faltan datos requeridos para la cotización.' }, { status: 400 })
@@ -87,13 +87,17 @@ export async function POST(request: NextRequest) {
     const includesDomainOrEmailInBudget =
       incluyeStr.includes('Sí') ||
       incluyeStr.includes('presupuesto') ||
-      tieneDominio === 'no' ||
-      tieneCorreo === 'no'
+      selectedServices.some((service) => service.hasDomain === 'no' || service.hasProfessionalEmail === 'no')
     const pasarelaStr = String(pasarelaPagos ?? '')
     const includesPasarela =
       pasarelaStr.startsWith('Sí') ||
       pasarelaStr.includes('add-on') ||
-      pasarelaStr.includes('Servicio pasarela')
+      pasarelaStr.includes('Servicio pasarela') ||
+      selectedServices.some(
+        (service) =>
+          service.serviceId === 'pasarela' ||
+          service.lines.some((line) => line.label.toLowerCase().includes('pasarela'))
+      )
 
     const totalAmount = typeof totalNumeric === 'number' && Number.isFinite(totalNumeric) ? totalNumeric : null
 
@@ -105,9 +109,9 @@ export async function POST(request: NextRequest) {
         client_first_name: nombre,
         client_last_name: apellido,
         client_email: correo,
-        service_id: typeof tipoServicio === 'string' ? tipoServicio : null,
+        service_id: selectedServices.length > 1 ? 'multiple' : typeof tipoServicio === 'string' ? tipoServicio : null,
         service_label: servicio || null,
-        quantity_pages: Number.isFinite(pages) ? pages : null,
+        quantity_pages: selectedServices.length === 1 && Number.isFinite(pages) ? pages : null,
         includes_domain_hosting_email: includesDomainOrEmailInBudget,
         payment_gateway_included: includesPasarela,
         total_amount: totalAmount,
@@ -182,6 +186,7 @@ export async function POST(request: NextRequest) {
         servicio,
         tipoServicio: typeof tipoServicio === 'string' ? tipoServicio : null,
         totalNumeric: typeof totalNumeric === 'number' && Number.isFinite(totalNumeric) ? totalNumeric : 0,
+        selectedServices,
       })
 
       const [quotePdf, contractPdf] = await Promise.all([
@@ -193,6 +198,11 @@ export async function POST(request: NextRequest) {
           serviceLabel: servicio,
           createdAtIso: new Date().toISOString(),
           lines: quoteLines,
+          services: selectedServices.map((service) => ({
+            label: service.label,
+            total: service.total,
+            offerPoints: service.offerPoints,
+          })),
           total: typeof totalNumeric === 'number' && Number.isFinite(totalNumeric) ? totalNumeric : 0,
           monthly,
         }),

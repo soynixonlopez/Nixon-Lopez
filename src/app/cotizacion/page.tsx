@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   User,
@@ -22,16 +22,19 @@ import Link from 'next/link'
 import Image from 'next/image'
 import {
   QUOTE_SERVICES,
-  calculateQuoteLines,
-  getQuoteAddonIfMissing,
-  getService,
   MAX_INCLUDED_PAGES,
   PRICE_EXTRA_PAGE_USD,
+  buildCatalogQuoteServiceSnapshot,
+  combineQuoteServiceSnapshots,
+  getQuoteAddonIfMissing,
+  getService,
+  summarizeQuoteServiceLabels,
+  type QuoteServiceSnapshot,
+  type YesNo,
 } from '@/lib/quote-pricing'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
 import { rateLimitFriendlyMessage } from '@/lib/utils'
 
-const MAX_IMAGENES_POR_SITIO = 20
 const OBSERVACIONES_IMAGENES =
   'Cada sitio web puede requerir funcionalidades adicionales según el alcance. En esos casos, contacta al desarrollador, ya que podrían generarse gastos extras.'
 const OBSERVACIONES_HOSTING_DB =
@@ -39,10 +42,49 @@ const OBSERVACIONES_HOSTING_DB =
 
 const STEPS = [
   { n: 1, title: 'Datos generales' },
-  { n: 2, title: 'Tipo de servicio' },
+  { n: 2, title: 'Servicios' },
   { n: 3, title: 'Detalles' },
   { n: 4, title: 'Resumen' },
 ] as const
+
+type PublicServiceConfig = {
+  cantidadPaginas: number
+  tieneDominio: YesNo
+  tieneCorreo: YesNo
+  incluirPasarelaAddon: boolean
+}
+
+function createServiceConfig(serviceId: string): PublicServiceConfig {
+  const service = getService(serviceId)
+  return {
+    cantidadPaginas: service?.needsPages ? MAX_INCLUDED_PAGES : 1,
+    tieneDominio: '',
+    tieneCorreo: '',
+    incluirPasarelaAddon: false,
+  }
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function buildSelectedServices(
+  selectedIds: string[],
+  serviceConfigs: Record<string, PublicServiceConfig>
+): QuoteServiceSnapshot[] {
+  return selectedIds
+    .map((serviceId) => {
+      const config = serviceConfigs[serviceId] ?? createServiceConfig(serviceId)
+      return buildCatalogQuoteServiceSnapshot({
+        serviceId,
+        cantidadPaginas: config.cantidadPaginas,
+        tieneDominio: config.tieneDominio,
+        tieneCorreo: config.tieneCorreo,
+        incluirPasarelaAddon: config.incluirPasarelaAddon,
+      })
+    })
+    .filter(Boolean) as QuoteServiceSnapshot[]
+}
 
 export default function CotizacionPage() {
   const [paso, setPaso] = useState(1)
@@ -50,41 +92,31 @@ export default function CotizacionPage() {
     nombre: '',
     apellido: '',
     correo: '',
-    tipoServicio: '',
-    cantidadPaginas: 5,
-    tieneDominio: '' as '' | 'si' | 'no',
-    tieneCorreo: '' as '' | 'si' | 'no',
-    incluirPasarelaAddon: false,
+    selectedServices: [] as string[],
+    serviceConfigs: {} as Record<string, PublicServiceConfig>,
     comentarios: '',
   })
   const [enviando, setEnviando] = useState(false)
   const [cotizacionEnviada, setCotizacionEnviada] = useState(false)
-  /** false = cotización guardada pero falló el correo con PDFs al cliente */
   const [correoPdfOk, setCorreoPdfOk] = useState(true)
   const [envioError, setEnvioError] = useState('')
 
-  const servicio = getService(form.tipoServicio)
-  const needsPages = servicio?.needsPages ?? false
-  const needsDomainEmail = servicio?.needsDomainEmail ?? false
-  const esPasarelaSolo = form.tipoServicio === 'pasarela'
-  const monthly = servicio?.monthly ?? false
-  const quoteAddOns = getQuoteAddonIfMissing(servicio)
-  const wordpressExtras = quoteAddOns.isWordPressHosting
-  const domainAddonUsd = quoteAddOns.domainUsd
-  const secondAddonUsd = quoteAddOns.secondUsd
-
-  const { lines, total } = calculateQuoteLines({
-    serviceId: form.tipoServicio,
-    cantidadPaginas: form.cantidadPaginas,
-    tieneDominio: form.tieneDominio,
-    tieneCorreo: form.tieneCorreo,
-    incluirPasarelaAddon: esPasarelaSolo ? false : form.incluirPasarelaAddon,
-  })
-
-  const paginasExtra =
-    needsPages && form.cantidadPaginas > MAX_INCLUDED_PAGES
-      ? form.cantidadPaginas - MAX_INCLUDED_PAGES
-      : 0
+  const selectedServices = useMemo(
+    () => buildSelectedServices(form.selectedServices, form.serviceConfigs),
+    [form.selectedServices, form.serviceConfigs]
+  )
+  const selectedCatalogServices = useMemo(
+    () =>
+      form.selectedServices
+        .map((serviceId) => getService(serviceId))
+        .filter(Boolean) as NonNullable<ReturnType<typeof getService>>[],
+    [form.selectedServices]
+  )
+  const pricing = useMemo(() => combineQuoteServiceSnapshots(selectedServices), [selectedServices])
+  const serviceSummary = useMemo(
+    () => summarizeQuoteServiceLabels(selectedServices.map((service) => service.label)),
+    [selectedServices]
+  )
 
   const puedePaso1 =
     form.nombre.trim() &&
@@ -92,12 +124,18 @@ export default function CotizacionPage() {
     form.correo.trim() &&
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.correo)
 
-  const puedePaso2 = Boolean(form.tipoServicio)
+  const puedePaso2 = selectedServices.length > 0 && !pricing.mixedBilling
 
   const puedePaso3 =
-    (!needsPages || (form.cantidadPaginas >= 1 && form.cantidadPaginas <= 50)) &&
-    (!needsDomainEmail || (form.tieneDominio === 'si' || form.tieneDominio === 'no')) &&
-    (!needsDomainEmail || (form.tieneCorreo === 'si' || form.tieneCorreo === 'no'))
+    selectedCatalogServices.every((service) => {
+      const config = form.serviceConfigs[service.id] ?? createServiceConfig(service.id)
+      const paginasOk = !service.needsPages || (config.cantidadPaginas >= 1 && config.cantidadPaginas <= 50)
+      const dominioOk =
+        !service.needsDomainEmail || (config.tieneDominio === 'si' || config.tieneDominio === 'no')
+      const correoOk =
+        !service.needsDomainEmail || (config.tieneCorreo === 'si' || config.tieneCorreo === 'no')
+      return paginasOk && dominioOk && correoOk
+    }) && !pricing.mixedBilling
 
   const puedeSiguiente =
     (paso === 1 && puedePaso1) ||
@@ -105,17 +143,68 @@ export default function CotizacionPage() {
     (paso === 3 && puedePaso3) ||
     paso === 4
 
+  const updateServiceConfig = (serviceId: string, patch: Partial<PublicServiceConfig>) => {
+    setForm((current) => ({
+      ...current,
+      serviceConfigs: {
+        ...current.serviceConfigs,
+        [serviceId]: {
+          ...(current.serviceConfigs[serviceId] ?? createServiceConfig(serviceId)),
+          ...patch,
+        },
+      },
+    }))
+  }
+
+  const toggleService = (serviceId: string) => {
+    setForm((current) => {
+      const alreadySelected = current.selectedServices.includes(serviceId)
+      const nextSelected = alreadySelected
+        ? current.selectedServices.filter((id) => id !== serviceId)
+        : [...current.selectedServices, serviceId]
+
+      return {
+        ...current,
+        selectedServices: nextSelected,
+        serviceConfigs: current.serviceConfigs[serviceId]
+          ? current.serviceConfigs
+          : {
+              ...current.serviceConfigs,
+              [serviceId]: createServiceConfig(serviceId),
+            },
+      }
+    })
+  }
+
   const handlePrint = () => {
     const ventana = window.open('', '_blank')
     if (!ventana) return
+
     const accent = INVOICE_BRANDING.accentHex
     const clientName = `${form.nombre} ${form.apellido}`.trim()
-    const lineasHtml = lines
+    const lineasHtml = pricing.lines
       .map(
-        (l) =>
-          `<tr><td style="padding:10px;border-bottom:1px solid #e2e8f0;">${escapeHtml(l.label)}</td><td style="padding:10px;text-align:right;border-bottom:1px solid #e2e8f0;white-space:nowrap;">$${l.amount.toFixed(2)}</td></tr>`
+        (line) =>
+          `<tr><td style="padding:10px;border-bottom:1px solid #e2e8f0;">${escapeHtml(line.label)}</td><td style="padding:10px;text-align:right;border-bottom:1px solid #e2e8f0;white-space:nowrap;">$${line.amount.toFixed(2)}</td></tr>`
       )
       .join('')
+    const servicesHtml = selectedServices
+      .map((service) => {
+        const pointsHtml = service.offerPoints.length
+          ? `<ul style="margin:10px 0 0;padding-left:18px;color:#334155;font-size:13px;line-height:1.6;">${service.offerPoints
+              .map((point) => `<li>${escapeHtml(point)}</li>`)
+              .join('')}</ul>`
+          : ''
+        return `<div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;">
+              <p style="margin:0;font-weight:700;color:${accent};">${escapeHtml(service.label)}</p>
+              <p style="margin:0;font-weight:700;color:#0f172a;white-space:nowrap;">$${service.total.toFixed(2)}${pricing.monthly ? '/mes' : ''}</p>
+            </div>
+            ${pointsHtml}
+          </div>`
+      })
+      .join('')
+
     ventana.document.write(`<!DOCTYPE html><html><head><title>Cotización — Nixon Lopez Services</title>
       <style>
         *{box-sizing:border-box}
@@ -159,8 +248,12 @@ export default function CotizacionPage() {
           </div>
         </section>
         <section class="block" style="padding-top:0">
+          <span class="label">Servicios incluidos</span>
+          <div class="client">${servicesHtml || '<p style="margin:0;color:#64748b;">Sin servicios seleccionados.</p>'}</div>
+        </section>
+        <section class="block" style="padding-top:0">
           <table><thead><tr><th>Concepto</th><th class="num">Importe</th></tr></thead><tbody>${lineasHtml}</tbody></table>
-          <div class="total"><span>Total estimado</span><b>$${total.toFixed(2)} USD${monthly ? ' / mes' : ''}</b></div>
+          <div class="total"><span>Total estimado</span><b>$${pricing.total.toFixed(2)} USD${pricing.monthly ? ' / mes' : ''}</b></div>
         </section>
       </article>
       ${form.comentarios ? `<p><strong>Comentarios:</strong> ${escapeHtml(form.comentarios)}</p>` : ''}
@@ -173,14 +266,19 @@ export default function CotizacionPage() {
     ventana.close()
   }
 
-  function escapeHtml(s: string) {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  }
-
   const handleAceptarCotizacion = async () => {
     setEnvioError('')
     setEnviando(true)
     try {
+      const includesDomainOrEmail = selectedServices.some(
+        (service) => service.hasDomain === 'no' || service.hasProfessionalEmail === 'no'
+      )
+      const hasPaymentGateway = selectedServices.some(
+        (service) =>
+          service.serviceId === 'pasarela' ||
+          service.lines.some((line) => line.label.toLowerCase().includes('pasarela'))
+      )
+
       const response = await fetch('/api/quote', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -188,29 +286,23 @@ export default function CotizacionPage() {
           nombre: form.nombre,
           apellido: form.apellido,
           correo: form.correo,
-          tipoServicio: form.tipoServicio,
-          servicio: servicio?.label ?? '',
-          cantidadPaginas: needsPages ? String(form.cantidadPaginas) : '',
-          incluyeDominioHostingCorreo:
-            needsDomainEmail && (form.tieneDominio === 'no' || form.tieneCorreo === 'no')
-              ? wordpressExtras
-                ? 'Sí (dominio $20 y hosting 1.er año $40 en presupuesto)'
-                : 'Sí (dominio/correo en presupuesto)'
-              : 'No aplica',
-          pasarelaPagos:
-            !esPasarelaSolo && needsPages && form.incluirPasarelaAddon
-              ? 'Sí (add-on)'
-              : esPasarelaSolo
-                ? 'Servicio pasarela'
-                : 'No',
-          total: `$${total}${monthly ? '/mes' : ''}`,
-          totalNumeric: total,
-          monthly,
-          tieneDominio: form.tieneDominio,
-          tieneCorreo: form.tieneCorreo,
-          breakdown: { lines },
+          tipoServicio: selectedServices.length === 1 ? selectedServices[0].serviceId : 'multiple',
+          servicio: serviceSummary,
+          cantidadPaginas:
+            selectedServices.length === 1 && selectedServices[0].quantityPages != null
+              ? String(selectedServices[0].quantityPages)
+              : '',
+          incluyeDominioHostingCorreo: includesDomainOrEmail
+            ? 'Sí, según el desglose por servicio de la cotización.'
+            : 'No aplica',
+          pasarelaPagos: hasPaymentGateway ? 'Sí, según el desglose por servicio.' : 'No',
+          total: `$${pricing.total.toFixed(2)}${pricing.monthly ? '/mes' : ''}`,
+          totalNumeric: pricing.total,
+          monthly: pricing.monthly,
+          breakdown: { lines: pricing.lines },
+          selected_services: selectedServices,
           comentarios: form.comentarios,
-          ...(needsPages
+          ...(selectedServices.some((service) => service.quantityPages != null)
             ? {
                 observacionImagenes: OBSERVACIONES_IMAGENES,
                 observacionHostingDb: OBSERVACIONES_HOSTING_DB,
@@ -218,6 +310,7 @@ export default function CotizacionPage() {
             : {}),
         }),
       })
+
       if (response.ok) {
         const data = (await response.json().catch(() => ({}))) as { clientEmailSent?: boolean }
         setCorreoPdfOk(data.clientEmailSent !== false)
@@ -232,8 +325,8 @@ export default function CotizacionPage() {
             : 'No se pudo enviar la cotización. Intenta de nuevo o contáctanos por contacto.'
         )
       }
-    } catch (e) {
-      console.error(e)
+    } catch (error) {
+      console.error(error)
       setEnvioError('No se pudo enviar la cotización. Intenta de nuevo o contáctanos.')
     } finally {
       setEnviando(false)
@@ -255,18 +348,18 @@ export default function CotizacionPage() {
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">Cotización online</h1>
             <p className="text-slate-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-              Presupuesto estimado en USD, sin compromiso. Avanza paso a paso y revisa el total al final.
+              Presupuesto estimado en USD, sin compromiso. Ahora puedes combinar varios servicios en una sola cotización.
             </p>
           </motion.div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-10">
-            {STEPS.map((s) => (
+            {STEPS.map((step) => (
               <div
-                key={s.n}
+                key={step.n}
                 className={`rounded-xl border px-2 py-3 sm:px-3 text-left transition-colors ${
-                  paso === s.n
+                  paso === step.n
                     ? 'border-blue-500/60 bg-blue-500/10 ring-1 ring-blue-500/30'
-                    : paso > s.n
+                    : paso > step.n
                       ? 'border-emerald-500/30 bg-emerald-500/5'
                       : 'border-white/10 bg-white/[0.03]'
                 }`}
@@ -274,28 +367,24 @@ export default function CotizacionPage() {
                 <div className="flex items-center gap-2">
                   <span
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                      paso > s.n
+                      paso > step.n
                         ? 'bg-emerald-500 text-white'
-                        : paso === s.n
+                        : paso === step.n
                           ? 'bg-blue-500 text-white'
                           : 'bg-white/10 text-slate-500'
                     }`}
                   >
-                    {paso > s.n ? <Check className="w-3.5 h-3.5" /> : s.n}
+                    {paso > step.n ? <Check className="w-3.5 h-3.5" /> : step.n}
                   </span>
-                  <span className="text-[11px] sm:text-xs font-semibold text-white leading-tight">{s.title}</span>
+                  <span className="text-[11px] sm:text-xs font-semibold text-white leading-tight">{step.title}</span>
                 </div>
               </div>
             ))}
           </div>
 
           <div className="bg-slate-900/50 rounded-2xl border border-white/10 p-5 sm:p-8 shadow-2xl shadow-black/40">
-            {paso === 1 && (
-              <motion.section
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="space-y-5"
-              >
+            {paso === 1 ? (
+              <motion.section initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} className="space-y-5">
                 <div className="flex items-center gap-2 text-blue-400 mb-2">
                   <User className="w-5 h-5" />
                   <h2 className="text-lg font-semibold text-white">Datos de contacto</h2>
@@ -306,7 +395,7 @@ export default function CotizacionPage() {
                     <input
                       type="text"
                       value={form.nombre}
-                      onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
+                      onChange={(e) => setForm((current) => ({ ...current, nombre: e.target.value }))}
                       className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       placeholder="Tu nombre"
                     />
@@ -316,7 +405,7 @@ export default function CotizacionPage() {
                     <input
                       type="text"
                       value={form.apellido}
-                      onChange={(e) => setForm((f) => ({ ...f, apellido: e.target.value }))}
+                      onChange={(e) => setForm((current) => ({ ...current, apellido: e.target.value }))}
                       className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       placeholder="Tu apellido"
                     />
@@ -329,158 +418,202 @@ export default function CotizacionPage() {
                     <input
                       type="email"
                       value={form.correo}
-                      onChange={(e) => setForm((f) => ({ ...f, correo: e.target.value }))}
+                      onChange={(e) => setForm((current) => ({ ...current, correo: e.target.value }))}
                       className="w-full bg-white/5 border border-white/15 rounded-xl pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       placeholder="tu@correo.com"
                     />
                   </div>
                 </div>
               </motion.section>
-            )}
+            ) : null}
 
-            {paso === 2 && (
+            {paso === 2 ? (
               <motion.section initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
                 <div className="flex items-center gap-2 text-blue-400 mb-2">
                   <Layers className="w-5 h-5" />
-                  <h2 className="text-lg font-semibold text-white">Elige tu servicio</h2>
+                  <h2 className="text-lg font-semibold text-white">Elige uno o varios servicios</h2>
                 </div>
                 <p className="text-sm text-slate-500">
-                  Todos los importes están en dólares (USD). Marca la opción que mejor encaje con tu proyecto.
+                  Puedes armar un paquete completo y recibir una sola cotización con un solo contrato.
                 </p>
+                {pricing.mixedBilling ? (
+                  <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                    No combines servicios mensuales con servicios de pago único en el mismo documento.
+                  </div>
+                ) : null}
                 <div className="space-y-2 max-h-[min(60vh,420px)] overflow-y-auto pr-1 admin-table-scroll">
-                  {QUOTE_SERVICES.map((s) => (
+                  {QUOTE_SERVICES.map((service) => (
                     <button
-                      key={s.id}
+                      key={service.id}
                       type="button"
-                      onClick={() =>
-                        setForm((f) => ({
-                          ...f,
-                          tipoServicio: s.id,
-                          incluirPasarelaAddon: false,
-                        }))
-                      }
-                      className={`w-full text-left px-4 py-3 rounded-xl border transition-all flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 ${
-                        form.tipoServicio === s.id
-                          ? 'border-blue-500 bg-blue-500/15 text-white'
+                      onClick={() => toggleService(service.id)}
+                      className={`w-full text-left px-4 py-3 rounded-xl border transition-all flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 ${
+                        form.selectedServices.includes(service.id)
+                          ? 'border-blue-500 bg-blue-500/15 text-white ring-1 ring-blue-500/20'
                           : 'border-white/15 bg-white/[0.03] text-slate-300 hover:border-white/25'
                       }`}
                     >
-                      <span className="text-sm">{s.label}</span>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{service.label}</span>
+                          {form.selectedServices.includes(service.id) ? <Check className="w-4 h-4 text-blue-300" /> : null}
+                        </div>
+                        <p className="mt-1 text-xs text-slate-400 line-clamp-2">{service.offerPoints[0]}</p>
+                      </div>
                       <span className="font-semibold text-blue-400 text-sm whitespace-nowrap">
-                        ${s.price}
-                        {s.monthly ? '/mes' : ''}
+                        ${service.price}
+                        {service.monthly ? '/mes' : ''}
                       </span>
                     </button>
                   ))}
                 </div>
+                <p className="text-xs text-slate-400">
+                  Seleccionados: <span className="text-white font-medium">{selectedServices.length}</span>
+                </p>
               </motion.section>
-            )}
+            ) : null}
 
-            {paso === 3 && (
+            {paso === 3 ? (
               <motion.section initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                 <div className="flex items-center gap-2 text-blue-400 mb-2">
                   <Calculator className="w-5 h-5" />
-                  <h2 className="text-lg font-semibold text-white">Detalles del proyecto</h2>
+                  <h2 className="text-lg font-semibold text-white">Detalles de cada servicio</h2>
                 </div>
 
-                {needsPages && (
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Páginas a desarrollar (hasta {MAX_INCLUDED_PAGES} incluidas en el precio base)
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={50}
-                      value={form.cantidadPaginas}
-                      onChange={(e) =>
-                        setForm((f) => ({
-                          ...f,
-                          cantidadPaginas: Math.max(1, Math.min(50, Number(e.target.value) || 1)),
-                        }))
-                      }
-                      className="w-full max-w-xs bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white"
-                    />
-                    {paginasExtra > 0 && (
-                      <p className="text-xs text-blue-400 mt-2">
-                        +${PRICE_EXTRA_PAGE_USD} por página adicional ({paginasExtra} páginas × ${PRICE_EXTRA_PAGE_USD} = $
-                        {paginasExtra * PRICE_EXTRA_PAGE_USD})
-                      </p>
-                    )}
-                  </div>
-                )}
+                {selectedCatalogServices.map((service) => {
+                  const config = form.serviceConfigs[service.id] ?? createServiceConfig(service.id)
+                  const quoteAddOns = getQuoteAddonIfMissing(service)
+                  const paginasExtra =
+                    service.needsPages && config.cantidadPaginas > MAX_INCLUDED_PAGES
+                      ? config.cantidadPaginas - MAX_INCLUDED_PAGES
+                      : 0
 
-                {needsDomainEmail && (
-                  <div className="grid gap-4 sm:grid-cols-2 sm:items-stretch">
-                    <div className="flex flex-col sm:h-full">
-                      <span className="block text-sm font-medium text-slate-300 mb-2">¿Ya tienes dominio?</span>
-                      <div className="hidden min-h-0 sm:block sm:flex-1" aria-hidden />
-                      <div className="mt-auto flex gap-2">
-                        {(['si', 'no'] as const).map((op) => (
-                          <button
-                            key={op}
-                            type="button"
-                            onClick={() => setForm((f) => ({ ...f, tieneDominio: op }))}
-                            className={`flex-1 py-2.5 rounded-xl border text-sm ${
-                              form.tieneDominio === op
-                                ? 'border-blue-500 bg-blue-500/20 text-white'
-                                : 'border-white/15 text-slate-400'
-                            }`}
-                          >
-                            {op === 'si' ? 'Sí' : `No (+$${domainAddonUsd})`}
-                          </button>
-                        ))}
+                  return (
+                    <div key={service.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 space-y-5">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                        <div>
+                          <h3 className="text-base font-semibold text-white">{service.label}</h3>
+                          <p className="text-xs text-slate-400 mt-1">
+                            Configura este servicio dentro de la misma cotización.
+                          </p>
+                        </div>
+                        <span className="text-sm font-semibold text-blue-400">
+                          ${service.price}
+                          {service.monthly ? '/mes' : ''}
+                        </span>
                       </div>
-                    </div>
-                    <div className="flex flex-col sm:h-full">
-                      {wordpressExtras ? (
-                        <>
-                          <span className="block text-sm font-medium text-slate-300 mb-1">
-                            ¿Ya tienes hosting para el sitio?
-                          </span>
-                          <span className="block text-xs text-slate-500 mb-2 leading-snug">
-                            Si no, el 1.er año de hosting va en presupuesto (+${secondAddonUsd}).
-                          </span>
-                        </>
-                      ) : (
-                        <span className="block text-sm font-medium text-slate-300 mb-2">¿Correo profesional?</span>
-                      )}
-                      <div className="hidden min-h-0 sm:block sm:flex-1" aria-hidden />
-                      <div className="mt-auto flex gap-2">
-                        {(['si', 'no'] as const).map((op) => (
-                          <button
-                            key={op}
-                            type="button"
-                            onClick={() => setForm((f) => ({ ...f, tieneCorreo: op }))}
-                            className={`flex-1 py-2.5 rounded-xl border text-sm ${
-                              form.tieneCorreo === op
-                                ? 'border-blue-500 bg-blue-500/20 text-white'
-                                : 'border-white/15 text-slate-400'
-                            }`}
-                          >
-                            {op === 'si' ? 'Sí' : `No (+$${secondAddonUsd})`}
-                          </button>
-                        ))}
+
+                      <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-blue-300">Qué incluye</p>
+                        <ul className="mt-2 space-y-2 text-sm text-slate-300 list-disc pl-5">
+                          {service.offerPoints.map((point) => (
+                            <li key={point}>{point}</li>
+                          ))}
+                        </ul>
                       </div>
+
+                      {service.needsPages ? (
+                        <div>
+                          <label className="block text-sm font-medium text-slate-300 mb-2">
+                            Páginas a desarrollar (hasta {MAX_INCLUDED_PAGES} incluidas en el precio base)
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={50}
+                            value={config.cantidadPaginas}
+                            onChange={(e) =>
+                              updateServiceConfig(service.id, {
+                                cantidadPaginas: Math.max(1, Math.min(50, Number(e.target.value) || 1)),
+                              })
+                            }
+                            className="w-full max-w-xs bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white"
+                          />
+                          {paginasExtra > 0 ? (
+                            <p className="text-xs text-blue-400 mt-2">
+                              +${PRICE_EXTRA_PAGE_USD} por página adicional ({paginasExtra} páginas × ${PRICE_EXTRA_PAGE_USD} =
+                              ${paginasExtra * PRICE_EXTRA_PAGE_USD})
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : null}
+
+                      {service.needsDomainEmail ? (
+                        <div className="grid gap-4 sm:grid-cols-2 sm:items-stretch">
+                          <div className="flex flex-col sm:h-full">
+                            <span className="block text-sm font-medium text-slate-300 mb-2">¿Ya tienes dominio?</span>
+                            <div className="hidden min-h-0 sm:block sm:flex-1" aria-hidden />
+                            <div className="mt-auto flex gap-2">
+                              {(['si', 'no'] as const).map((option) => (
+                                <button
+                                  key={option}
+                                  type="button"
+                                  onClick={() => updateServiceConfig(service.id, { tieneDominio: option })}
+                                  className={`flex-1 py-2.5 rounded-xl border text-sm ${
+                                    config.tieneDominio === option
+                                      ? 'border-blue-500 bg-blue-500/20 text-white'
+                                      : 'border-white/15 text-slate-400'
+                                  }`}
+                                >
+                                  {option === 'si' ? 'Sí' : `No (+$${quoteAddOns.domainUsd})`}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex flex-col sm:h-full">
+                            {quoteAddOns.isWordPressHosting ? (
+                              <>
+                                <span className="block text-sm font-medium text-slate-300 mb-1">
+                                  ¿Ya tienes hosting para el sitio?
+                                </span>
+                                <span className="block text-xs text-slate-500 mb-2 leading-snug">
+                                  Si no, el 1.er año de hosting va en presupuesto (+${quoteAddOns.secondUsd}).
+                                </span>
+                              </>
+                            ) : (
+                              <span className="block text-sm font-medium text-slate-300 mb-2">¿Correo profesional?</span>
+                            )}
+                            <div className="hidden min-h-0 sm:block sm:flex-1" aria-hidden />
+                            <div className="mt-auto flex gap-2">
+                              {(['si', 'no'] as const).map((option) => (
+                                <button
+                                  key={option}
+                                  type="button"
+                                  onClick={() => updateServiceConfig(service.id, { tieneCorreo: option })}
+                                  className={`flex-1 py-2.5 rounded-xl border text-sm ${
+                                    config.tieneCorreo === option
+                                      ? 'border-blue-500 bg-blue-500/20 text-white'
+                                      : 'border-white/15 text-slate-400'
+                                  }`}
+                                >
+                                  {option === 'si' ? 'Sí' : `No (+$${quoteAddOns.secondUsd})`}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {service.needsPages && service.id !== 'pasarela' ? (
+                        <label className="flex items-start gap-3 cursor-pointer rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                          <input
+                            type="checkbox"
+                            checked={config.incluirPasarelaAddon}
+                            onChange={(e) =>
+                              updateServiceConfig(service.id, { incluirPasarelaAddon: e.target.checked })
+                            }
+                            className="mt-1 rounded border-white/30 bg-white/5 text-blue-500"
+                          />
+                          <span className="text-sm text-slate-300">
+                            Añadir integración de pasarela de pagos al sitio (+$200)
+                          </span>
+                        </label>
+                      ) : null}
                     </div>
-                  </div>
-                )}
+                  )
+                })}
 
-                {needsPages && !esPasarelaSolo && (
-                  <label className="flex items-start gap-3 cursor-pointer rounded-xl border border-white/10 bg-white/[0.03] p-4">
-                    <input
-                      type="checkbox"
-                      checked={form.incluirPasarelaAddon}
-                      onChange={(e) => setForm((f) => ({ ...f, incluirPasarelaAddon: e.target.checked }))}
-                      className="mt-1 rounded border-white/30 bg-white/5 text-blue-500"
-                    />
-                    <span className="text-sm text-slate-300">
-                      Añadir integración de pasarela de pagos al sitio (+$200)
-                    </span>
-                  </label>
-                )}
-
-                {needsPages && (
+                {selectedCatalogServices.some((service) => service.needsPages) ? (
                   <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 space-y-2">
                     <p className="text-xs text-slate-300 flex gap-2">
                       <Info className="w-4 h-4 shrink-0 text-blue-400" />
@@ -491,22 +624,22 @@ export default function CotizacionPage() {
                       {OBSERVACIONES_HOSTING_DB}
                     </p>
                   </div>
-                )}
+                ) : null}
 
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">Comentarios adicionales</label>
                   <textarea
                     value={form.comentarios}
-                    onChange={(e) => setForm((f) => ({ ...f, comentarios: e.target.value }))}
+                    onChange={(e) => setForm((current) => ({ ...current, comentarios: e.target.value }))}
                     rows={3}
                     className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-500 resize-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     placeholder="Ej.: referencias de diseño, plazos deseados, integraciones…"
                   />
                 </div>
               </motion.section>
-            )}
+            ) : null}
 
-            {paso === 4 && (
+            {paso === 4 ? (
               <motion.section
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -554,6 +687,35 @@ export default function CotizacionPage() {
                     </div>
                   </div>
 
+                  <div className="px-4 sm:px-6 pb-4">
+                    <div
+                      className="text-white text-[11px] font-bold uppercase tracking-wide px-3 py-1.5 rounded-t inline-block"
+                      style={{ backgroundColor: INVOICE_BRANDING.accentHex }}
+                    >
+                      Servicios incluidos
+                    </div>
+                    <div className="border border-t-0 border-slate-200 rounded-b px-3 py-3 space-y-4">
+                      {selectedServices.map((service) => (
+                        <div key={service.serviceId} className="rounded-lg border border-slate-200 p-3">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                            <p className="font-semibold text-slate-900">{service.label}</p>
+                            <p className="font-semibold text-slate-700">
+                              ${service.total.toFixed(2)}
+                              {pricing.monthly ? ' / mes' : ''}
+                            </p>
+                          </div>
+                          {service.offerPoints.length ? (
+                            <ul className="mt-3 text-sm text-slate-700 list-disc pl-5 space-y-1">
+                              {service.offerPoints.map((point) => (
+                                <li key={point}>{point}</li>
+                              ))}
+                            </ul>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                   <div className="px-4 sm:px-6 pb-4 sm:pb-6">
                     <div className="overflow-x-auto">
                       <table className="w-full min-w-[280px] text-xs sm:text-sm border border-slate-200 rounded-lg overflow-hidden">
@@ -564,10 +726,12 @@ export default function CotizacionPage() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                          {lines.map((l, i) => (
-                            <tr key={i}>
-                              <td className="px-3 py-2 text-slate-800 break-words">{l.label}</td>
-                              <td className="px-3 py-2 text-right tabular-nums whitespace-nowrap">${l.amount.toFixed(2)}</td>
+                          {pricing.lines.map((line, index) => (
+                            <tr key={`${line.label}-${index}`}>
+                              <td className="px-3 py-2 text-slate-800 break-words">{line.label}</td>
+                              <td className="px-3 py-2 text-right tabular-nums whitespace-nowrap">
+                                ${line.amount.toFixed(2)}
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -579,7 +743,7 @@ export default function CotizacionPage() {
                     >
                       <span className="font-bold uppercase text-sm">Total estimado</span>
                       <span className="text-lg sm:text-xl font-bold tabular-nums">
-                        ${total.toFixed(2)} USD{monthly ? ' / mes' : ''}
+                        ${pricing.total.toFixed(2)} USD{pricing.monthly ? ' / mes' : ''}
                       </span>
                     </div>
                   </div>
@@ -590,9 +754,8 @@ export default function CotizacionPage() {
                     <div className="flex items-center gap-2 text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
                       <CheckCircle className="w-5 h-5 shrink-0" />
                       <p>
-                        Hemos recibido tu cotización. Revisa tu correo: te enviamos el resumen y el contrato en
-                        PDF, con el enlace para enviarlo por WhatsApp cuando lo tengas listo. Te responderemos lo
-                        antes posible.
+                        Hemos recibido tu cotización. Revisa tu correo: te enviamos el resumen y el contrato en PDF,
+                        con el enlace para enviarlo por WhatsApp cuando lo tengas listo.
                       </p>
                     </div>
                   ) : (
@@ -601,8 +764,7 @@ export default function CotizacionPage() {
                         <Info className="w-5 h-5 shrink-0 text-amber-400 mt-0.5" />
                         <p>
                           Tu cotización quedó registrada, pero <strong className="font-semibold">no pudimos entregar el correo con los PDFs</strong> a{' '}
-                          <span className="break-all">{form.correo}</span>. Revisa la carpeta de spam o correo no deseado;
-                          en algunas empresas los adjuntos son filtrados.
+                          <span className="break-all">{form.correo}</span>.
                         </p>
                       </div>
                       <p className="text-sm text-slate-300 pl-7">
@@ -616,7 +778,7 @@ export default function CotizacionPage() {
                   )
                 ) : (
                   <div className="flex flex-col gap-3">
-                    {envioError && (
+                    {envioError ? (
                       <div
                         role="alert"
                         className="flex items-start gap-2 text-amber-100 bg-amber-500/15 border border-amber-500/40 rounded-xl p-4 text-sm"
@@ -624,28 +786,30 @@ export default function CotizacionPage() {
                         <Info className="w-5 h-5 shrink-0 text-amber-400 mt-0.5" />
                         <p>{envioError}</p>
                       </div>
-                    )}
+                    ) : null}
                     <div className="flex flex-col sm:flex-row gap-3">
-                    <button
-                      type="button"
-                      onClick={handlePrint}
-                      className="flex-1 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-5 py-3.5 rounded-xl font-medium transition-colors print:hidden"
-                    >
-                      <Printer className="w-5 h-5" />
-                      Imprimir / PDF
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleAceptarCotizacion}
-                      disabled={enviando}
-                      className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-5 py-3.5 rounded-xl font-medium disabled:opacity-60"
-                    >
-                      {enviando ? 'Enviando…' : (
-                        <>
-                          <Send className="w-5 h-5" /> Enviar cotización
-                        </>
-                      )}
-                    </button>
+                      <button
+                        type="button"
+                        onClick={handlePrint}
+                        className="flex-1 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-5 py-3.5 rounded-xl font-medium transition-colors print:hidden"
+                      >
+                        <Printer className="w-5 h-5" />
+                        Imprimir / PDF
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleAceptarCotizacion}
+                        disabled={enviando}
+                        className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-5 py-3.5 rounded-xl font-medium disabled:opacity-60"
+                      >
+                        {enviando ? (
+                          'Enviando…'
+                        ) : (
+                          <>
+                            <Send className="w-5 h-5" /> Enviar cotización
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
                 )}
@@ -658,23 +822,23 @@ export default function CotizacionPage() {
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </motion.section>
-            )}
+            ) : null}
           </div>
 
           <div className="flex justify-between items-center mt-8">
-            {paso > 1 && paso < 4 && (
+            {paso > 1 && paso < 4 ? (
               <button
                 type="button"
-                onClick={() => setPaso((p) => p - 1)}
+                onClick={() => setPaso((current) => current - 1)}
                 className="text-slate-400 hover:text-white text-sm py-2"
               >
                 Atrás
               </button>
-            )}
+            ) : null}
             {paso < 4 ? (
               <button
                 type="button"
-                onClick={() => setPaso((p) => p + 1)}
+                onClick={() => setPaso((current) => current + 1)}
                 disabled={!puedeSiguiente}
                 className="ml-auto flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium disabled:opacity-40 disabled:cursor-not-allowed"
               >

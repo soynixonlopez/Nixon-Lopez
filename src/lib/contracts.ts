@@ -1,4 +1,5 @@
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
+import { extractQuoteServiceSnapshots, getServiceOfferPoints, summarizeQuoteServiceLabels } from '@/lib/quote-pricing'
 import type { ServiceContractRecord } from '@/lib/types/contract'
 
 export type ContractTemplate = {
@@ -144,18 +145,46 @@ export function buildContractIntroSegments(contract: ServiceContractRecord): Con
 }
 
 export function buildContractClauses(contract: ServiceContractRecord) {
+  const selectedServices = extractQuoteServiceSnapshots(contract.terms_payload)
+  const contractServices =
+    selectedServices.length > 0
+      ? selectedServices
+      : [
+          {
+            serviceId: contract.service_type ?? '',
+            label: contract.service_label,
+            offerPoints: getServiceOfferPoints(contract.service_type, contract.service_label),
+            monthly: false,
+          },
+        ]
+  const isMultiService = contractServices.length > 1
+  const labelSummary = summarizeQuoteServiceLabels(contractServices.map((service) => service.label))
+  const allMonthly = contractServices.length > 0 && contractServices.every((service) => service.monthly === true)
   const template = getContractTemplate(contract.service_label)
   const amount = Number(contract.total_amount || 0).toFixed(2)
   const introSegments = buildContractIntroSegments(contract)
   const intro = introSegments.map((s) => s.value).join('')
+  const multiIncludes = contractServices.flatMap((service) =>
+    service.offerPoints.length > 0
+      ? service.offerPoints.slice(0, 5).map((point) => `${service.label}: ${point}`)
+      : [`${service.label}: alcance personalizado según la cotización aprobada.`]
+  )
+  const multiExcludes = Array.from(
+    new Set(contractServices.flatMap((service) => getContractTemplate(service.label).excludes))
+  )
+
   return {
     intro,
     introSegments,
-    primera: template.objectText,
-    segundaIncluye: template.includes,
-    segundaNoIncluye: template.excludes,
+    primera: isMultiService
+      ? `EL PRESTADOR se compromete a ejecutar el paquete de servicios tecnológicos contratado por EL CLIENTE, compuesto por: ${labelSummary}.`
+      : template.objectText,
+    segundaIncluye: isMultiService ? multiIncludes : template.includes,
+    segundaNoIncluye: isMultiService ? multiExcludes : template.excludes,
     tercera: [
-      `El valor total del proyecto será de USD $${amount}.`,
+      allMonthly
+        ? `El valor mensual del servicio será de USD $${amount}.`
+        : `El valor total del proyecto será de USD $${amount}.`,
       'Forma de pago: 50% anticipo para iniciar el proyecto y 50% contra entrega y aprobación final.',
       'El proyecto no iniciará hasta recibir el pago inicial.',
       'Métodos de pago: Transferencia/ACH, Yappy u otro método previamente acordado.',
@@ -166,7 +195,8 @@ export function buildContractClauses(contract: ServiceContractRecord) {
       'Correo corporativo / email marketing: USD $10.',
       'Hosting privado: desde USD $25 mensuales cuando el tráfico supere aproximadamente 200 visitas mensuales.',
     ],
-    quinta:
-      `El tiempo estimado de desarrollo será de ${template.timeline}, contados a partir de recepción del pago inicial y entrega completa del contenido.`,
+    quinta: isMultiService
+      ? 'El tiempo estimado de entrega se definirá según el cronograma del paquete contratado, contados a partir de la recepción del pago inicial y de la entrega completa del contenido por parte del CLIENTE.'
+      : `El tiempo estimado de desarrollo será de ${template.timeline}, contados a partir de recepción del pago inicial y entrega completa del contenido.`,
   }
 }

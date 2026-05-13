@@ -38,6 +38,7 @@ function yTop(page: { getHeight: () => number }, fromTop: number) {
 }
 
 export type QuoteSummaryLine = { label: string; amount: number }
+export type QuoteSummaryService = { label: string; total: number; offerPoints: string[] }
 
 export type QuoteSummaryPdfInput = {
   quoteId: string
@@ -47,6 +48,7 @@ export type QuoteSummaryPdfInput = {
   serviceLabel: string
   createdAtIso: string
   lines: QuoteSummaryLine[]
+  services?: QuoteSummaryService[]
   total: number
   monthly?: boolean
 }
@@ -61,7 +63,7 @@ function fmtMoney(n: number) {
 
 export async function generateQuoteSummaryPdfBuffer(input: QuoteSummaryPdfInput): Promise<Uint8Array> {
   const pdf = await PDFDocument.create()
-  const page = pdf.addPage([PAGE_W, PAGE_H])
+  let page = pdf.addPage([PAGE_W, PAGE_H])
   const font = await pdf.embedFont(StandardFonts.Helvetica)
   const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold)
   const ac = hexToRgb01(INVOICE_BRANDING.accentHex)
@@ -70,6 +72,12 @@ export async function generateQuoteSummaryPdfBuffer(input: QuoteSummaryPdfInput)
   const muted = rgb(0.38, 0.42, 0.48)
 
   let cursorY = 48
+  const maxW = PAGE_W - M * 2
+  const ensureSpace = (needed: number) => {
+    if (cursorY + needed <= PAGE_H - M) return
+    page = pdf.addPage([PAGE_W, PAGE_H])
+    cursorY = M
+  }
   const logoPath = path.join(process.cwd(), 'public', INVOICE_BRANDING.logoPath.replace(/^\//, ''))
   try {
     const logoBytes = fs.readFileSync(logoPath)
@@ -116,10 +124,10 @@ export async function generateQuoteSummaryPdfBuffer(input: QuoteSummaryPdfInput)
   })
   cursorY += 36
 
-  const maxW = PAGE_W - M * 2
   const drawP = (t: string, size = 10, bold = false, gap = 14) => {
     const f = bold ? fontBold : font
     for (const line of wrapText(t, maxW, f, size)) {
+      ensureSpace(gap + 8)
       page.drawText(line, { x: M, y: yTop(page, cursorY), size, font: f, color: textColor })
       cursorY += gap
     }
@@ -130,6 +138,60 @@ export async function generateQuoteSummaryPdfBuffer(input: QuoteSummaryPdfInput)
   drawP(input.clientEmail, 9, false, 22)
   drawP('Servicio', 9, true, 12)
   drawP(input.serviceLabel, 10, false, 24)
+
+  const services =
+    input.services && input.services.length > 0
+      ? input.services
+      : [{ label: input.serviceLabel || 'Servicio', total: input.total, offerPoints: [] }]
+
+  page.drawText('Servicios incluidos', { x: M, y: yTop(page, cursorY), size: 10, font: fontBold, color: accent })
+  cursorY += 20
+
+  for (const service of services) {
+    const titleLines = wrapText(service.label, maxW - 90, fontBold, 10)
+    const totalStr = `${fmtMoney(service.total)}${input.monthly ? '/mes' : ''}`
+    const estimatedHeight = 26 + titleLines.length * 14 + service.offerPoints.length * 14 + 12
+    ensureSpace(estimatedHeight)
+
+    page.drawText(titleLines[0] || service.label, {
+      x: M,
+      y: yTop(page, cursorY),
+      size: 10,
+      font: fontBold,
+      color: accent,
+    })
+    page.drawText(totalStr, {
+      x: PAGE_W - M - fontBold.widthOfTextAtSize(totalStr, 10),
+      y: yTop(page, cursorY),
+      size: 10,
+      font: fontBold,
+      color: textColor,
+    })
+    cursorY += 14
+
+    for (let i = 1; i < titleLines.length; i++) {
+      ensureSpace(14)
+      page.drawText(titleLines[i], {
+        x: M,
+        y: yTop(page, cursorY),
+        size: 10,
+        font: fontBold,
+        color: accent,
+      })
+      cursorY += 14
+    }
+
+    for (const point of service.offerPoints.slice(0, 5)) {
+      const bulletLines = wrapText(`• ${point}`, maxW - 10, font, 9)
+      for (const line of bulletLines) {
+        ensureSpace(13)
+        page.drawText(line, { x: M + 8, y: yTop(page, cursorY), size: 9, font, color: textColor })
+        cursorY += 13
+      }
+    }
+
+    cursorY += 10
+  }
 
   page.drawText('Detalle', { x: M, y: yTop(page, cursorY), size: 10, font: fontBold, color: accent })
   cursorY += 20
@@ -143,6 +205,7 @@ export async function generateQuoteSummaryPdfBuffer(input: QuoteSummaryPdfInput)
     const left = wrapText(label, maxW - 120, font, 9)
     const amt = fmtMoney(row.amount)
     for (let i = 0; i < left.length; i++) {
+      ensureSpace(16)
       page.drawText(left[i], { x: M, y: yTop(page, cursorY), size: 9, font, color: textColor })
       if (i === 0) {
         page.drawText(amt, {
@@ -159,6 +222,7 @@ export async function generateQuoteSummaryPdfBuffer(input: QuoteSummaryPdfInput)
   }
 
   cursorY += 12
+  ensureSpace(50)
   page.drawLine({
     start: { x: M, y: yTop(page, cursorY) },
     end: { x: PAGE_W - M, y: yTop(page, cursorY) },

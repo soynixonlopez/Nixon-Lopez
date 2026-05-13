@@ -11,7 +11,7 @@ export default async function NuevoContratoPage({
   const { data: quotes } = await supabase
     .from('quotes')
     .select(
-      'id, client_first_name, client_last_name, client_email, service_label, service_id, total_amount'
+      'id, client_first_name, client_last_name, client_email, service_label, service_id, total_amount, raw_payload'
     )
     .order('created_at', { ascending: false })
     .limit(200)

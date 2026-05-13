@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { extractQuoteServiceSnapshots } from '@/lib/quote-pricing'
 
 type QuoteOpt = {
   id: string
@@ -12,6 +13,7 @@ type QuoteOpt = {
   service_label: string | null
   service_id: string | null
   total_amount: number | null
+  raw_payload?: unknown
 }
 
 export function ContractCreateForm({
@@ -55,6 +57,10 @@ export function ContractCreateForm({
       total_amount: selected.total_amount ?? 0,
       currency: 'USD',
       custom_notes: customNotes || null,
+      terms_payload:
+        selected.raw_payload && extractQuoteServiceSnapshots(selected.raw_payload).length > 0
+          ? { selected_services: extractQuoteServiceSnapshots(selected.raw_payload) }
+          : null,
     }
     const { data, error } = await supabase.from('service_contracts').insert(payload).select('id').single()
     setLoading(false)
