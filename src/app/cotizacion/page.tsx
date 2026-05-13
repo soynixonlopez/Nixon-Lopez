@@ -190,16 +190,23 @@ export default function CotizacionPage() {
       .join('')
     const servicesHtml = selectedServices
       .map((service) => {
-        const pointsHtml = service.offerPoints.length
-          ? `<ul style="margin:10px 0 0;padding-left:18px;color:#334155;font-size:13px;line-height:1.6;">${service.offerPoints
-              .map((point) => `<li>${escapeHtml(point)}</li>`)
-              .join('')}</ul>`
-          : ''
         return `<div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;">
             <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;">
               <p style="margin:0;font-weight:700;color:${accent};">${escapeHtml(service.label)}</p>
               <p style="margin:0;font-weight:700;color:#0f172a;white-space:nowrap;">$${service.total.toFixed(2)}${pricing.monthly ? '/mes' : ''}</p>
             </div>
+          </div>`
+      })
+      .join('')
+    const includesHtml = selectedServices
+      .map((service) => {
+        const pointsHtml = service.offerPoints.length
+          ? `<ul style="margin:10px 0 0;padding-left:18px;color:#334155;font-size:13px;line-height:1.6;">${service.offerPoints
+              .map((point) => `<li>${escapeHtml(point)}</li>`)
+              .join('')}</ul>`
+          : '<p style="margin:10px 0 0;color:#64748b;font-size:13px;">Alcance sujeto a la cotización aprobada.</p>'
+        return `<div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;">
+            <p style="margin:0;font-weight:700;color:${accent};">${escapeHtml(service.label)}</p>
             ${pointsHtml}
           </div>`
       })
@@ -249,11 +256,16 @@ export default function CotizacionPage() {
         </section>
         <section class="block" style="padding-top:0">
           <span class="label">Servicios incluidos</span>
+          <p style="margin:0 0 12px;color:#64748b;font-size:13px;">Resumen de servicios cotizados y monto estimado por cada uno.</p>
           <div class="client">${servicesHtml || '<p style="margin:0;color:#64748b;">Sin servicios seleccionados.</p>'}</div>
         </section>
         <section class="block" style="padding-top:0">
           <table><thead><tr><th>Concepto</th><th class="num">Importe</th></tr></thead><tbody>${lineasHtml}</tbody></table>
           <div class="total"><span>Total estimado</span><b>$${pricing.total.toFixed(2)} USD${pricing.monthly ? ' / mes' : ''}</b></div>
+        </section>
+        <section class="block" style="padding-top:0">
+          <span class="label">Lo que incluye cada servicio</span>
+          <div class="client">${includesHtml || '<p style="margin:0;color:#64748b;">Sin detalle de servicios.</p>'}</div>
         </section>
       </article>
       ${form.comentarios ? `<p><strong>Comentarios:</strong> ${escapeHtml(form.comentarios)}</p>` : ''}
@@ -695,6 +707,9 @@ export default function CotizacionPage() {
                       Servicios incluidos
                     </div>
                     <div className="border border-t-0 border-slate-200 rounded-b px-3 py-3 space-y-4">
+                      <p className="text-xs text-slate-500">
+                        Resumen de servicios cotizados y monto estimado por cada uno.
+                      </p>
                       {selectedServices.map((service) => (
                         <div key={service.serviceId} className="rounded-lg border border-slate-200 p-3">
                           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
@@ -704,13 +719,6 @@ export default function CotizacionPage() {
                               {pricing.monthly ? ' / mes' : ''}
                             </p>
                           </div>
-                          {service.offerPoints.length ? (
-                            <ul className="mt-3 text-sm text-slate-700 list-disc pl-5 space-y-1">
-                              {service.offerPoints.map((point) => (
-                                <li key={point}>{point}</li>
-                              ))}
-                            </ul>
-                          ) : null}
                         </div>
                       ))}
                     </div>
@@ -745,6 +753,31 @@ export default function CotizacionPage() {
                       <span className="text-lg sm:text-xl font-bold tabular-nums">
                         ${pricing.total.toFixed(2)} USD{pricing.monthly ? ' / mes' : ''}
                       </span>
+                    </div>
+
+                    <div className="mt-6">
+                      <div
+                        className="text-white text-[11px] font-bold uppercase tracking-wide px-3 py-1.5 rounded-t inline-block"
+                        style={{ backgroundColor: INVOICE_BRANDING.accentHex }}
+                      >
+                        Lo que incluye cada servicio
+                      </div>
+                      <div className="border border-t-0 border-slate-200 rounded-b px-3 py-3 space-y-4">
+                        {selectedServices.map((service) => (
+                          <div key={`${service.serviceId}-includes`} className="rounded-lg border border-slate-200 p-3">
+                            <p className="font-semibold text-slate-900">{service.label}</p>
+                            {service.offerPoints.length ? (
+                              <ul className="mt-3 text-sm text-slate-700 list-disc pl-5 space-y-1">
+                                {service.offerPoints.map((point) => (
+                                  <li key={point}>{point}</li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="mt-2 text-sm text-slate-600">Alcance sujeto a la cotización aprobada.</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>

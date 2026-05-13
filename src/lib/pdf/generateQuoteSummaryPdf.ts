@@ -147,10 +147,17 @@ export async function generateQuoteSummaryPdfBuffer(input: QuoteSummaryPdfInput)
   page.drawText('Servicios incluidos', { x: M, y: yTop(page, cursorY), size: 10, font: fontBold, color: accent })
   cursorY += 20
 
+  for (const line of wrapText('Resumen de servicios cotizados y monto estimado por cada uno.', maxW, font, 8)) {
+    ensureSpace(12)
+    page.drawText(line, { x: M, y: yTop(page, cursorY), size: 8, font, color: muted })
+    cursorY += 12
+  }
+  cursorY += 4
+
   for (const service of services) {
     const titleLines = wrapText(service.label, maxW - 90, fontBold, 10)
     const totalStr = `${fmtMoney(service.total)}${input.monthly ? '/mes' : ''}`
-    const estimatedHeight = 26 + titleLines.length * 14 + service.offerPoints.length * 14 + 12
+    const estimatedHeight = 26 + titleLines.length * 14 + 12
     ensureSpace(estimatedHeight)
 
     page.drawText(titleLines[0] || service.label, {
@@ -179,15 +186,6 @@ export async function generateQuoteSummaryPdfBuffer(input: QuoteSummaryPdfInput)
         color: accent,
       })
       cursorY += 14
-    }
-
-    for (const point of service.offerPoints.slice(0, 5)) {
-      const bulletLines = wrapText(`• ${point}`, maxW - 10, font, 9)
-      for (const line of bulletLines) {
-        ensureSpace(13)
-        page.drawText(line, { x: M + 8, y: yTop(page, cursorY), size: 9, font, color: textColor })
-        cursorY += 13
-      }
     }
 
     cursorY += 10
@@ -243,9 +241,52 @@ export async function generateQuoteSummaryPdfBuffer(input: QuoteSummaryPdfInput)
   })
   cursorY += 40
 
+  page.drawText('Lo que incluye cada servicio', {
+    x: M,
+    y: yTop(page, cursorY),
+    size: 10,
+    font: fontBold,
+    color: accent,
+  })
+  cursorY += 20
+
+  for (const service of services) {
+    const titleLines = wrapText(service.label, maxW, fontBold, 10)
+    const estimatedHeight = 20 + titleLines.length * 14 + Math.max(service.offerPoints.length, 1) * 13 + 12
+    ensureSpace(estimatedHeight)
+
+    for (const line of titleLines) {
+      page.drawText(line, { x: M, y: yTop(page, cursorY), size: 10, font: fontBold, color: textColor })
+      cursorY += 14
+    }
+
+    if (service.offerPoints.length > 0) {
+      for (const point of service.offerPoints.slice(0, 5)) {
+        const bulletLines = wrapText(`• ${point}`, maxW - 10, font, 9)
+        for (const line of bulletLines) {
+          ensureSpace(13)
+          page.drawText(line, { x: M + 8, y: yTop(page, cursorY), size: 9, font, color: textColor })
+          cursorY += 13
+        }
+      }
+    } else {
+      page.drawText('• Alcance sujeto a la cotización aprobada.', {
+        x: M + 8,
+        y: yTop(page, cursorY),
+        size: 9,
+        font,
+        color: textColor,
+      })
+      cursorY += 13
+    }
+
+    cursorY += 10
+  }
+
   const foot =
     '* Montos referenciales según lo indicado en el formulario. No constituye factura. Conserve este documento.'
   for (const line of wrapText(foot, maxW, font, 8)) {
+    ensureSpace(12)
     page.drawText(line, { x: M, y: yTop(page, cursorY), size: 8, font, color: muted })
     cursorY += 12
   }

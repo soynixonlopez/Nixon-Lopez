@@ -462,6 +462,9 @@ export default function NuevaCotizacionPage() {
                   <span className="text-slate-400">Empresa:</span> {form.company || '-'}
                 </p>
                 <div className="space-y-3">
+                  <p className="text-xs text-slate-500">
+                    Resumen de servicios cotizados y monto estimado por cada uno.
+                  </p>
                   {bundle.services.map((service, index) => (
                     <div key={`${service.serviceId}-${index}`} className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
@@ -471,13 +474,6 @@ export default function NuevaCotizacionPage() {
                           {bundle.monthly ? '/mes' : ''}
                         </p>
                       </div>
-                      {service.offerPoints.length > 0 ? (
-                        <ul className="mt-2 list-disc pl-5 space-y-1 text-slate-300">
-                          {service.offerPoints.map((point) => (
-                            <li key={point}>{point}</li>
-                          ))}
-                        </ul>
-                      ) : null}
                     </div>
                   ))}
                 </div>
@@ -502,6 +498,25 @@ export default function NuevaCotizacionPage() {
                     Total USD: ${bundle.total.toFixed(2)}
                     {bundle.monthly ? '/mes' : ''}
                   </p>
+                </div>
+                <div className="border-t border-slate-800 pt-3 mt-2 space-y-3">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                    Lo que incluye cada servicio
+                  </p>
+                  {bundle.services.map((service, index) => (
+                    <div key={`${service.serviceId}-includes-${index}`} className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
+                      <p className="font-semibold text-white">{service.label}</p>
+                      {service.offerPoints.length > 0 ? (
+                        <ul className="mt-2 list-disc pl-5 space-y-1 text-slate-300">
+                          {service.offerPoints.map((point) => (
+                            <li key={point}>{point}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="mt-2 text-slate-400">Alcance sujeto a la cotización aprobada.</p>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

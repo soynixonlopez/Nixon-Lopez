@@ -129,38 +129,30 @@ export function QuotePrintView({ quote }: { quote: QuoteRow }) {
         </div>
       </div>
 
-      {services.length > 0 ? (
-        <div className="px-4 sm:px-8 pb-5 sm:pb-6 print:px-6 min-w-0">
-          <h3 className="text-sm font-bold text-slate-800 mb-3" style={{ color: accent }}>
-            Servicios incluidos
-          </h3>
-          <div className="space-y-3">
-            {services.map((service, index) => (
-              <div key={`${service.serviceId}-${index}`} className="rounded-lg border border-slate-200 p-3 sm:p-4">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                  <p className="font-semibold text-slate-900">{service.label}</p>
-                  <p className="text-sm font-semibold text-slate-700">
-                    ${service.total.toFixed(2)}
-                    {monthly ? ' / mes' : ''}
-                  </p>
-                </div>
-                {service.offerPoints.length > 0 ? (
-                  <ul className="mt-3 list-disc pl-5 space-y-1 text-sm text-slate-700">
-                    {service.offerPoints.map((point) => (
-                      <li key={point}>{point}</li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
       <div className="px-4 sm:px-8 pb-5 sm:pb-6 print:px-6 min-w-0">
         <h3 className="text-sm font-bold text-slate-800 mb-3" style={{ color: accent }}>
           Detalle del presupuesto
         </h3>
+        {services.length > 0 ? (
+          <div className="mb-4">
+            <p className="text-xs text-slate-500 mb-3">
+              Resumen de servicios cotizados y monto estimado por cada uno.
+            </p>
+            <div className="space-y-3">
+              {services.map((service, index) => (
+                <div key={`${service.serviceId}-${index}`} className="rounded-lg border border-slate-200 p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                    <p className="font-semibold text-slate-900">{service.label}</p>
+                    <p className="text-sm font-semibold text-slate-700">
+                      ${service.total.toFixed(2)}
+                      {monthly ? ' / mes' : ''}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
         {breakdown && breakdown.length > 0 ? (
           <div className="w-full overflow-x-auto -mx-1 px-1 print:overflow-visible print:mx-0 print:px-0">
             <table className="w-full min-w-[280px] text-xs sm:text-sm border border-slate-200 rounded-lg overflow-hidden print:text-sm table-fixed">
@@ -208,6 +200,30 @@ export function QuotePrintView({ quote }: { quote: QuoteRow }) {
             ${total.toFixed(2)} USD{monthly ? ' / mes' : ''}
           </span>
         </div>
+
+        {services.length > 0 ? (
+          <div className="mt-6">
+            <h3 className="text-sm font-bold text-slate-800 mb-3" style={{ color: accent }}>
+              Lo que incluye cada servicio
+            </h3>
+            <div className="space-y-3">
+              {services.map((service, index) => (
+                <div key={`${service.serviceId}-includes-${index}`} className="rounded-lg border border-slate-200 p-3 sm:p-4">
+                  <p className="font-semibold text-slate-900">{service.label}</p>
+                  {service.offerPoints.length > 0 ? (
+                    <ul className="mt-3 list-disc pl-5 space-y-1 text-sm text-slate-700">
+                      {service.offerPoints.map((point) => (
+                        <li key={point}>{point}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-2 text-sm text-slate-600">Alcance sujeto a la cotización aprobada.</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {quote.comments ? (
