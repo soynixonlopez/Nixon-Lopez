@@ -48,7 +48,7 @@ export const QUOTE_SERVICES: ServiceDef[] = [
   {
     id: 'web-negocio',
     label: 'Sitio web de servicios profesionales',
-    price: 85,
+    price: 90,
     offerPoints: [
       'Diseño web profesional orientado a captar clientes para tu negocio.',
       'Secciones clave como inicio, servicios, contacto y llamada a la acción.',
@@ -163,7 +163,7 @@ export const QUOTE_SERVICES: ServiceDef[] = [
   {
     id: 'marketplace-10',
     label: 'Marketplace — hasta 10 productos',
-    price: 170,
+    price: 200,
     offerPoints: [
       'Catálogo digital para vender hasta 10 productos.',
       'Vista de productos con información clara para el cliente.',
