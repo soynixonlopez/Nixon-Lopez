@@ -61,7 +61,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex print:block print:min-h-0 print:h-auto print:overflow-visible print:bg-white print:text-slate-900">
       {/* Sidebar */}
       <aside
         className={clsx(
@@ -193,7 +193,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col print:block print:h-auto print:min-h-0 print:overflow-visible">
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-800 bg-slate-950/90 px-4 py-3 backdrop-blur lg:hidden print:hidden">
           <button
             type="button"
@@ -205,7 +205,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </button>
           <span className="font-semibold">Panel</span>
         </header>
-        <main className="flex-1 w-full min-w-0 overflow-x-hidden overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-6 md:p-8 print:p-0 print:overflow-visible print:bg-white">
+        <main className="flex-1 w-full min-w-0 overflow-x-hidden overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-6 md:p-8 print:block print:h-auto print:max-h-none print:flex-none print:overflow-visible print:p-0 print:bg-white">
           {children}
         </main>
       </div>

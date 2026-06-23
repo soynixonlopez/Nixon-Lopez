@@ -13,7 +13,10 @@ function KeyField({ children }: { children: React.ReactNode }) {
 export function ContractPrintView({ contract }: { contract: ServiceContractRecord }) {
   const c = buildContractClauses(contract)
   return (
-    <article className="mx-auto w-full max-w-[210mm] bg-white text-slate-900 border border-slate-200 shadow-xl print:shadow-none print:border-0">
+    <article
+      id="contract-print-root"
+      className="mx-auto w-full max-w-[210mm] bg-white text-slate-900 border border-slate-200 shadow-xl print:shadow-none print:border-0 print:max-w-none print:overflow-visible"
+    >
       <header className="px-8 pt-8 pb-6 border-b border-slate-200">
         <div className="flex items-start justify-between gap-6">
           <div className="relative h-16 w-56">
@@ -207,7 +210,7 @@ function PaymentTable({
   rows: { label: string; value: string; emphasize?: boolean }[]
 }) {
   return (
-    <div className="rounded-lg border border-slate-300 overflow-hidden">
+    <div className="rounded-lg border border-slate-300 overflow-hidden print:overflow-visible">
       <p className="bg-slate-100 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-800">{title}</p>
       <table className="w-full text-xs border-collapse">
         <tbody>
@@ -227,7 +230,7 @@ function PaymentTable({
 
 function Clause({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section>
+    <section className="print:break-inside-avoid">
       <h3 className="font-bold uppercase text-slate-800 mb-1">{title}</h3>
       {children}
     </section>

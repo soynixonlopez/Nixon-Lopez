@@ -140,18 +140,29 @@ html {
   }
 }
 
-/* Facturas: impresión / PDF desde el navegador */
+/* Facturas, cotizaciones y contratos: impresión / PDF desde el navegador */
 @media print {
   @page {
     size: A4 portrait;
     margin: 10mm;
   }
+  html,
   body {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
     background: white !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  /* Ocultar barras de herramientas del panel al imprimir facturas/cotizaciones */
+  /* Evitar que contenedores del layout recorten con scroll interno */
+  body > div {
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  /* Ocultar barras de herramientas del panel al imprimir facturas/cotizaciones/contratos */
   .no-print {
     display: none !important;
   }
@@ -160,6 +171,21 @@ html {
     max-width: 100% !important;
     width: 100% !important;
     box-shadow: none !important;
+    overflow: visible !important;
+  }
+  /* Contrato: flujo multipágina sin scroll embebido */
+  #contract-print-root {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+  #contract-print-root header,
+  #contract-print-root footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }
 

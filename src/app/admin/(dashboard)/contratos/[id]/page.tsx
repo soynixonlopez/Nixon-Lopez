@@ -16,7 +16,7 @@ export default async function ContratoDetailPage({
   const contract = data as ServiceContractRecord
 
   return (
-    <div className="max-w-[220mm] mx-auto">
+    <div className="max-w-[220mm] mx-auto print:max-w-none print:w-full print:overflow-visible">
       <ContractDetailToolbar
         contractId={contract.id}
         contractNumber={contract.contract_number}
