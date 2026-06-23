@@ -14,6 +14,7 @@ export function inferServiceType(serviceLabel: string) {
   if (s.includes('app')) return 'app'
   if (s.includes('ia') || s.includes('automat')) return 'automation'
   if (s.includes('ads') || s.includes('publicidad')) return 'ads'
+  if (s.includes('seo') || s.includes('posicionamiento')) return 'seo'
   return 'web'
 }
 
@@ -71,6 +72,25 @@ export function getContractTemplate(serviceLabel: string): ContractTemplate {
         'Gestión de comunidad o atención comercial',
       ],
       timeline: '3 a 5 días hábiles para implementación inicial',
+    }
+  }
+  if (type === 'seo') {
+    return {
+      objectText:
+        'EL PRESTADOR se compromete a optimizar el posicionamiento en buscadores del sitio web del CLIENTE, aplicando mejoras técnicas y de contenido acordadas.',
+      includes: [
+        'Auditoría técnica y de contenido del sitio web',
+        'Optimización de meta etiquetas, títulos y encabezados',
+        'Mejoras de velocidad, indexación y estructura SEO',
+        'Configuración de herramientas de seguimiento y entrega de informe',
+      ],
+      excludes: [
+        'Redacción masiva de contenido nuevo no acordado',
+        'Campañas publicitarias de pago (Google Ads, Meta Ads)',
+        'Rediseño visual completo del sitio web',
+        'Garantía de posiciones específicas en buscadores',
+      ],
+      timeline: '5 a 10 días hábiles',
     }
   }
   return {
@@ -179,7 +199,11 @@ export function buildContractClauses(contract: ServiceContractRecord) {
     primera: isMultiService
       ? `EL PRESTADOR se compromete a ejecutar el paquete de servicios tecnológicos contratado por EL CLIENTE, compuesto por: ${labelSummary}.`
       : template.objectText,
-    segundaIncluye: isMultiService ? multiIncludes : template.includes,
+    segundaIncluye: isMultiService
+      ? multiIncludes
+      : contractServices[0]?.offerPoints?.length
+        ? contractServices[0].offerPoints
+        : template.includes,
     segundaNoIncluye: isMultiService ? multiExcludes : template.excludes,
     tercera: [
       allMonthly

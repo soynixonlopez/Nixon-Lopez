@@ -189,6 +189,20 @@ export const QUOTE_SERVICES: ServiceDef[] = [
     needsDomainEmail: true,
   },
   {
+    id: 'seo-optimizacion',
+    label: 'Optimización de SEO para sitios web',
+    price: 200,
+    offerPoints: [
+      'Auditoría técnica y de contenido del sitio web existente.',
+      'Optimización de títulos, meta descripciones y encabezados clave.',
+      'Mejora de velocidad, indexación y estructura para buscadores.',
+      'Configuración de Google Search Console y seguimiento básico.',
+      'Informe de cambios aplicados y recomendaciones de mantenimiento.',
+    ],
+    needsPages: false,
+    needsDomainEmail: false,
+  },
+  {
     id: 'pasarela',
     label: 'Integración de pasarela de pagos',
     price: 200,
