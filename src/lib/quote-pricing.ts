@@ -46,6 +46,20 @@ export const QUOTE_SERVICES: ServiceDef[] = [
     needsDomainEmail: true,
   },
   {
+    id: 'web-productos-panel',
+    label: 'Desarrollo de sitios web profesional para venta de productos con panel de administración',
+    price: 150,
+    offerPoints: [
+      'Sitio web profesional orientado a la venta de productos.',
+      'Panel administrativo para gestionar catálogo, pedidos o contenido.',
+      'Secciones comerciales para mostrar productos y facilitar la compra.',
+      'Diseño adaptable a celular, tablet y computadora.',
+      'Base funcional lista para operar y escalar ventas digitales.',
+    ],
+    needsPages: true,
+    needsDomainEmail: true,
+  },
+  {
     id: 'web-negocio',
     label: 'Sitio web de servicios profesionales',
     price: 90,
@@ -646,4 +660,14 @@ export function serviceTypeLabel(value: string | null | undefined): string {
   if (cat) return cat.label
   const o = ADMIN_SERVICE_TYPE_OPTIONS.find((x) => x.value === value)
   return o?.label ?? value
+}
+
+export function formatQuoteProjectSummary(input: {
+  company?: string | null
+  clientName?: string | null
+}): string {
+  const projectName = input.company?.trim() || input.clientName?.trim()
+  return projectName
+    ? `Resumen de los servicios cotizados para el proyecto ${projectName}.`
+    : 'Resumen de los servicios cotizados para el proyecto.'
 }

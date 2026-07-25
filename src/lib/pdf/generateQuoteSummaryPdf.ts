@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
+import { formatQuoteProjectSummary } from '@/lib/quote-pricing'
 
 const PAGE_W = 595.28
 const PAGE_H = 841.89
@@ -45,6 +46,7 @@ export type QuoteSummaryPdfInput = {
   clientFirstName: string
   clientLastName: string
   clientEmail: string
+  company?: string | null
   serviceLabel: string
   createdAtIso: string
   lines: QuoteSummaryLine[]
@@ -147,7 +149,12 @@ export async function generateQuoteSummaryPdfBuffer(input: QuoteSummaryPdfInput)
   page.drawText('Servicios incluidos', { x: M, y: yTop(page, cursorY), size: 10, font: fontBold, color: accent })
   cursorY += 20
 
-  for (const line of wrapText('Resumen de servicios cotizados y monto estimado por cada uno.', maxW, font, 8)) {
+  const projectSummary = formatQuoteProjectSummary({
+    company: input.company,
+    clientName: `${input.clientFirstName} ${input.clientLastName}`.trim(),
+  })
+
+  for (const line of wrapText(projectSummary, maxW, font, 8)) {
     ensureSpace(12)
     page.drawText(line, { x: M, y: yTop(page, cursorY), size: 8, font, color: muted })
     cursorY += 12

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Check, ChevronLeft, ChevronRight, Plus, Sparkles, Trash2 } from 'lucide-react'
 import { CATALOG_OTHER, createAdminQuoteDraft, resolveAdminQuoteBundle, type AdminQuoteServiceDraft } from '@/lib/admin-quote-services'
-import { getQuoteAddonIfMissing, getService, QUOTE_SERVICES } from '@/lib/quote-pricing'
+import { formatQuoteProjectSummary, getQuoteAddonIfMissing, getService, QUOTE_SERVICES } from '@/lib/quote-pricing'
 
 export default function NuevaCotizacionPage() {
   const router = useRouter()
@@ -463,7 +463,10 @@ export default function NuevaCotizacionPage() {
                 </p>
                 <div className="space-y-3">
                   <p className="text-xs text-slate-500">
-                    Resumen de servicios cotizados y monto estimado por cada uno.
+                    {formatQuoteProjectSummary({
+                      company: form.company,
+                      clientName: `${form.client_first_name} ${form.client_last_name}`.trim(),
+                    })}
                   </p>
                   {bundle.services.map((service, index) => (
                     <div key={`${service.serviceId}-${index}`} className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">

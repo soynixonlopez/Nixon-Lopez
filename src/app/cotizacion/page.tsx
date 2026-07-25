@@ -26,6 +26,7 @@ import {
   PRICE_EXTRA_PAGE_USD,
   buildCatalogQuoteServiceSnapshot,
   combineQuoteServiceSnapshots,
+  formatQuoteProjectSummary,
   getQuoteAddonIfMissing,
   getService,
   summarizeQuoteServiceLabels,
@@ -182,6 +183,7 @@ export default function CotizacionPage() {
 
     const accent = INVOICE_BRANDING.accentHex
     const clientName = `${form.nombre} ${form.apellido}`.trim()
+    const projectSummary = formatQuoteProjectSummary({ clientName })
     const lineasHtml = pricing.lines
       .map(
         (line) =>
@@ -256,7 +258,7 @@ export default function CotizacionPage() {
         </section>
         <section class="block" style="padding-top:0">
           <span class="label">Servicios incluidos</span>
-          <p style="margin:0 0 12px;color:#64748b;font-size:13px;">Resumen de servicios cotizados y monto estimado por cada uno.</p>
+          <p style="margin:0 0 12px;color:#64748b;font-size:13px;">${escapeHtml(projectSummary)}</p>
           <div class="client">${servicesHtml || '<p style="margin:0;color:#64748b;">Sin servicios seleccionados.</p>'}</div>
         </section>
         <section class="block" style="padding-top:0">
@@ -708,7 +710,9 @@ export default function CotizacionPage() {
                     </div>
                     <div className="border border-t-0 border-slate-200 rounded-b px-3 py-3 space-y-4">
                       <p className="text-xs text-slate-500">
-                        Resumen de servicios cotizados y monto estimado por cada uno.
+                        {formatQuoteProjectSummary({
+                          clientName: `${form.nombre} ${form.apellido}`.trim(),
+                        })}
                       </p>
                       {selectedServices.map((service) => (
                         <div key={service.serviceId} className="rounded-lg border border-slate-200 p-3">

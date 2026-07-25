@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
-import { extractQuoteServiceSnapshots } from '@/lib/quote-pricing'
+import { extractQuoteServiceSnapshots, formatQuoteProjectSummary } from '@/lib/quote-pricing'
 
 type QuoteRow = Record<string, unknown> & {
   id: string
@@ -58,6 +58,10 @@ export function QuotePrintView({ quote }: { quote: QuoteRow }) {
     typeof quote.raw_payload === 'object' &&
     quote.raw_payload !== null &&
     (quote.raw_payload as { monthly?: boolean }).monthly === true
+  const projectSummary = formatQuoteProjectSummary({
+    company: quote.company,
+    clientName: `${quote.client_first_name} ${quote.client_last_name}`.trim(),
+  })
 
   return (
     <article
@@ -136,7 +140,7 @@ export function QuotePrintView({ quote }: { quote: QuoteRow }) {
         {services.length > 0 ? (
           <div className="mb-4">
             <p className="text-xs text-slate-500 mb-3">
-              Resumen de servicios cotizados y monto estimado por cada uno.
+              {projectSummary}
             </p>
             <div className="space-y-3">
               {services.map((service, index) => (
