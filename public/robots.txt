@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://nixonlopez.com/sitemap.xml

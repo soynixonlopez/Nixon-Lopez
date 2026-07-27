@@ -4,27 +4,13 @@ import dynamic from 'next/dynamic'
 import { useEffect, useState, type ReactNode } from 'react'
 import LazySection from '@/components/LazySection'
 
-const SkillsSection = dynamic(() => import('@/components/SkillsSection'), {
-  ssr: false,
-})
-const ServicesSection = dynamic(() => import('@/components/ServicesSection'), {
-  ssr: false,
-})
-const WhyChooseSection = dynamic(() => import('@/components/WhyChooseSection'), {
-  ssr: false,
-})
-const AboutSection = dynamic(() => import('@/components/AboutSection'), {
-  ssr: false,
-})
-const ProjectsSection = dynamic(() => import('@/components/ProjectsSection'), {
-  ssr: false,
-})
-const TestimonialsSection = dynamic(() => import('@/components/TestimonialsSection'), {
-  ssr: false,
-})
-const ContactSection = dynamic(() => import('@/components/ContactSection'), {
-  ssr: false,
-})
+const SkillsSection = dynamic(() => import('@/components/SkillsSection'))
+const ServicesSection = dynamic(() => import('@/components/ServicesSection'))
+const WhyChooseSection = dynamic(() => import('@/components/WhyChooseSection'))
+const AboutSection = dynamic(() => import('@/components/AboutSection'))
+const ProjectsSection = dynamic(() => import('@/components/ProjectsSection'))
+const TestimonialsSection = dynamic(() => import('@/components/TestimonialsSection'))
+const ContactSection = dynamic(() => import('@/components/ContactSection'))
 
 /**
  * Si la URL trae ancla a una sección (#projects, #contact, etc.), cargamos todo el bloque

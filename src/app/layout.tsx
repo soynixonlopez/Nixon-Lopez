@@ -25,6 +25,7 @@ const defaultDescription =
   'Nixon Lopez Services: desarrollo web profesional, ChatBots, e-commerce y automatizaciones con inteligencia artificial en Panamá. Nixon López — más de 5 años creando soluciones digitales para negocios. Cotización online.'
 
 const googleVerification = process.env.GOOGLE_SITE_VERIFICATION
+const bingVerification = process.env.BING_SITE_VERIFICATION
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -95,8 +96,13 @@ export const metadata: Metadata = {
   alternates: {
     canonical: SITE_URL,
   },
-  ...(googleVerification
-    ? { verification: { google: googleVerification } }
+  ...(googleVerification || bingVerification
+    ? {
+        verification: {
+          ...(googleVerification ? { google: googleVerification } : {}),
+          ...(bingVerification ? { other: { 'msvalidate.01': bingVerification } } : {}),
+        },
+      }
     : {}),
 }
 
