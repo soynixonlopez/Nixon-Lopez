@@ -39,6 +39,14 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'image.thum.io',
+      },
+      {
+        protocol: 'https',
+        hostname: 's.wordpress.com',
+      },
     ],
   },
   experimental: {

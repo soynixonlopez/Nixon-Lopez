@@ -21,6 +21,11 @@ module.exports = {
     },
     extend: {
       colors: {
+        brand: {
+          DEFAULT: '#1e3a5f',
+          light: '#2a4a73',
+          dark: '#152a45',
+        },
         'neon-blue': '#00D4FF',
         'neon-purple': '#8B5CF6',
         'neon-green': '#10B981',

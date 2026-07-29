@@ -1,17 +1,27 @@
 import type { Metadata } from 'next'
 import Header from '@/components/Header'
-import HeroSectionStatic from '@/components/HeroSectionStatic'
 import Footer from '@/components/Footer'
 import ScrollToTop from '@/components/ScrollToTop'
 import HashScroll from '@/components/HashScroll'
-import HomeBelowFold from '@/components/HomeBelowFold'
 import { HomeSeoContent } from '@/components/seo/HomeSeoContent'
+import { HeroSection } from '@/components/home/HeroSection'
+import { ProblemSection } from '@/components/home/ProblemSection'
+import { BenefitsSection } from '@/components/home/BenefitsSection'
+import { ServicesPreviewSection } from '@/components/home/ServicesPreviewSection'
+import { QuoteBannerSection } from '@/components/home/QuoteBannerSection'
+import { CaseStudiesSection } from '@/components/home/CaseStudiesSection'
+import { ProcessSection } from '@/components/home/ProcessSection'
+import { AiSection } from '@/components/home/AiSection'
+import { TestimonialsSection } from '@/components/home/TestimonialsSection'
+import { AboutSection } from '@/components/home/AboutSection'
+import { FaqSection } from '@/components/home/FaqSection'
+import { FinalCtaSection } from '@/components/home/FinalCtaSection'
 import { SITE_URL } from '@/lib/site-config'
 
 export const metadata: Metadata = {
-  title: 'Nixon Lopez Services | Desarrollo web, IA y automatización en Panamá',
+  title: 'Nixon Lopez Services | Páginas web que consiguen más clientes en Panamá',
   description:
-    'Páginas web profesionales, tiendas online, SEO, apps móviles y automatización con IA para negocios en Panamá. Cotización online. Nixon López — más de 5 años impulsando negocios digitales.',
+    'Estudio digital en Panamá: páginas web profesionales, tiendas online y software a medida. Cotización automática en minutos. Más clientes, más ventas.',
   alternates: { canonical: SITE_URL },
   openGraph: {
     url: SITE_URL,
@@ -24,10 +34,20 @@ export default function Home() {
     <>
       <Header />
       <HashScroll />
-      <main className="min-h-screen w-full min-w-0 overflow-x-hidden">
-        <HeroSectionStatic />
+      <main className="min-h-screen w-full min-w-0 overflow-x-hidden bg-white">
+        <HeroSection />
         <HomeSeoContent />
-        <HomeBelowFold />
+        <ProblemSection />
+        <BenefitsSection />
+        <ServicesPreviewSection />
+        <QuoteBannerSection />
+        <CaseStudiesSection />
+        <ProcessSection />
+        <TestimonialsSection />
+        <AiSection />
+        <AboutSection />
+        <FaqSection />
+        <FinalCtaSection />
       </main>
       <Footer />
       <ScrollToTop />

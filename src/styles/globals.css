@@ -13,6 +13,8 @@ body {
   line-height: 1.6;
   overflow-x: hidden;
   max-width: 100%;
+  background: #ffffff;
+  color: #0f172a;
 }
 
 /* Evitar scroll horizontal: html + body (100vw y elementos posicionados suelen desbordar solo en body) */

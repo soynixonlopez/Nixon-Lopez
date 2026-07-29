@@ -1,15 +1,20 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { FileText, FolderKanban, Receipt, TrendingUp } from 'lucide-react'
+import { FileText, FolderKanban, GraduationCap, Receipt, TrendingUp } from 'lucide-react'
+import { MASTERCLASS_EVENT } from '@/lib/masterclass'
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
 
-  const [quotes, projects, invoices, contracts] = await Promise.all([
+  const [quotes, projects, invoices, contracts, masterclass] = await Promise.all([
     supabase.from('quotes').select('*', { count: 'exact', head: true }),
     supabase.from('projects').select('*', { count: 'exact', head: true }),
     supabase.from('invoices').select('*', { count: 'exact', head: true }),
     supabase.from('service_contracts').select('*', { count: 'exact', head: true }),
+    supabase
+      .from('masterclass_registrations')
+      .select('*', { count: 'exact', head: true })
+      .eq('event_slug', MASTERCLASS_EVENT.slug),
   ])
 
   const qStatus = await supabase.from('quotes').select('status').limit(500)
@@ -48,6 +53,13 @@ export default async function AdminDashboardPage() {
       href: '/admin/contratos',
       icon: FileText,
     },
+    {
+      label: 'Masterclass',
+      value: masterclass.count ?? 0,
+      href: '/admin/masterclass',
+      icon: GraduationCap,
+      hint: MASTERCLASS_EVENT.dateLabel,
+    },
   ]
 
   return (
@@ -57,10 +69,10 @@ export default async function AdminDashboardPage() {
           <TrendingUp className="w-8 h-8 text-indigo-400" />
           Dashboard
         </h1>
-        <p className="text-slate-400 mt-1">Resumen de cotizaciones, proyectos y facturas.</p>
+        <p className="text-slate-400 mt-1">Resumen de cotizaciones, proyectos, facturas y masterclass.</p>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {cards.map((c, i) => (
           <Link
             key={c.label}
@@ -96,6 +108,11 @@ export default async function AdminDashboardPage() {
           <li>
             <Link className="text-indigo-400 hover:underline" href="/admin/contratos/nuevo">
               Nuevo contrato
+            </Link>
+          </li>
+          <li>
+            <Link className="text-indigo-400 hover:underline" href="/admin/masterclass">
+              Ver registros masterclass
             </Link>
           </li>
         </ul>

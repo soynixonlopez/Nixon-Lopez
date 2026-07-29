@@ -117,7 +117,7 @@ export default function RootLayout({
         <SiteJsonLd />
         <MetaPixel />
 
-        <div className="min-h-screen w-full min-w-0 max-w-full overflow-x-hidden bg-background text-foreground">
+        <div className="min-h-screen w-full min-w-0 max-w-full overflow-x-hidden bg-white text-slate-900">
           {children}
         </div>
       </body>

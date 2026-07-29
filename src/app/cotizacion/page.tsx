@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   User,
@@ -101,6 +101,24 @@ export default function CotizacionPage() {
   const [cotizacionEnviada, setCotizacionEnviada] = useState(false)
   const [correoPdfOk, setCorreoPdfOk] = useState(true)
   const [envioError, setEnvioError] = useState('')
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const serviceId = params.get('service')?.trim()
+    if (!serviceId || !getService(serviceId)) return
+    setForm((current) => {
+      if (current.selectedServices.includes(serviceId)) return current
+      return {
+        ...current,
+        selectedServices: [...current.selectedServices, serviceId],
+        serviceConfigs: {
+          ...current.serviceConfigs,
+          [serviceId]: current.serviceConfigs[serviceId] ?? createServiceConfig(serviceId),
+        },
+      }
+    })
+    setPaso(2)
+  }, [])
 
   const selectedServices = useMemo(
     () => buildSelectedServices(form.selectedServices, form.serviceConfigs),

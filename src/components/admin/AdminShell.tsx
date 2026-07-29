@@ -14,6 +14,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  GraduationCap,
   Home,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -24,6 +25,7 @@ const STORAGE_KEY = 'admin-sidebar-collapsed'
 const nav = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/cotizaciones', label: 'Cotizaciones', icon: FileText },
+  { href: '/admin/masterclass', label: 'Masterclass', icon: GraduationCap },
   { href: '/admin/contratos', label: 'Contratos', icon: FileText },
   { href: '/admin/proyectos', label: 'Proyectos', icon: FolderKanban },
   { href: '/admin/facturas', label: 'Facturas', icon: Receipt },

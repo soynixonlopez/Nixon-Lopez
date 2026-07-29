@@ -51,6 +51,7 @@ const TechLogo: React.FC<TechLogoProps> = ({
     TikTok: 'tiktok.svg',
     YouTube: 'youtube.svg',
     WhatsApp: 'whatsapp.svg',
+    WordPress: 'wordpress.svg',
     GitHub: 'github.svg',
     'Framer Motion': 'framer.svg',
     AWS: 'amazonaws.svg',

@@ -1,4 +1,5 @@
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
+import { HOME_FAQ } from '@/lib/marketing'
 import { SITE_NAME, SITE_NAME_FULL, SITE_URL } from '@/lib/site-config'
 
 const orgId = `${SITE_URL}/#organization`
@@ -103,6 +104,18 @@ const graph = {
         'Automatización con IA',
         'Desarrollo de apps móviles',
       ],
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': `${SITE_URL}/#faq`,
+      mainEntity: HOME_FAQ.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.answer,
+        },
+      })),
     },
   ],
 }
