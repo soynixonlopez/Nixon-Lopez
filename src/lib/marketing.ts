@@ -302,26 +302,32 @@ export const HOME_PROBLEMS = [
 export const HOME_PROCESS = [
   {
     step: '1',
+    icon: 'quote' as const,
     title: 'Cotizas en minutos',
     description: 'Eliges lo que necesitas en el cotizador online. Sin llamadas ni esperas.',
   },
   {
     step: '2',
+    icon: 'proposal' as const,
     title: 'Recibes tu propuesta',
-    description: 'PDF con precio, alcance y detalle. Lo revisas con calma.',
+    description: 'PDF con precio, alcance y detalles. La revisas con calma, sin presiones.',
   },
   {
     step: '3',
+    icon: 'contract' as const,
     title: 'Firmamos contrato',
-    description: 'Documento formal que protege a ambas partes. 50% para iniciar.',
+    description: 'Documento formal que protege a ambas partes.',
+    highlight: '50% para iniciar.',
   },
   {
     step: '4',
+    icon: 'develop' as const,
     title: 'Desarrollamos juntos',
-    description: 'Comunicación directa conmigo. Sabes en qué va tu proyecto.',
+    description: 'Comunicación directa conmigo. Sabes en qué va tu proyecto en todo momento.',
   },
   {
     step: '5',
+    icon: 'launch' as const,
     title: 'Lanzamos tu web',
     description: 'Entrega, ajustes finales y tu negocio listo para captar clientes.',
   },
