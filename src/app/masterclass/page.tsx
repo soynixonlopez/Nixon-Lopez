@@ -1,11 +1,9 @@
-import Benefits from '@/components/masterclass/Benefits'
-import CTA from '@/components/masterclass/CTA'
 import Hero from '@/components/masterclass/Hero'
-import Instructor from '@/components/masterclass/Instructor'
-import Learning from '@/components/masterclass/Learning'
+import MasterclassBelowFold from '@/components/masterclass/MasterclassBelowFold'
 import MasterclassHeader from '@/components/masterclass/MasterclassHeader'
-import Projects from '@/components/masterclass/Projects'
-import RegisterForm from '@/components/masterclass/RegisterForm'
+
+/** Landing estática — el formulario habla con la API en cliente */
+export const dynamic = 'force-static'
 
 export default function MasterclassPage() {
   return (
@@ -13,12 +11,7 @@ export default function MasterclassPage() {
       <MasterclassHeader />
       <main>
         <Hero />
-        <Benefits />
-        <Learning />
-        <Instructor />
-        <Projects />
-        <RegisterForm />
-        <CTA />
+        <MasterclassBelowFold />
       </main>
       <footer className="border-t border-white/10 py-8 text-center text-sm text-slate-500">
         <p>© {new Date().getFullYear()} Nixon López. Todos los derechos reservados.</p>

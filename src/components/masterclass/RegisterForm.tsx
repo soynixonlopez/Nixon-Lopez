@@ -18,6 +18,7 @@ export default function RegisterForm() {
   const [nombre, setNombre] = useState('')
   const [email, setEmail] = useState('')
   const [whatsapp, setWhatsapp] = useState('')
+  const [honeypot, setHoneypot] = useState('')
   const [state, setState] = useState<FormState>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [alreadyRegistered, setAlreadyRegistered] = useState(false)
@@ -31,7 +32,7 @@ export default function RegisterForm() {
       const res = await fetch('/api/masterclass/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre, email, whatsapp }),
+        body: JSON.stringify({ nombre, email, whatsapp, _hp: honeypot }),
       })
 
       const data = await res.json().catch(() => ({}))
@@ -77,12 +78,26 @@ export default function RegisterForm() {
               </h3>
               <p className="mt-2 text-sm text-slate-400">
                 {alreadyRegistered
-                  ? 'Este correo ya tiene cupo reservado. Revisa tu bandeja por los detalles de acceso.'
-                  : 'Revisa tu correo. Te enviaremos los detalles de acceso antes del evento.'}
+                  ? 'Este correo ya tiene cupo reservado. Revisa tu bandeja por el enlace de WhatsApp y Google Meet.'
+                  : 'Revisa tu correo: encontrarás el enlace al grupo de WhatsApp y el acceso a Google Meet.'}
               </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="relative space-y-5">
+              {/* Honeypot anti-bot — oculto para usuarios reales */}
+              <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden>
+                <label htmlFor="mc-hp">No completar</label>
+                <input
+                  id="mc-hp"
+                  name="_hp"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                />
+              </div>
+
               <div>
                 <label htmlFor="mc-nombre" className="mb-1.5 block text-sm font-medium text-slate-300">
                   Nombre completo

@@ -1,6 +1,5 @@
 'use client'
 
-import { Sparkles } from 'lucide-react'
 import { GlowOrb, MasterclassCta, MasterclassSection, SectionLead, SectionTitle } from './shared'
 
 export default function CTA() {
@@ -18,11 +17,7 @@ export default function CTA() {
           }}
         />
 
-        <Sparkles className="mx-auto h-8 w-8 text-neon-blue" aria-hidden />
-
-        <SectionTitle className="mt-4">
-          Tu primera página web profesional puede comenzar aquí 🚀
-        </SectionTitle>
+        <SectionTitle>Tu primera página web profesional puede comenzar aquí</SectionTitle>
 
         <SectionLead className="mx-auto">
           No necesitas experiencia previa. Solo aprender el proceso correcto y utilizar las herramientas

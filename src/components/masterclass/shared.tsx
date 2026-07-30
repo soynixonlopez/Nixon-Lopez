@@ -1,6 +1,6 @@
 'use client'
 
-import { motion, useInView, type Variants } from 'framer-motion'
+import { motion, useInView, useReducedMotion, type Variants } from 'framer-motion'
 import { useRef, type ReactNode } from 'react'
 
 export const fadeUp: Variants = {
@@ -27,6 +27,7 @@ type SectionProps = {
 export function MasterclassSection({ id, children, className = '', dark = true }: SectionProps) {
   const ref = useRef<HTMLElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-60px' })
+  const reduceMotion = useReducedMotion()
 
   return (
     <section
@@ -35,8 +36,8 @@ export function MasterclassSection({ id, children, className = '', dark = true }
       className={`relative py-16 sm:py-20 lg:py-24 ${dark ? 'text-white' : ''} ${className}`}
     >
       <motion.div
-        initial="hidden"
-        animate={isInView ? 'visible' : 'hidden'}
+        initial={reduceMotion ? false : 'hidden'}
+        animate={reduceMotion || isInView ? 'visible' : 'hidden'}
         variants={staggerContainer}
         className="container relative z-10"
       >

@@ -14,13 +14,16 @@ export function MetaPixel() {
 
   if (pathname?.startsWith('/admin')) return null
 
+  // Masterclass: pixel diferido vía lazyOnload (no bloquea LCP)
+  const isMasterclass = pathname === '/masterclass'
+
   const idJson = JSON.stringify(pixelId)
 
   return (
     <>
       <Script
         id="meta-pixel"
-        strategy="afterInteractive"
+        strategy={isMasterclass ? 'lazyOnload' : 'afterInteractive'}
         dangerouslySetInnerHTML={{
           __html: `
 !function(f,b,e,v,n,t,s)

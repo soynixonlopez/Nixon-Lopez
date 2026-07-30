@@ -1,18 +1,23 @@
-import {
-  PROJECT_HERO_PREVIEWS,
-  PROJECT_LIVE_URLS,
-  projectLivePreview,
-  type FeaturedProject,
-} from '@/lib/case-studies'
+import { PROJECT_HERO_PREVIEWS, PROJECT_LIVE_URLS, type FeaturedProject } from '@/lib/case-studies'
 
 export const MASTERCLASS_EVENT = {
   slug: 'masterclass-ia-agosto-2026',
   name: 'Masterclass Gratuita: Aprende a crear páginas web profesionales con Inteligencia Artificial',
+  shortName: 'MasterClass Aprende a Crear Web Profesionales con IA',
   dateLabel: 'Sábado 1 de agosto',
-  timeLabel: '10:00 AM - 12:00 PM',
+  timeLabel: '10:00 AM - 11:30 AM',
+  timezone: 'America/Panama',
+  timezoneLabel: 'Hora de Panamá (GMT-5)',
   modality: 'Online en vivo',
   cost: 'Acceso gratuito',
   urgency: 'Cupos limitados para participantes en vivo',
+  whatsappCommunityUrl: 'https://chat.whatsapp.com/ExznHRowGGO3kHzzXuvwOi',
+  whatsappCommunityName: 'MasterClass Aprende A Crear Web Profesionales con IA',
+  googleMeetUrl: 'https://meet.google.com/ppi-fknh-dtu',
+  googleCalendarUrl:
+    'https://calendar.google.com/calendar/render?action=TEMPLATE&text=MasterClass+Aprende+a+Crear+Web+Profesionales+con+IA&dates=20260801T100000/20260801T113000&ctz=America%2FPanama&details=Enlace+de+acceso%3A+https%3A%2F%2Fmeet.google.com%2Fppi-fknh-dtu%0A%0AComunidad+WhatsApp%3A+https%3A%2F%2Fchat.whatsapp.com%2FExznHRowGGO3kHzzXuvwOi&location=https%3A%2F%2Fmeet.google.com%2Fppi-fknh-dtu',
+  startDateIso: '2026-08-01T10:00:00-05:00',
+  endDateIso: '2026-08-01T11:30:00-05:00',
 } as const
 
 export const MASTERCLASS_REGISTRATION_STATUSES = {
@@ -98,7 +103,20 @@ export const MASTERCLASS_AUDIENCE = [
 
 export const INSTRUCTOR_TECH = ['React', 'Next.js', 'TypeScript', 'Tailwind CSS', 'AI Tools'] as const
 
-/** Proyectos de autoridad — formato carrusel (igual que home) */
+export const INSTRUCTOR_SOCIAL = [
+  {
+    label: 'Instagram',
+    handle: '@nixonlopes.dev',
+    href: 'https://www.instagram.com/nixonlopes.dev/',
+  },
+  {
+    label: 'LinkedIn',
+    handle: 'in/nixonlopez',
+    href: 'https://www.linkedin.com/in/nixonlopez',
+  },
+] as const
+
+/** Proyectos de autoridad — previews locales (sin depender de thum.io) */
 export const MASTERCLASS_PROJECTS: FeaturedProject[] = [
   {
     slug: 'spl-business',
@@ -107,7 +125,7 @@ export const MASTERCLASS_PROJECTS: FeaturedProject[] = [
     categoryTone: 'blue',
     description: 'Sitio corporativo moderno enfocado en confianza y conversión.',
     demoUrl: PROJECT_LIVE_URLS.spl,
-    image: projectLivePreview(PROJECT_LIVE_URLS.spl),
+    image: PROJECT_HERO_PREVIEWS.spl,
   },
   {
     slug: 'aquarumbos',
@@ -121,7 +139,7 @@ export const MASTERCLASS_PROJECTS: FeaturedProject[] = [
   },
   {
     slug: 'aserta',
-    company: 'Aserta',
+    company: 'Aserta S.A.',
     category: 'Solución empresarial',
     categoryTone: 'green',
     description: 'Herramienta digital para automatizar procesos y facilitar decisiones.',
@@ -129,12 +147,12 @@ export const MASTERCLASS_PROJECTS: FeaturedProject[] = [
     image: PROJECT_HERO_PREVIEWS.aserta,
   },
   {
-    slug: 'cositas-lindas',
-    company: 'Marketplace Cositas Lindas',
-    category: 'E-commerce',
-    categoryTone: 'pink',
-    description: 'Experiencia ecommerce para conectar productos con clientes.',
-    demoUrl: 'https://tienda.cosas-lindas.com',
-    image: projectLivePreview('https://tienda.cosas-lindas.com', { wait: 5 }),
+    slug: 'sara',
+    company: 'Sara Carryhau',
+    category: 'Marca profesional',
+    categoryTone: 'purple',
+    description: 'Web enfocada en transmitir confianza y captar nuevos clientes.',
+    demoUrl: PROJECT_LIVE_URLS.sara,
+    image: PROJECT_HERO_PREVIEWS.sara,
   },
 ]

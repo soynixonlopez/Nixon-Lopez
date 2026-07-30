@@ -23,6 +23,10 @@ export function getContactLimit() {
   return parseIntEnv('RATE_LIMIT_CONTACT_MAX', 10)
 }
 
+export function getMasterclassLimit() {
+  return parseIntEnv('RATE_LIMIT_MASTERCLASS_MAX', 5)
+}
+
 export function getNewsletterLimit() {
   return parseIntEnv('RATE_LIMIT_NEWSLETTER_MAX', 5)
 }

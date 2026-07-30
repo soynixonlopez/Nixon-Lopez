@@ -2,6 +2,16 @@ import { WHATSAPP_E164 } from '@/lib/site-contact'
 
 export const BRAND_ACCENT = '#1e3a5f'
 
+/** Retratos del home — public/images/nixon */
+export const HOME_IMAGES = {
+  hero: '/images/nixon/masterclass_hero.webp',
+  about: '/images/nixon/nixon_about.webp',
+  heroWidth: 1086,
+  heroHeight: 1448,
+  aboutWidth: 960,
+  aboutHeight: 1200,
+} as const
+
 export const WHATSAPP_MESSAGES = {
   default: 'Hola Nixon, quiero cotizar una página web para mi negocio. ¿Me ayudas?',
   hero: 'Hola Nixon, vi tu web y me gustaría hablar sobre un proyecto para mi negocio.',

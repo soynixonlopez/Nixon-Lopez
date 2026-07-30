@@ -4,8 +4,7 @@ import Image from 'next/image'
 import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
 import { Check, User } from 'lucide-react'
-import { ABOUT_CHECKLIST, ABOUT_STATS } from '@/lib/marketing'
-import aboutPhoto from '../../../public/images/aboutNixonLopez.png'
+import { ABOUT_CHECKLIST, ABOUT_STATS, HOME_IMAGES } from '@/lib/marketing'
 
 export function AboutSection() {
   const ref = useRef(null)
@@ -79,20 +78,28 @@ export function AboutSection() {
             initial={{ opacity: 0, y: 24 }}
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
             transition={{ duration: 0.5, delay: 0.08 }}
-            className="relative flex justify-center lg:justify-end"
+            className="relative mx-auto w-full max-w-[min(100%,380px)] lg:max-w-none"
           >
             <div
-              className="pointer-events-none absolute bottom-[8%] right-[5%] h-[70%] w-[85%] rounded-full bg-brand/[0.06] blur-3xl"
+              className="pointer-events-none absolute -inset-3 rounded-3xl bg-gradient-to-br from-brand/15 via-blue-200/20 to-indigo-200/10 blur-2xl"
               aria-hidden
             />
-            <Image
-              src={aboutPhoto}
-              alt="Nixon López — desarrollador web para negocios en Panamá"
-              width={aboutPhoto.width}
-              height={aboutPhoto.height}
-              className="relative w-full max-w-[min(100%,380px)] sm:max-w-[440px] lg:max-w-[480px] h-auto object-contain object-bottom drop-shadow-[0_20px_40px_rgba(15,23,42,0.08)]"
-              sizes="(max-width: 640px) 380px, (max-width: 1024px) 440px, 480px"
-            />
+            <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_24px_64px_rgba(15,23,42,0.10)]">
+              <div className="relative aspect-[4/5] sm:aspect-[960/1200]">
+                <Image
+                  src={HOME_IMAGES.about}
+                  alt="Nixon López en su espacio de trabajo — desarrollo web e IA"
+                  fill
+                  className="object-cover object-[center_20%]"
+                  sizes="(max-width: 640px) 380px, (max-width: 1024px) 440px, 480px"
+                  quality={80}
+                />
+              </div>
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/75 via-slate-900/25 to-transparent px-4 pb-4 pt-16">
+                <p className="text-sm font-semibold text-white">Nixon López</p>
+                <p className="text-xs text-slate-200/90">Desarrollo web · IA · Panamá</p>
+              </div>
+            </div>
           </motion.div>
         </div>
       </div>

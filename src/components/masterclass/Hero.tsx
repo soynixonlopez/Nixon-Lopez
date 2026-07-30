@@ -1,12 +1,11 @@
-'use client'
-
 import Image from 'next/image'
-import { motion } from 'framer-motion'
-import { Calendar, Clock, Monitor, Sparkles, Ticket } from 'lucide-react'
-import { PROJECT_HERO_PREVIEWS } from '@/lib/case-studies'
+import { Calendar, Clock, Monitor, Ticket } from 'lucide-react'
+import { MASTERCLASS_HERO_FLOATS } from '@/lib/case-studies'
 import { MASTERCLASS_EVENT } from '@/lib/masterclass'
-import nixonProfileWebp from '../../../public/images/nixonprofile.webp'
-import { fadeUp, GlowOrb, MasterclassCta } from './shared'
+import { masterclassCtaPrimary } from '@/lib/masterclass-ui'
+
+const HERO_WIDTH = 1086
+const HERO_HEIGHT = 1448
 
 const EVENT_DETAILS = [
   { icon: Calendar, label: MASTERCLASS_EVENT.dateLabel },
@@ -15,175 +14,24 @@ const EVENT_DETAILS = [
   { icon: Ticket, label: MASTERCLASS_EVENT.cost },
 ] as const
 
-type FloatProject = {
-  slug: keyof typeof PROJECT_HERO_PREVIEWS
-  position: string
-  width: string
-  zIndex: string
-  transform: string
-  floatDelay: number
-  floatY: number
-}
-
-/** Tres pantallas alrededor del perfil — distribución original, rostro libre arriba */
-const FLOAT_PROJECTS: FloatProject[] = [
-  {
-    slug: 'aserta',
-    position: 'top-[40%] left-[0%]',
-    width: 'w-[140px] sm:w-[172px] lg:w-[196px]',
-    zIndex: 'z-[48]',
-    transform: '[transform:rotateY(-8deg)_rotateZ(-5deg)] origin-center',
-    floatDelay: 0.15,
-    floatY: 5,
-  },
-  {
-    slug: 'aquarumbos',
-    position: 'top-[46%] right-[0%] sm:right-[2%]',
-    width: 'w-[140px] sm:w-[172px] lg:w-[196px]',
-    zIndex: 'z-[50]',
-    transform: '[transform:rotateY(-7deg)_rotateZ(6deg)] origin-center',
-    floatDelay: 0.35,
-    floatY: -5,
-  },
-  {
-    slug: 'nutrielys',
-    position: 'bottom-[0%] right-[0%] sm:right-[1%]',
-    width: 'w-[140px] sm:w-[172px] lg:w-[196px]',
-    zIndex: 'z-[55]',
-    transform: '[transform:rotateY(-10deg)_rotateZ(3deg)] origin-bottom-right',
-    floatDelay: 0.55,
-    floatY: 6,
-  },
-]
-
-function HeroProjectScreen({
-  item,
-  priority = false,
-}: {
-  item: FloatProject
-  priority?: boolean
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.94 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.6, delay: 0.45 + item.floatDelay, ease: [0.22, 1, 0.36, 1] }}
-      className={`absolute pointer-events-none ${item.zIndex} ${item.width} ${item.position} ${item.transform}`}
-      aria-hidden
-    >
-      <motion.div
-        animate={{ y: [0, item.floatY, 0] }}
-        transition={{
-          duration: 4.5 + item.floatDelay,
-          repeat: Infinity,
-          ease: 'easeInOut',
-          delay: item.floatDelay,
-        }}
-      >
-        <div className="overflow-hidden rounded-2xl border border-white/25 bg-[#0d1117]/95 p-1.5 shadow-[0_24px_60px_rgba(0,212,255,0.28)] ring-1 ring-neon-blue/25 backdrop-blur-sm">
-          <div className="flex items-center gap-1.5 rounded-t-xl border-b border-white/10 bg-[#161b22] px-2 py-1.5">
-            <span className="h-2 w-2 rounded-full bg-red-400/90" />
-            <span className="h-2 w-2 rounded-full bg-amber-400/90" />
-            <span className="h-2 w-2 rounded-full bg-emerald-400/90" />
-          </div>
-          <div className="relative aspect-[16/10] overflow-hidden rounded-b-xl bg-slate-900">
-            <Image
-              src={PROJECT_HERO_PREVIEWS[item.slug]}
-              alt=""
-              fill
-              className="object-cover object-top"
-              sizes="224px"
-              priority={priority}
-            />
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
-  )
-}
-
-function HeroVisual() {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.65, delay: 0.2 }}
-      className="relative mr-auto ml-0 w-full max-w-[min(100%,520px)] -translate-y-8 sm:max-w-[560px] sm:-translate-y-12 lg:max-w-[600px] lg:-translate-y-16"
-    >
-      <div className="relative min-h-[440px] sm:min-h-[520px] lg:min-h-[580px] xl:min-h-[620px]">
-        {/* Glow detrás del perfil */}
-        <div
-          aria-hidden
-          className="absolute bottom-0 left-[20%] h-[82%] w-[85%] -translate-x-1/2 rounded-full bg-gradient-to-t from-neon-blue/35 via-neon-purple/18 to-transparent blur-3xl"
-        />
-
-        {/* Capa 1 — perfil ligeramente a la izquierda del centro */}
-        <motion.div
-          initial={{ opacity: 0, y: 36 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.75, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute bottom-0 left-[20%] z-10 w-[112%] max-w-[340px] -translate-x-1/2 sm:max-w-[420px] lg:max-w-[480px] xl:max-w-[540px]"
-        >
-          <picture className="block w-full leading-none">
-            <source srcSet="/images/nixonprofile.avif" type="image/avif" />
-            <Image
-              src={nixonProfileWebp}
-              alt="Nixon López — instructor de la masterclass"
-              width={nixonProfileWebp.width}
-              height={nixonProfileWebp.height}
-              className="h-auto w-full object-contain object-bottom drop-shadow-[0_28px_56px_rgba(0,212,255,0.25)]"
-              priority
-              placeholder="blur"
-              fetchPriority="high"
-              sizes="(max-width: 640px) 340px, (max-width: 1024px) 420px, 540px"
-            />
-          </picture>
-        </motion.div>
-
-        {/* Capa 2 — pantallas por encima del perfil */}
-        <div className="absolute inset-0 z-30 hidden sm:block [perspective:1200px]">
-          {FLOAT_PROJECTS.map((item) => (
-            <HeroProjectScreen key={item.slug} item={item} priority />
-          ))}
-        </div>
-      </div>
-
-      {/* Móvil — mini pantallas */}
-      <div className="mt-4 grid grid-cols-3 gap-2 sm:hidden" aria-hidden>
-        {FLOAT_PROJECTS.map((item, i) => (
-          <motion.div
-            key={item.slug}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 + i * 0.08 }}
-            className="overflow-hidden rounded-xl border border-white/15 bg-[#0d1117] p-0.5 shadow-[0_8px_24px_rgba(0,212,255,0.15)]"
-          >
-            <div className="flex gap-1 border-b border-white/10 bg-[#161b22] px-1.5 py-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-red-400/80" />
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-400/80" />
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/80" />
-            </div>
-            <div className="relative aspect-[16/10]">
-              <Image
-                src={PROJECT_HERO_PREVIEWS[item.slug]}
-                alt=""
-                fill
-                className="object-cover object-top"
-                sizes="100px"
-              />
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </motion.div>
-  )
-}
+const FLOAT_PROJECTS = [
+  { image: MASTERCLASS_HERO_FLOATS[0], position: 'top-[36%] left-[6%] sm:left-[8%]', delay: 'mc-delay-1' },
+  { image: MASTERCLASS_HERO_FLOATS[1], position: 'top-[42%] right-[6%] sm:right-[8%]', delay: 'mc-delay-2' },
+  { image: MASTERCLASS_HERO_FLOATS[2], position: 'bottom-[6%] left-[4%] sm:left-[6%]', delay: 'mc-delay-3' },
+  { image: MASTERCLASS_HERO_FLOATS[3], position: 'bottom-[20%] right-[4%] sm:right-[6%]', delay: 'mc-delay-4' },
+] as const
 
 export default function Hero() {
   return (
-    <section className="relative overflow-visible pb-12 pt-28 sm:pb-16 sm:pt-32 lg:pb-20 lg:pt-36">
-      <GlowOrb className="left-1/4 top-0 h-96 w-96 bg-neon-blue/20" />
-      <GlowOrb className="bottom-0 right-0 h-80 w-80 bg-neon-purple/15" />
+    <section className="relative overflow-visible pb-0 pt-28 sm:pt-32 lg:pt-36">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/4 top-0 h-96 w-96 rounded-full bg-neon-blue/20 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 rounded-full bg-neon-purple/15 blur-3xl"
+      />
 
       <div
         aria-hidden
@@ -196,83 +44,117 @@ export default function Hero() {
       />
 
       <div className="container relative z-10">
-        <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-12 xl:gap-16">
-          <div className="pb-4 sm:pb-8 lg:pb-12">
-            <motion.span
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="mb-5 inline-flex items-center gap-2 rounded-full border border-neon-purple/40 bg-neon-purple/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-neon-purple"
-            >
-              <Sparkles className="h-3.5 w-3.5" aria-hidden />
+        <div className="grid items-end gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-16">
+          <div className="pb-12 sm:pb-16 lg:pb-20">
+            <span className="mc-fade-up mb-5 inline-flex items-center rounded-full border border-neon-purple/40 bg-neon-purple/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-neon-purple">
               Masterclass gratuita en vivo
-            </motion.span>
+            </span>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-balance text-3xl font-extrabold leading-[1.15] tracking-tight sm:text-4xl lg:text-5xl xl:text-[3.25rem]"
-            >
+            <h1 className="mc-fade-up mc-delay-1 text-balance text-3xl font-extrabold leading-[1.15] tracking-tight sm:text-4xl lg:text-5xl xl:text-[3.25rem]">
               Aprende a crear páginas web profesionales con{' '}
               <span className="bg-gradient-to-r from-neon-blue via-white to-neon-purple bg-clip-text text-transparent">
                 Inteligencia Artificial
-              </span>{' '}
-              🚀
-            </motion.h1>
+              </span>
+            </h1>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg"
-            >
-              Descubre cómo crear sitios web modernos utilizando IA, incluso si estás empezando desde cero.
-            </motion.p>
+            <p className="mc-fade-up mc-delay-2 mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
+              Descubre cómo crear sitios web modernos utilizando IA, incluso si estás empezando desde
+              cero.
+            </p>
 
-            <motion.ul
-              initial="hidden"
-              animate="visible"
-              variants={{ visible: { transition: { staggerChildren: 0.06, delayChildren: 0.3 } } }}
-              className="mt-8 grid gap-3 sm:grid-cols-2"
-            >
-              {EVENT_DETAILS.map(({ icon: Icon, label }) => (
-                <motion.li
-                  key={label}
-                  variants={fadeUp}
-                  className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-slate-200"
-                >
-                  <Icon className="h-4 w-4 shrink-0 text-neon-blue" aria-hidden />
-                  {label}
-                </motion.li>
-              ))}
-            </motion.ul>
+            <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+              {EVENT_DETAILS.map(({ icon: Icon, label }, i) => {
+                const delayClass =
+                  i === 0 ? 'mc-delay-3' : i === 1 ? 'mc-delay-4' : i === 2 ? 'mc-delay-5' : 'mc-delay-6'
+                return (
+                  <li
+                    key={label}
+                    className={`mc-fade-up ${delayClass} flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-slate-200`}
+                  >
+                    <Icon className="h-4 w-4 shrink-0 text-neon-blue" aria-hidden />
+                    {label}
+                  </li>
+                )
+              })}
+            </ul>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.45 }}
-              className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center"
-            >
-              <MasterclassCta href="#registro">Quiero reservar mi cupo gratis</MasterclassCta>
-            </motion.div>
+            <div className="mc-fade-up mc-delay-6 mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
+              <a href="#registro" className={masterclassCtaPrimary}>
+                Quiero reservar mi cupo gratis
+              </a>
+            </div>
 
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="mt-4 flex items-center gap-2 text-sm font-medium text-amber-400/90"
-            >
+            <p className="mc-fade-up mc-delay-6 mt-4 flex items-center gap-2 text-sm font-medium text-amber-300">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
               </span>
               {MASTERCLASS_EVENT.urgency}
-            </motion.p>
+            </p>
           </div>
 
-          <div className="flex w-full justify-start">
-            <HeroVisual />
+          <div className="mc-fade-up mc-delay-2 flex w-full justify-center lg:justify-end">
+            <div className="relative w-full max-w-[400px] sm:max-w-[480px] md:max-w-[540px] lg:max-w-[600px] xl:max-w-[680px]">
+              <div className="pointer-events-none absolute -inset-x-[6%] inset-y-0 z-20 hidden sm:block [perspective:1200px]">
+                {FLOAT_PROJECTS.map((item) => (
+                  <div
+                    key={item.image}
+                    className={`mc-float-card ${item.delay} absolute w-[132px] sm:w-[164px] lg:w-[188px] xl:w-[204px] ${item.position} pointer-events-none [transform:rotateY(-9deg)_rotateZ(6deg)]`}
+                    aria-hidden
+                  >
+                    <div className="relative overflow-hidden rounded-xl ring-1 ring-white/35 shadow-[0_20px_48px_rgba(0,0,0,0.55),0_0_28px_rgba(0,212,255,0.22)]">
+                      <div className="relative aspect-[16/10]">
+                        <Image
+                          src={item.image}
+                          alt=""
+                          fill
+                          className="object-cover object-top"
+                          sizes="260px"
+                          loading="lazy"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div
+                aria-hidden
+                className="pointer-events-none absolute bottom-[10%] left-1/2 h-[72%] w-[88%] -translate-x-1/2 rounded-full bg-gradient-to-t from-neon-blue/35 via-neon-purple/18 to-transparent blur-3xl"
+              />
+
+              <Image
+                src="/images/nixon/masterclass_hero.webp"
+                alt="Nixon López — instructor de la masterclass"
+                width={HERO_WIDTH}
+                height={HERO_HEIGHT}
+                className="relative z-10 h-auto w-full object-contain object-bottom drop-shadow-[0_28px_56px_rgba(0,212,255,0.22)]"
+                priority
+                fetchPriority="high"
+                quality={75}
+                sizes="(max-width: 640px) 360px, (max-width: 1024px) 480px, 600px"
+              />
+
+              <div className="mt-4 grid grid-cols-4 gap-1.5 sm:hidden" aria-hidden>
+                {FLOAT_PROJECTS.map((item) => (
+                  <div
+                    key={item.image}
+                    className="relative overflow-hidden rounded-lg ring-1 ring-white/25 shadow-[0_8px_24px_rgba(0,212,255,0.18)]"
+                  >
+                    <div className="relative aspect-[16/10]">
+                      <Image
+                        src={item.image}
+                        alt=""
+                        fill
+                        className="object-cover object-top"
+                        sizes="100px"
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

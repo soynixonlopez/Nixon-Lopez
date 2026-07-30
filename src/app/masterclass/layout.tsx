@@ -22,6 +22,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: `${SITE_URL}/masterclass`,
   },
+  other: {
+    'format-detection': 'telephone=no',
+  },
   openGraph: {
     title: `${title} | Nixon Lopez Services`,
     description,
@@ -51,13 +54,13 @@ function MasterclassEventJsonLd() {
     '@type': 'Event',
     name: MASTERCLASS_EVENT.name,
     description,
-    startDate: '2026-08-01T10:00:00-05:00',
-    endDate: '2026-08-01T12:00:00-05:00',
+    startDate: MASTERCLASS_EVENT.startDateIso,
+    endDate: MASTERCLASS_EVENT.endDateIso,
     eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
     eventStatus: 'https://schema.org/EventScheduled',
     location: {
       '@type': 'VirtualLocation',
-      url: `${SITE_URL}/masterclass`,
+      url: MASTERCLASS_EVENT.googleMeetUrl,
     },
     organizer: {
       '@type': 'Person',

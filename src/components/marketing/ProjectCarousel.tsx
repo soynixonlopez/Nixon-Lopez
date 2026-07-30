@@ -1,10 +1,9 @@
 'use client'
 
-import Image from 'next/image'
 import { useCallback, useRef, useState } from 'react'
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { FeaturedProject } from '@/lib/case-studies'
-import { isLivePreviewImage } from '@/lib/case-studies'
+import { ProjectPreviewImage } from '@/components/marketing/ProjectPreviewImage'
 
 const SWIPE_THRESHOLD = 48
 
@@ -67,13 +66,12 @@ function ProjectCard({
       } ${layout === 'desktop' ? 'min-h-[420px]' : 'min-h-[380px]'}`}
     >
       <div className={`relative aspect-[16/11] sm:aspect-[16/10] overflow-hidden ${isDark ? 'bg-slate-900' : 'bg-slate-100'}`}>
-        <Image
+        <ProjectPreviewImage
           src={project.image}
           alt={`Proyecto ${project.company}`}
-          fill
-          className={`object-cover object-top transition-transform duration-300 ${isFocused ? 'scale-105' : 'scale-100'}`}
+          isDark={isDark}
           sizes={isFocused ? '(max-width: 768px) 90vw, 520px' : '(max-width: 768px) 70vw, 220px'}
-          unoptimized={isLivePreviewImage(project.image)}
+          className={`object-cover object-top transition-transform duration-300 ${isFocused ? 'scale-105' : 'scale-100'}`}
         />
       </div>
 

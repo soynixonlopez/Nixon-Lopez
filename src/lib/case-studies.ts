@@ -1,11 +1,20 @@
 const CLOUDINARY = 'https://res.cloudinary.com/dewe5s4xv/image/upload/f_auto,q_auto,w_1200'
 
-/** Capturas oficiales del hero — carpeta public/images/projects */
+/** Mockups flotantes del hero masterclass (tarjetas alrededor del perfil) */
+export const MASTERCLASS_HERO_FLOATS = [
+  '/images/projects/hero_image1.webp',
+  '/images/projects/hero_image2.webp',
+  '/images/projects/hero_image3.webp',
+  '/images/projects/hero_image4.webp',
+] as const
+
+/** Capturas reales optimizadas (WebP) — carrusel y casos de éxito */
 export const PROJECT_HERO_PREVIEWS = {
-  aquarumbos: '/images/projects/hero_image1.png',
-  aserta: '/images/projects/hro_image2.png',
-  nutrielys: '/images/projects/hero_image3.png',
-  sara: '/images/projects/hero_image4.png',
+  aquarumbos: '/images/projects/aquarumbos_preview.webp',
+  aserta: '/images/projects/aserta_preview.webp',
+  sara: '/images/projects/sara_preview.webp',
+  spl: '/images/projects/spl_preview.webp',
+  nutrielys: '/images/projects/hero_image3.webp',
 } as const
 
 /** @deprecated Usar PROJECT_HERO_PREVIEWS */
@@ -18,7 +27,12 @@ export const PROJECT_STATIC_PREVIEWS = {
 export function projectLivePreview(demoUrl: string, opts?: { wait?: number; crop?: number }) {
   const wait = opts?.wait ? `/wait/${opts.wait}` : ''
   const crop = opts?.crop ? `/crop/${opts.crop}` : '/crop/800'
-  return `https://image.thum.io/get/width/1200${crop}/noanimate${wait}/${demoUrl}`
+  return `https://image.thum.io/get/width/1200/png/noanimate${crop}${wait}/${demoUrl}`
+}
+
+/** Convierte URL de preview en prefetch (encola captura completa en thum.io) */
+export function toLivePreviewPrefetchUrl(thumPreviewUrl: string) {
+  return thumPreviewUrl.replace('/get/', '/get/prefetch/')
 }
 
 export function projectCloudinaryImage(path: string) {
@@ -186,7 +200,7 @@ export const FEATURED_CASE_STUDIES: CaseStudy[] = [
     result: 'Una plataforma digital profesional para presentar servicios.',
     technologies: ['Next.js', 'TypeScript', 'Tailwind CSS'],
     demoUrl: PROJECT_LIVE_URLS.spl,
-    image: projectLivePreview(PROJECT_LIVE_URLS.spl),
+    image: PROJECT_HERO_PREVIEWS.spl,
     ctaLabel: 'Crear mi sitio empresarial',
     quoteServiceId: 'web-negocio',
   },

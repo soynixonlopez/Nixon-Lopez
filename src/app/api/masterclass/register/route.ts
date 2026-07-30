@@ -1,19 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendContactEmail, sendEmail } from '@/lib/mailer'
+import { buildMasterclassConfirmationContent } from '@/lib/masterclass-confirmation-email'
+import { isJsonRequest, parseMasterclassRegisterBody } from '@/lib/masterclass-register'
 import { MASTERCLASS_EVENT } from '@/lib/masterclass'
 import {
   checkRateLimit,
   getClientIp,
-  getContactLimit,
+  getMasterclassLimit,
   getPublicRateLimitWindowMs,
 } from '@/lib/rate-limit'
 import { createServiceRoleClient } from '@/lib/supabase/service'
 import { escapeHtml } from '@/lib/utils'
 
 export async function POST(request: NextRequest) {
+  if (!isJsonRequest(request)) {
+    return NextResponse.json({ error: 'Content-Type debe ser application/json.' }, { status: 415 })
+  }
+
   const ip = getClientIp(request)
   const windowMs = getPublicRateLimitWindowMs()
-  const limited = checkRateLimit(`masterclass:${ip}`, getContactLimit(), windowMs)
+  const limited = checkRateLimit(`masterclass:${ip}`, getMasterclassLimit(), windowMs)
   if (!limited.ok) {
     return NextResponse.json(
       { error: 'Demasiadas solicitudes. Espera un momento e intenta de nuevo.' },
@@ -25,20 +31,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { nombre, email, whatsapp } = await request.json()
-
-    if (!nombre || !email || !whatsapp) {
-      return NextResponse.json({ error: 'Todos los campos son requeridos.' }, { status: 400 })
+    const body = await request.json()
+    const parsed = parseMasterclassRegisterBody(body)
+    if (!parsed.ok) {
+      return NextResponse.json({ error: parsed.error }, { status: parsed.status })
     }
 
-    if (String(nombre).length > 200 || String(whatsapp).length > 40) {
-      return NextResponse.json({ error: 'Uno o más campos exceden la longitud permitida.' }, { status: 400 })
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(String(email))) {
-      return NextResponse.json({ error: 'Correo inválido.' }, { status: 400 })
-    }
+    const { nombre, email, whatsapp } = parsed.data
 
     const supabaseAdmin = createServiceRoleClient()
     if (!supabaseAdmin) {
@@ -48,15 +47,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const normalizedEmail = String(email).trim().toLowerCase()
+    const normalizedEmail = email
     const nowIso = new Date().toISOString()
 
     const { data: inserted, error: insertError } = await supabaseAdmin
       .from('masterclass_registrations')
       .insert({
-        full_name: String(nombre).trim(),
+        full_name: nombre,
         email: normalizedEmail,
-        whatsapp: String(whatsapp).trim(),
+        whatsapp,
         event_slug: MASTERCLASS_EVENT.slug,
         event_name: MASTERCLASS_EVENT.name,
         status: 'registered',
@@ -80,9 +79,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const n = escapeHtml(String(nombre))
+    const n = escapeHtml(nombre)
     const e = escapeHtml(normalizedEmail)
-    const w = escapeHtml(String(whatsapp))
+    const w = escapeHtml(whatsapp)
 
     if (!alreadyRegistered) {
       const subject = `Nuevo registro Masterclass — ${nombre}`
@@ -90,7 +89,9 @@ export async function POST(request: NextRequest) {
       <div style="font-family: Arial, sans-serif; padding: 20px; color: #111827;">
         <h2 style="margin-bottom: 12px;">Nuevo registro — Masterclass IA</h2>
         <p><strong>Evento:</strong> ${escapeHtml(MASTERCLASS_EVENT.name)}</p>
-        <p><strong>Fecha:</strong> ${escapeHtml(MASTERCLASS_EVENT.dateLabel)} · ${escapeHtml(MASTERCLASS_EVENT.timeLabel)}</p>
+        <p><strong>Fecha:</strong> ${escapeHtml(MASTERCLASS_EVENT.dateLabel)} · ${escapeHtml(MASTERCLASS_EVENT.timeLabel)} (${escapeHtml(MASTERCLASS_EVENT.timezoneLabel)})</p>
+        <p><strong>WhatsApp:</strong> <a href="${escapeHtml(MASTERCLASS_EVENT.whatsappCommunityUrl)}">${escapeHtml(MASTERCLASS_EVENT.whatsappCommunityUrl)}</a></p>
+        <p><strong>Google Meet:</strong> <a href="${escapeHtml(MASTERCLASS_EVENT.googleMeetUrl)}">${escapeHtml(MASTERCLASS_EVENT.googleMeetUrl)}</a></p>
         <hr style="margin: 16px 0;" />
         <p><strong>Nombre:</strong> ${n}</p>
         <p><strong>Correo:</strong> ${e}</p>
@@ -107,25 +108,12 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const confirmHtml = `
-      <div style="font-family: Arial, sans-serif; padding: 24px; color: #111827; max-width: 560px;">
-        <h2 style="color: #1e3a5f;">¡Tu cupo está reservado, ${n}!</h2>
-        <p>Gracias por registrarte en la masterclass gratuita.</p>
-        <p><strong>${escapeHtml(MASTERCLASS_EVENT.name)}</strong></p>
-        <ul style="padding-left: 20px;">
-          <li>📅 ${escapeHtml(MASTERCLASS_EVENT.dateLabel)}</li>
-          <li>⏰ ${escapeHtml(MASTERCLASS_EVENT.timeLabel)}</li>
-          <li>💻 ${escapeHtml(MASTERCLASS_EVENT.modality)}</li>
-        </ul>
-        <p>Te enviaremos el enlace de acceso antes del evento. ¡Nos vemos en vivo!</p>
-        <p style="margin-top: 24px; color: #64748b; font-size: 14px;">— Nixon López</p>
-      </div>
-    `
+    const confirmContent = buildMasterclassConfirmationContent({ nombre })
 
     if (!alreadyRegistered) {
       await sendEmail({
-        subject: 'Confirmación — Masterclass gratuita con IA',
-        html: confirmHtml,
+        subject: confirmContent.subject,
+        html: confirmContent.html,
         to: normalizedEmail,
       })
 

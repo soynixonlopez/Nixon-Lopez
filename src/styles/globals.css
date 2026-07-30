@@ -211,3 +211,61 @@ html {
 .admin-table-scroll::-webkit-scrollbar-thumb:hover {
   background: rgb(71 85 105);
 }
+
+/* Masterclass — animaciones CSS (sin JS en el critical path) */
+@keyframes mc-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes mc-float-y {
+  0%,
+  100% {
+    transform: translateY(0) rotateY(-9deg) rotateZ(6deg);
+  }
+  50% {
+    transform: translateY(-6px) rotateY(-9deg) rotateZ(6deg);
+  }
+}
+
+.mc-fade-up {
+  animation: mc-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.mc-delay-1 {
+  animation-delay: 0.08s;
+}
+.mc-delay-2 {
+  animation-delay: 0.16s;
+}
+.mc-delay-3 {
+  animation-delay: 0.24s;
+}
+.mc-delay-4 {
+  animation-delay: 0.32s;
+}
+.mc-delay-5 {
+  animation-delay: 0.4s;
+}
+.mc-delay-6 {
+  animation-delay: 0.48s;
+}
+
+.mc-float-card {
+  animation: mc-float-y 4.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mc-fade-up,
+  .mc-float-card {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
