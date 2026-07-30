@@ -3,12 +3,12 @@
 import dynamic from 'next/dynamic'
 import { type ReactNode } from 'react'
 import LazySection from '@/components/LazySection'
+import RegisterForm from '@/components/masterclass/RegisterForm'
 
 const Benefits = dynamic(() => import('@/components/masterclass/Benefits'))
 const Learning = dynamic(() => import('@/components/masterclass/Learning'))
 const Instructor = dynamic(() => import('@/components/masterclass/Instructor'))
 const Projects = dynamic(() => import('@/components/masterclass/Projects'))
-const RegisterForm = dynamic(() => import('@/components/masterclass/RegisterForm'))
 const CTA = dynamic(() => import('@/components/masterclass/CTA'))
 
 function wrap(node: ReactNode, minHeight: string) {
@@ -23,7 +23,7 @@ export default function MasterclassBelowFold() {
       {wrap(<Learning />, 'min-h-[32rem]')}
       {wrap(<Instructor />, 'min-h-[32rem]')}
       {wrap(<Projects />, 'min-h-[28rem]')}
-      {wrap(<RegisterForm />, 'min-h-[24rem]')}
+      <RegisterForm />
       {wrap(<CTA />, 'min-h-[16rem]')}
     </>
   )

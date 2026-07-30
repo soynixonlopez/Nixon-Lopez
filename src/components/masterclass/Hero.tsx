@@ -45,7 +45,7 @@ export default function Hero() {
 
       <div className="container relative z-10">
         <div className="grid items-end gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-16">
-          <div className="pb-12 sm:pb-16 lg:pb-20">
+          <div className="relative z-20 pb-12 sm:pb-16 lg:pb-20">
             <span className="mc-fade-up mb-5 inline-flex items-center rounded-full border border-neon-purple/40 bg-neon-purple/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-neon-purple">
               Masterclass gratuita en vivo
             </span>
@@ -93,7 +93,7 @@ export default function Hero() {
             </p>
           </div>
 
-          <div className="mc-fade-up mc-delay-2 flex w-full justify-center lg:justify-end">
+          <div className="relative z-0 mc-fade-up mc-delay-2 flex w-full justify-center lg:justify-end">
             <div className="relative w-full max-w-[400px] sm:max-w-[480px] md:max-w-[540px] lg:max-w-[600px] xl:max-w-[680px]">
               <div className="pointer-events-none absolute -inset-x-[6%] inset-y-0 z-20 hidden sm:block [perspective:1200px]">
                 {FLOAT_PROJECTS.map((item) => (

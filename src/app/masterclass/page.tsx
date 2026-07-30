@@ -1,6 +1,7 @@
 import Hero from '@/components/masterclass/Hero'
 import MasterclassBelowFold from '@/components/masterclass/MasterclassBelowFold'
 import MasterclassHeader from '@/components/masterclass/MasterclassHeader'
+import MasterclassScrollToRegister from '@/components/masterclass/MasterclassScrollToRegister'
 
 /** Landing estática — el formulario habla con la API en cliente */
 export const dynamic = 'force-static'
@@ -9,6 +10,7 @@ export default function MasterclassPage() {
   return (
     <>
       <MasterclassHeader />
+      <MasterclassScrollToRegister />
       <main>
         <Hero />
         <MasterclassBelowFold />

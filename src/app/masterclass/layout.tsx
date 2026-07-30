@@ -89,7 +89,7 @@ export default function MasterclassLayout({ children }: { children: React.ReactN
   return (
     <>
       <MasterclassEventJsonLd />
-      <div className="min-h-screen bg-[#030712] text-white antialiased">{children}</div>
+      <div className="min-h-screen scroll-pt-[4.5rem] bg-[#030712] text-white antialiased sm:scroll-pt-[4.75rem]">{children}</div>
     </>
   )
 }
