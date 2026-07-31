@@ -17,9 +17,9 @@ export const MASTERCLASS_EMAIL_BRANDING = {
   instagramHandle: 'nixonlopez.dev',
   instagramUrl: 'https://www.instagram.com/nixonlopez.dev/',
   icons: {
-    ai: '/images/emails/icon-ai.png',
-    rocket: '/images/emails/icon-rocket.png',
-    globe: '/images/emails/icon-globe.png',
+    ai: '/images/emails/icon-ai@2x.png',
+    rocket: '/images/emails/icon-rocket@2x.png',
+    professional: '/images/emails/icon-professional@2x.png',
   },
 } as const
 
@@ -108,7 +108,7 @@ export function buildMasterclassValueProps() {
               <p style="margin:2px 0 0;font-size:11px;color:#64748b;line-height:1.35;">Publica en menos tiempo</p>
             </td>
             <td width="33%" align="center" style="padding:6px 4px;vertical-align:top;">
-              ${valuePropIcon(icons.globe, 'Profesional')}
+              ${valuePropIcon(icons.professional, 'Profesional')}
               <p style="margin:6px 0 0;font-size:12px;font-weight:700;color:#0f172a;">Profesional</p>
               <p style="margin:2px 0 0;font-size:11px;color:#64748b;line-height:1.35;">Listo para tu negocio</p>
             </td>
