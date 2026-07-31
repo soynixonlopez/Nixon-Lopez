@@ -32,15 +32,15 @@ export default async function ProyectoDetailPage({
       <div className="flex flex-wrap items-center gap-3">
         <Link
           href="/admin/proyectos"
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-700 text-slate-300 text-sm hover:bg-slate-800"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 text-slate-600 text-sm hover:bg-slate-50"
         >
           <ArrowLeft className="w-4 h-4" />
           Proyectos
         </Link>
-        <h1 className="text-2xl font-bold text-white">{project.title}</h1>
+        <h1 className="text-2xl font-bold text-slate-900">{project.title}</h1>
       </div>
 
-      <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 text-sm text-slate-300 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 text-sm text-slate-600 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <p>
           <span className="text-slate-500 block text-xs">Cliente</span>
           {project.client_name}
@@ -60,7 +60,7 @@ export default async function ProyectoDetailPage({
       </div>
 
       {tasksError ? (
-        <p className="text-red-400 text-sm">{tasksError.message}</p>
+        <p className="text-red-600 text-sm">{tasksError.message}</p>
       ) : (
         <ProjectScrumBoard projectId={project.id} initialTasks={(tasks ?? []) as never[]} />
       )}

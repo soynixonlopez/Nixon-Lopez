@@ -1,6 +1,27 @@
 import { PROJECT_HERO_PREVIEWS, PROJECT_LIVE_URLS, type FeaturedProject } from '@/lib/case-studies'
 
-export const MASTERCLASS_EVENT = {
+export type MasterclassEventConfig = {
+  slug: string
+  name: string
+  shortName: string
+  dateLabel: string
+  timeLabel: string
+  timezone: string
+  timezoneLabel: string
+  modality: string
+  cost: string
+  urgency: string
+  whatsappCommunityUrl: string
+  whatsappCommunityName: string
+  googleMeetUrl: string
+  googleCalendarUrl: string
+  startDateIso: string
+  endDateIso: string
+  /** Evento que recibe registros en /masterclass */
+  active?: boolean
+}
+
+export const MASTERCLASS_EVENT: MasterclassEventConfig = {
   slug: 'masterclass-ia-agosto-2026',
   name: 'Masterclass Gratuita: Aprende a crear páginas web profesionales con Inteligencia Artificial',
   shortName: 'MasterClass Aprende a Crear Web Profesionales con IA',
@@ -18,7 +39,19 @@ export const MASTERCLASS_EVENT = {
     'https://calendar.google.com/calendar/render?action=TEMPLATE&text=MasterClass+Aprende+a+Crear+Web+Profesionales+con+IA&dates=20260801T100000/20260801T113000&ctz=America%2FPanama&details=Enlace+de+acceso%3A+https%3A%2F%2Fmeet.google.com%2Fppi-fknh-dtu%0A%0AComunidad+WhatsApp%3A+https%3A%2F%2Fchat.whatsapp.com%2FExznHRowGGO3kHzzXuvwOi&location=https%3A%2F%2Fmeet.google.com%2Fppi-fknh-dtu',
   startDateIso: '2026-08-01T10:00:00-05:00',
   endDateIso: '2026-08-01T11:30:00-05:00',
-} as const
+  active: true,
+}
+
+/**
+ * Lista de eventos (masterclass, bootcamps, etc.).
+ * Para un evento nuevo: duplica el objeto, cambia slug/fechas/enlaces y pon `active: true`.
+ * Solo un evento debe estar activo — es el que usa la landing `/masterclass`.
+ */
+export const MASTERCLASS_EVENTS: MasterclassEventConfig[] = [MASTERCLASS_EVENT]
+
+export function getMasterclassEventBySlug(slug: string): MasterclassEventConfig {
+  return MASTERCLASS_EVENTS.find((e) => e.slug === slug) ?? MASTERCLASS_EVENT
+}
 
 export const MASTERCLASS_REGISTRATION_STATUSES = {
   registered: 'Registrado',

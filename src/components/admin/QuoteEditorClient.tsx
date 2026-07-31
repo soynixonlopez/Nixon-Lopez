@@ -168,16 +168,16 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
 
   return (
     <div className="w-full max-w-3xl min-w-0 space-y-6">
-      <h1 className="text-xl sm:text-2xl font-bold text-white">Editar cotización</h1>
+      <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Editar cotización</h1>
 
-      <div className="rounded-xl border border-slate-700/80 bg-slate-950/40 p-3 sm:p-4 space-y-2 text-sm">
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4 space-y-2 text-sm">
         <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Total calculado</p>
         {bundle.mixedBilling ? (
           <p className="text-amber-200 text-sm">
             No combines servicios mensuales con servicios de pago único en la misma cotización.
           </p>
         ) : null}
-        <ul className="space-y-1 text-slate-200">
+        <ul className="space-y-1 text-slate-700">
           {bundle.lines.length === 0 ? (
             <li className="text-slate-500">Sin partidas</li>
           ) : (
@@ -189,9 +189,9 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
             ))
           )}
         </ul>
-        <p className="text-xs text-slate-500 pt-1 border-t border-slate-800">
+        <p className="text-xs text-slate-500 pt-1 border-t border-slate-200">
           Base ${bundle.subtotal.toFixed(2)} · Extras ${bundle.extrasTotal.toFixed(2)} ·{' '}
-          <span className="text-white font-semibold">Total ${bundle.total.toFixed(2)} USD{bundle.monthly ? '/mes' : ''}</span>
+          <span className="text-slate-900 font-semibold">Total ${bundle.total.toFixed(2)} USD{bundle.monthly ? '/mes' : ''}</span>
         </p>
       </div>
 
@@ -201,7 +201,7 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
           <select
             value={form.status}
             onChange={(e) => setForm((current) => ({ ...current, status: e.target.value }))}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           >
             {statuses.map((status) => (
               <option key={status} value={status}>
@@ -215,7 +215,7 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
           <input
             value={form.client_first_name}
             onChange={(e) => setForm((current) => ({ ...current, client_first_name: e.target.value }))}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
         <label>
@@ -223,7 +223,7 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
           <input
             value={form.client_last_name}
             onChange={(e) => setForm((current) => ({ ...current, client_last_name: e.target.value }))}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
         <label className="sm:col-span-2">
@@ -232,7 +232,7 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
             type="email"
             value={form.client_email}
             onChange={(e) => setForm((current) => ({ ...current, client_email: e.target.value }))}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
         <label>
@@ -240,7 +240,7 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
           <input
             value={form.client_phone}
             onChange={(e) => setForm((current) => ({ ...current, client_phone: e.target.value }))}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
         <label>
@@ -248,18 +248,18 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
           <input
             value={form.company}
             onChange={(e) => setForm((current) => ({ ...current, company: e.target.value }))}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
 
-        <div className="sm:col-span-2 rounded-xl border border-slate-700/80 bg-slate-950/40 p-4 space-y-3">
+        <div className="sm:col-span-2 rounded-xl border border-slate-200 bg-white shadow-sm p-4 space-y-3">
           <label className="block">
             <span className="text-xs text-slate-400">Agregar servicio</span>
             <div className="mt-1 flex flex-col sm:flex-row gap-3">
               <select
                 value={pendingServiceType}
                 onChange={(e) => setPendingServiceType(e.target.value)}
-                className="flex-1 rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+                className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
               >
                 <option value="">Selecciona un servicio</option>
                 {QUOTE_SERVICES.map((service) => (
@@ -273,7 +273,7 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
               <button
                 type="button"
                 onClick={addService}
-                className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl bg-indigo-600 text-white"
+                className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl bg-brand text-white"
               >
                 <Plus className="w-4 h-4" />
                 Agregar
@@ -291,10 +291,10 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
             const resolved = bundle.items[index]
 
             return (
-              <div key={service.key} className="rounded-xl border border-slate-700/80 bg-slate-950/40 p-4 space-y-4">
+              <div key={service.key} className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-white">
+                    <p className="text-sm font-semibold text-slate-900">
                       Servicio {index + 1}: {service.service_label || 'Sin descripción'}
                     </p>
                     <p className="text-xs text-slate-500 mt-1">
@@ -305,7 +305,7 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
                   <button
                     type="button"
                     onClick={() => setServices((current) => current.filter((item) => item.key !== service.key))}
-                    className="inline-flex items-center justify-center gap-2 min-h-[40px] px-3 py-2 rounded-lg border border-red-900/60 text-red-300 text-sm"
+                    className="inline-flex items-center justify-center gap-2 min-h-[40px] px-3 py-2 rounded-lg border border-red-900/60 text-red-600 text-sm"
                   >
                     <Trash2 className="w-4 h-4" />
                     Quitar
@@ -317,14 +317,14 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
                   <input
                     value={service.service_label}
                     onChange={(e) => updateService(service.key, { service_label: e.target.value })}
-                    className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
                   />
                 </label>
 
                 {catalog ? (
-                  <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 px-3 py-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-indigo-300">Qué incluye</p>
-                    <ul className="mt-2 space-y-1 text-sm text-slate-300 list-disc pl-5">
+                  <div className="rounded-lg border border-neon-blue/20 bg-brand/5 px-3 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-brand">Qué incluye</p>
+                    <ul className="mt-2 space-y-1 text-sm text-slate-600 list-disc pl-5">
                       {catalog.offerPoints.map((point) => (
                         <li key={point}>{point}</li>
                       ))}
@@ -344,8 +344,8 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
                             onClick={() => updateService(service.key, { has_domain: value })}
                             className={`min-h-[44px] px-4 py-2 rounded-lg border text-sm ${
                               service.has_domain === value
-                                ? 'border-indigo-500 bg-indigo-500/20 text-white'
-                                : 'border-slate-700 text-slate-300'
+                                ? 'border-brand/30 bg-brand/10 text-brand'
+                                : 'border-slate-200 text-slate-600'
                             }`}
                           >
                             {value === 'si' ? 'Sí' : `No (+$${addOns.domainUsd})`}
@@ -365,8 +365,8 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
                             onClick={() => updateService(service.key, { has_professional_email: value })}
                             className={`min-h-[44px] px-4 py-2 rounded-lg border text-sm ${
                               service.has_professional_email === value
-                                ? 'border-indigo-500 bg-indigo-500/20 text-white'
-                                : 'border-slate-700 text-slate-300'
+                                ? 'border-brand/30 bg-brand/10 text-brand'
+                                : 'border-slate-200 text-slate-600'
                             }`}
                           >
                             {value === 'si' ? 'Sí' : `No (+$${addOns.secondUsd})`}
@@ -388,8 +388,8 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
                           onClick={() => updateService(service.key, { has_hosting: value })}
                           className={`min-h-[44px] px-4 py-2 rounded-lg border text-sm ${
                             service.has_hosting === value
-                              ? 'border-indigo-500 bg-indigo-500/20 text-white'
-                              : 'border-slate-700 text-slate-300'
+                              ? 'border-brand/30 bg-brand/10 text-brand'
+                              : 'border-slate-200 text-slate-600'
                           }`}
                         >
                           {value === 'si' ? 'Sí' : 'No'}
@@ -411,7 +411,7 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
                         max={50}
                         value={service.quantity_pages}
                         onChange={(e) => updateService(service.key, { quantity_pages: e.target.value })}
-                        className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
                       />
                     </label>
                   ) : null}
@@ -423,7 +423,7 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
                       min={0}
                       value={service.base_amount}
                       onChange={(e) => updateService(service.key, { base_amount: e.target.value })}
-                      className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
                     />
                   </label>
                 </div>
@@ -438,7 +438,7 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
             value={form.comments}
             onChange={(e) => setForm((current) => ({ ...current, comments: e.target.value }))}
             rows={3}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
         <label className="sm:col-span-2">
@@ -447,7 +447,7 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
             value={form.internal_notes}
             onChange={(e) => setForm((current) => ({ ...current, internal_notes: e.target.value }))}
             rows={3}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
       </div>
@@ -457,7 +457,7 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
           type="button"
           onClick={save}
           disabled={saving || services.length === 0 || bundle.mixedBilling}
-          className="inline-flex min-h-[44px] px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-500 disabled:opacity-50 w-full sm:w-auto items-center justify-center"
+          className="inline-flex min-h-[44px] px-5 py-2.5 rounded-xl bg-brand text-white font-medium hover:bg-brand-light disabled:opacity-50 w-full sm:w-auto items-center justify-center"
         >
           Guardar
         </button>
@@ -465,7 +465,7 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
           type="button"
           onClick={convertToProject}
           disabled={saving}
-          className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 rounded-xl border border-slate-600 text-white hover:bg-slate-800 disabled:opacity-50 w-full sm:w-auto"
+          className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50 w-full sm:w-auto"
         >
           <FolderPlus className="w-4 h-4 shrink-0" />
           Añadir a proyectos (pendiente)

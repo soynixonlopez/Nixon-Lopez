@@ -39,7 +39,7 @@ export default async function EditarFacturaPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-white">Editar factura</h1>
+      <h1 className="text-2xl font-bold text-slate-900">Editar factura</h1>
       <InvoiceEditForm invoice={invoice} lines={invoice.invoice_line_items ?? []} />
     </div>
   )

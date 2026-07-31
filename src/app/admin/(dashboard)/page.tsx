@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { FileText, FolderKanban, GraduationCap, Receipt, TrendingUp } from 'lucide-react'
+import { ArrowRight, FileText, FolderKanban, GraduationCap, Plus, Receipt, Sparkles } from 'lucide-react'
 import { MASTERCLASS_EVENT } from '@/lib/masterclass'
+import { adminUi } from '@/lib/admin-ui'
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
@@ -62,59 +63,69 @@ export default async function AdminDashboardPage() {
     },
   ]
 
+  const quickLinks = [
+    { href: '/admin/cotizacion-nueva', label: 'Crear cotización manual' },
+    { href: '/admin/facturas/nueva', label: 'Nueva factura / prefactura' },
+    { href: '/admin/contratos/nuevo', label: 'Nuevo contrato' },
+    { href: '/admin/masterclass', label: 'Ver registros masterclass' },
+  ]
+
   return (
-    <div className="space-y-8 w-full min-w-0">
+    <div className="w-full min-w-0 space-y-8">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
-          <TrendingUp className="w-8 h-8 text-indigo-400" />
+        <span className={adminUi.badge}>
+          <Sparkles className="h-3.5 w-3.5" aria-hidden />
+          Panel de control
+        </span>
+        <h1 className={`${adminUi.pageTitle} mt-4 flex items-center gap-3`}>
           Dashboard
         </h1>
-        <p className="text-slate-400 mt-1">Resumen de cotizaciones, proyectos, facturas y masterclass.</p>
+        <p className={adminUi.pageSubtitle}>
+          Resumen de cotizaciones, proyectos, facturas y masterclass.
+        </p>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {cards.map((c, i) => (
           <Link
             key={c.label}
             href={c.href}
             style={{ animationDelay: `${i * 65}ms` }}
-            className="rounded-2xl border border-slate-800 bg-slate-900/50 p-6 hover:border-indigo-500/50 transition-colors max-md:motion-safe:animate-soft-rise"
+            className={`${adminUi.card} ${adminUi.cardHover} group p-6 max-md:motion-safe:animate-soft-rise`}
           >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-slate-400 text-sm">{c.label}</p>
-                <p className="text-3xl font-bold text-white mt-1">{c.value}</p>
-                {c.hint && <p className="text-xs text-slate-500 mt-2 line-clamp-2">{c.hint}</p>}
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm text-slate-400">{c.label}</p>
+                <p className="mt-1 text-3xl font-bold text-slate-900">{c.value}</p>
+                {c.hint ? (
+                  <p className="mt-2 line-clamp-2 text-xs text-slate-500">{c.hint}</p>
+                ) : null}
               </div>
-              <c.icon className="w-10 h-10 text-indigo-400 opacity-80" />
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand/20 transition-colors group-hover:bg-brand/30">
+                <c.icon className={`h-5 w-5 ${adminUi.statIcon}`} aria-hidden />
+              </div>
             </div>
           </Link>
         ))}
       </div>
 
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/30 p-6">
-        <h2 className="font-semibold text-white mb-2">Accesos rápidos</h2>
-        <ul className="flex flex-wrap gap-3 text-sm">
-          <li>
-            <Link className="text-indigo-400 hover:underline" href="/admin/cotizacion-nueva">
-              Crear cotización manual
-            </Link>
-          </li>
-          <li>
-            <Link className="text-indigo-400 hover:underline" href="/admin/facturas/nueva">
-              Nueva factura / prefactura
-            </Link>
-          </li>
-          <li>
-            <Link className="text-indigo-400 hover:underline" href="/admin/contratos/nuevo">
-              Nuevo contrato
-            </Link>
-          </li>
-          <li>
-            <Link className="text-indigo-400 hover:underline" href="/admin/masterclass">
-              Ver registros masterclass
-            </Link>
-          </li>
+      <div className={adminUi.panel}>
+        <div className="mb-4 flex items-center gap-2">
+          <Plus className="h-4 w-4 text-brand" aria-hidden />
+          <h2 className="font-semibold text-slate-900">Accesos rápidos</h2>
+        </div>
+        <ul className="grid gap-2 sm:grid-cols-2">
+          {quickLinks.map((link) => (
+            <li key={link.href}>
+              <Link
+                href={link.href}
+                className={`group flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm transition-colors hover:border-brand/25 hover:bg-brand/5 ${adminUi.link}`}
+              >
+                <span>{link.label}</span>
+                <ArrowRight className="h-4 w-4 shrink-0 opacity-50 transition-transform group-hover:translate-x-0.5 group-hover:opacity-100" />
+              </Link>
+            </li>
+          ))}
         </ul>
       </div>
     </div>

@@ -113,24 +113,24 @@ export function QuoteListActions({ id, label }: Props) {
           width: MENU_WIDTH,
           zIndex: 9999,
         }}
-        className="overflow-hidden rounded-lg border border-slate-700/80 bg-slate-950/98 py-1 shadow-xl backdrop-blur-md"
+        className="overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
       >
-        <p className="border-b border-slate-800/80 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 truncate">
+        <p className="border-b border-slate-200 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 truncate">
           {label}
         </p>
         <Link
           href={`/admin/cotizaciones/${id}`}
           role="menuitem"
-          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800/90"
+          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
           onClick={() => setOpen(false)}
         >
-          <Eye className="h-4 w-4 shrink-0 text-indigo-400/90" />
+          <Eye className="h-4 w-4 shrink-0 text-brand" />
           Ver / PDF
         </Link>
         <Link
           href={`/admin/cotizaciones/${id}#editar-cotizacion`}
           role="menuitem"
-          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800/90"
+          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
           onClick={() => setOpen(false)}
         >
           <Pencil className="h-4 w-4 shrink-0 text-slate-400" />
@@ -139,7 +139,7 @@ export function QuoteListActions({ id, label }: Props) {
         <Link
           href={`/admin/cotizaciones/${id}`}
           role="menuitem"
-          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800/90"
+          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
           onClick={() => setOpen(false)}
         >
           <Printer className="h-4 w-4 shrink-0 text-slate-400" />
@@ -148,26 +148,26 @@ export function QuoteListActions({ id, label }: Props) {
         <Link
           href={`/admin/facturas/nueva?quoteId=${id}`}
           role="menuitem"
-          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800/90"
+          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
           onClick={() => setOpen(false)}
         >
-          <ReceiptText className="h-4 w-4 shrink-0 text-indigo-400/90" />
+          <ReceiptText className="h-4 w-4 shrink-0 text-brand" />
           Crear factura
         </Link>
         <Link
           href={`/admin/contratos/nuevo?quoteId=${id}`}
           role="menuitem"
-          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800/90"
+          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
           onClick={() => setOpen(false)}
         >
-          <FileText className="h-4 w-4 shrink-0 text-indigo-400/90" />
+          <FileText className="h-4 w-4 shrink-0 text-brand" />
           Crear contrato
         </Link>
-        <div className="my-1 h-px bg-slate-800" />
+        <div className="my-1 h-px bg-slate-200" />
         <button
           type="button"
           role="menuitem"
-          className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-red-400 hover:bg-red-950/35"
+          className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-950/35"
           onClick={remove}
         >
           <Trash2 className="h-4 w-4 shrink-0" />
@@ -188,9 +188,9 @@ export function QuoteListActions({ id, label }: Props) {
         title="Opciones"
         className={clsx(
           'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors',
-          'text-slate-500 hover:bg-slate-800/80 hover:text-slate-200',
-          'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500/50',
-          open && 'bg-slate-800 text-slate-100'
+          'text-slate-500 hover:bg-slate-50 hover:text-slate-700',
+          'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neon-blue/40',
+          open && 'bg-slate-100 text-slate-900'
         )}
       >
         <MoreVertical className="h-4 w-4" strokeWidth={2} />

@@ -140,26 +140,26 @@ export function ProjectScrumBoard({
 
   return (
     <section className="space-y-4">
-      <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 space-y-3">
-        <h2 className="text-lg font-semibold text-white">Agregar tarea</h2>
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 space-y-3">
+        <h2 className="text-lg font-semibold text-slate-900">Agregar tarea</h2>
         <div className="grid gap-3 md:grid-cols-4">
           <input
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             placeholder="Título de la tarea"
-            className="md:col-span-2 rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white text-sm"
+            className="md:col-span-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
           <input
             type="date"
             value={newDueDate}
             onChange={(e) => setNewDueDate(e.target.value)}
-            className="rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white text-sm"
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
           <button
             type="button"
             onClick={createTask}
             disabled={loading || !newTitle.trim()}
-            className="rounded-xl bg-indigo-600 text-white text-sm font-medium px-3 py-2 disabled:opacity-50"
+            className="rounded-xl bg-brand text-white text-sm font-medium px-3 py-2 disabled:opacity-50"
           >
             Crear tarea
           </button>
@@ -169,21 +169,21 @@ export function ProjectScrumBoard({
           onChange={(e) => setNewDescription(e.target.value)}
           placeholder="Descripción (opcional)"
           rows={2}
-          className="w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white text-sm"
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
         />
       </div>
 
-      <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 grid gap-3 md:grid-cols-[1fr_220px]">
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 grid gap-3 md:grid-cols-[1fr_220px]">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Filtrar tareas..."
-          className="rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white text-sm"
+          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
         />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as 'all' | Task['status'])}
-          className="rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white text-sm"
+          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
         >
           <option value="all">Todos los estados</option>
           {COLUMNS.map((c) => (
@@ -200,33 +200,33 @@ export function ProjectScrumBoard({
             .filter((t) => t.status === column.id)
             .sort((a, b) => a.sort_order - b.sort_order)
           return (
-            <div key={column.id} className="rounded-xl border border-slate-800 bg-slate-900/40">
-              <div className="px-3 py-2 border-b border-slate-800 text-sm font-medium text-slate-300">
+            <div key={column.id} className="rounded-xl border border-slate-200 bg-white shadow-sm">
+              <div className="px-3 py-2 border-b border-slate-200 text-sm font-medium text-slate-600">
                 {column.label} ({columnTasks.length})
               </div>
               <div className="p-3 space-y-3">
                 {columnTasks.map((t) => {
                   const isEditing = editingId === t.id
                   return (
-                    <article key={t.id} className="rounded-lg border border-slate-700 bg-slate-800/70 p-3 space-y-2">
+                    <article key={t.id} className="rounded-lg border border-slate-200 bg-white p-3 space-y-2 shadow-sm">
                       {isEditing ? (
                         <>
                           <input
                             value={editDraft.title}
                             onChange={(e) => setEditDraft((d) => ({ ...d, title: e.target.value }))}
-                            className="w-full rounded-lg bg-slate-900 border border-slate-700 px-2 py-1.5 text-white text-sm"
+                            className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-slate-900 text-sm shadow-sm"
                           />
                           <textarea
                             value={editDraft.description}
                             onChange={(e) => setEditDraft((d) => ({ ...d, description: e.target.value }))}
                             rows={2}
-                            className="w-full rounded-lg bg-slate-900 border border-slate-700 px-2 py-1.5 text-white text-sm"
+                            className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-slate-900 text-sm shadow-sm"
                           />
                           <div className="grid grid-cols-2 gap-2">
                             <select
                               value={editDraft.status}
                               onChange={(e) => setEditDraft((d) => ({ ...d, status: e.target.value as Task['status'] }))}
-                              className="rounded-lg bg-slate-900 border border-slate-700 px-2 py-1.5 text-white text-xs"
+                              className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-slate-900 text-xs shadow-sm"
                             >
                               {COLUMNS.map((c) => (
                                 <option key={c.id} value={c.id}>
@@ -237,7 +237,7 @@ export function ProjectScrumBoard({
                             <select
                               value={editDraft.priority}
                               onChange={(e) => setEditDraft((d) => ({ ...d, priority: e.target.value as Task['priority'] }))}
-                              className="rounded-lg bg-slate-900 border border-slate-700 px-2 py-1.5 text-white text-xs"
+                              className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-slate-900 text-xs shadow-sm"
                             >
                               <option value="low">Baja</option>
                               <option value="normal">Normal</option>
@@ -249,7 +249,7 @@ export function ProjectScrumBoard({
                             type="date"
                             value={editDraft.due_date}
                             onChange={(e) => setEditDraft((d) => ({ ...d, due_date: e.target.value }))}
-                            className="w-full rounded-lg bg-slate-900 border border-slate-700 px-2 py-1.5 text-white text-xs"
+                            className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-slate-900 text-xs shadow-sm"
                           />
                           <div className="flex justify-end gap-2">
                             <button
@@ -263,7 +263,7 @@ export function ProjectScrumBoard({
                             <button
                               type="button"
                               onClick={() => setEditingId(null)}
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded border border-slate-600 text-slate-200 text-xs"
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded border border-slate-200 text-slate-700 text-xs"
                             >
                               <X className="w-3.5 h-3.5" />
                               Cancelar
@@ -272,13 +272,13 @@ export function ProjectScrumBoard({
                         </>
                       ) : (
                         <>
-                          <p className="text-white font-medium text-sm">{t.title}</p>
-                          {t.description && <p className="text-slate-300 text-xs">{t.description}</p>}
+                          <p className="text-slate-900 font-medium text-sm">{t.title}</p>
+                          {t.description && <p className="text-slate-600 text-xs">{t.description}</p>}
                           <div className="flex flex-wrap gap-2 text-[11px] text-slate-400">
-                            <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-700">
+                            <span className="px-2 py-0.5 rounded border border-slate-200 bg-slate-50">
                               Prioridad: {t.priority}
                             </span>
-                            <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-700">
+                            <span className="px-2 py-0.5 rounded border border-slate-200 bg-slate-50">
                               Entrega: {t.due_date || 'Por colocar'}
                             </span>
                           </div>
@@ -286,7 +286,7 @@ export function ProjectScrumBoard({
                             <button
                               type="button"
                               onClick={() => beginEdit(t)}
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded border border-slate-600 text-slate-200 text-xs"
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded border border-slate-200 text-slate-700 text-xs"
                             >
                               <Pencil className="w-3.5 h-3.5" />
                               Editar
@@ -294,7 +294,7 @@ export function ProjectScrumBoard({
                             <button
                               type="button"
                               onClick={() => removeTask(t.id)}
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded border border-red-900/60 text-red-300 text-xs"
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded border border-red-900/60 text-red-600 text-xs"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                               Eliminar

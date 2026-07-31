@@ -123,21 +123,21 @@ export default function NuevaCotizacionPage() {
 
   return (
     <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 space-y-6">
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/80 backdrop-blur-md p-6 sm:p-8 shadow-2xl">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-brand/20 text-brand flex items-center justify-center">
             <Sparkles className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">Nueva cotización</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Nueva cotización</h1>
             <p className="text-sm text-slate-400">Ahora puedes agregar varios servicios en una sola cotización.</p>
           </div>
         </div>
 
         <div className="mt-6">
-          <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
+          <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-300"
+              className="h-full bg-gradient-to-r from-brand to-neon-purple transition-all duration-300"
               style={{ width: `${stepProgress}%` }}
             />
           </div>
@@ -147,8 +147,8 @@ export default function NuevaCotizacionPage() {
                 key={item.id}
                 className={`text-xs sm:text-sm rounded-lg px-3 py-2 border ${
                   step >= item.id
-                    ? 'border-indigo-500/50 bg-indigo-500/10 text-indigo-200'
-                    : 'border-slate-800 bg-slate-900 text-slate-500'
+                    ? 'border-brand/30 bg-brand/10 text-brand'
+                    : 'border-slate-200 bg-slate-50 text-slate-500'
                 }`}
               >
                 <span className="font-semibold">Paso {item.id}:</span> {item.title}
@@ -160,7 +160,7 @@ export default function NuevaCotizacionPage() {
         <form onSubmit={submit} className="mt-8 space-y-6">
           {step === 1 ? (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-white">Datos del cliente</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Datos del cliente</h2>
               <div className="grid sm:grid-cols-2 gap-4">
                 <label>
                   <span className="text-xs text-slate-400">Nombre *</span>
@@ -168,7 +168,7 @@ export default function NuevaCotizacionPage() {
                     required
                     value={form.client_first_name}
                     onChange={(e) => setForm((current) => ({ ...current, client_first_name: e.target.value }))}
-                    className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
                   />
                 </label>
                 <label>
@@ -177,7 +177,7 @@ export default function NuevaCotizacionPage() {
                     required
                     value={form.client_last_name}
                     onChange={(e) => setForm((current) => ({ ...current, client_last_name: e.target.value }))}
-                    className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
                   />
                 </label>
               </div>
@@ -188,7 +188,7 @@ export default function NuevaCotizacionPage() {
                   required
                   value={form.client_email}
                   onChange={(e) => setForm((current) => ({ ...current, client_email: e.target.value }))}
-                  className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
                 />
               </label>
               <div className="grid sm:grid-cols-2 gap-4">
@@ -197,7 +197,7 @@ export default function NuevaCotizacionPage() {
                   <input
                     value={form.client_phone}
                     onChange={(e) => setForm((current) => ({ ...current, client_phone: e.target.value }))}
-                    className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
                   />
                 </label>
                 <label>
@@ -205,7 +205,7 @@ export default function NuevaCotizacionPage() {
                   <input
                     value={form.company}
                     onChange={(e) => setForm((current) => ({ ...current, company: e.target.value }))}
-                    className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
                   />
                 </label>
               </div>
@@ -214,15 +214,15 @@ export default function NuevaCotizacionPage() {
 
           {step === 2 ? (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-white">Servicios del paquete</h2>
-              <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4 space-y-3">
+              <h2 className="text-lg font-semibold text-slate-900">Servicios del paquete</h2>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
                 <label className="block">
                   <span className="text-xs text-slate-400">Agregar servicio</span>
                   <div className="mt-1 flex flex-col sm:flex-row gap-3">
                     <select
                       value={pendingServiceType}
                       onChange={(e) => setPendingServiceType(e.target.value)}
-                      className="flex-1 rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+                      className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
                     >
                       <option value="">Selecciona un servicio</option>
                       {QUOTE_SERVICES.map((service) => (
@@ -236,7 +236,7 @@ export default function NuevaCotizacionPage() {
                     <button
                       type="button"
                       onClick={addService}
-                      className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl bg-indigo-600 text-white"
+                      className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl bg-brand text-white"
                     >
                       <Plus className="w-4 h-4" />
                       Agregar
@@ -261,10 +261,10 @@ export default function NuevaCotizacionPage() {
                   const isOther = service.service_type === CATALOG_OTHER
 
                   return (
-                    <div key={service.key} className="rounded-xl border border-slate-800 bg-slate-950/50 p-4 space-y-4">
+                    <div key={service.key} className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-4">
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                         <div>
-                          <p className="text-sm font-semibold text-white">
+                          <p className="text-sm font-semibold text-slate-900">
                             Servicio {index + 1}: {service.service_label || 'Sin descripción'}
                           </p>
                           <p className="text-xs text-slate-500 mt-1">
@@ -275,7 +275,7 @@ export default function NuevaCotizacionPage() {
                         <button
                           type="button"
                           onClick={() => setServices((current) => current.filter((item) => item.key !== service.key))}
-                          className="inline-flex items-center justify-center gap-2 min-h-[40px] px-3 py-2 rounded-lg border border-red-900/60 text-red-300 text-sm"
+                          className="inline-flex items-center justify-center gap-2 min-h-[40px] px-3 py-2 rounded-lg border border-red-900/60 text-red-600 text-sm"
                         >
                           <Trash2 className="w-4 h-4" />
                           Quitar
@@ -287,21 +287,21 @@ export default function NuevaCotizacionPage() {
                         <input
                           value={service.service_label}
                           onChange={(e) => updateService(service.key, { service_label: e.target.value })}
-                          className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+                          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
                         />
                       </label>
 
                       {catalog ? (
-                        <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 px-3 py-3">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-300">Qué incluye</p>
-                          <ul className="mt-2 space-y-1 text-sm text-slate-300 list-disc pl-5">
+                        <div className="rounded-lg border border-neon-blue/20 bg-brand/5 px-3 py-3">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-brand">Qué incluye</p>
+                          <ul className="mt-2 space-y-1 text-sm text-slate-600 list-disc pl-5">
                             {catalog.offerPoints.map((point) => (
                               <li key={point}>{point}</li>
                             ))}
                           </ul>
                         </div>
                       ) : (
-                        <p className="text-xs text-slate-500 rounded-lg border border-slate-700/80 bg-slate-950/40 px-3 py-2 leading-relaxed">
+                        <p className="text-xs text-slate-600 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 leading-relaxed">
                           Servicio manual: puedes definir nombre y precio base libremente.
                         </p>
                       )}
@@ -318,8 +318,8 @@ export default function NuevaCotizacionPage() {
                                   onClick={() => updateService(service.key, { has_domain: value })}
                                   className={`min-h-[44px] px-4 py-2 rounded-lg border text-sm ${
                                     service.has_domain === value
-                                      ? 'border-indigo-500 bg-indigo-500/20 text-white'
-                                      : 'border-slate-700 text-slate-300'
+                                      ? 'border-brand/30 bg-brand/10 text-brand'
+                                      : 'border-slate-200 text-slate-600'
                                   }`}
                                 >
                                   {value === 'si' ? 'Sí' : `No (+$${addOns.domainUsd})`}
@@ -339,8 +339,8 @@ export default function NuevaCotizacionPage() {
                                   onClick={() => updateService(service.key, { has_professional_email: value })}
                                   className={`min-h-[44px] px-4 py-2 rounded-lg border text-sm ${
                                     service.has_professional_email === value
-                                      ? 'border-indigo-500 bg-indigo-500/20 text-white'
-                                      : 'border-slate-700 text-slate-300'
+                                      ? 'border-brand/30 bg-brand/10 text-brand'
+                                      : 'border-slate-200 text-slate-600'
                                   }`}
                                 >
                                   {value === 'si' ? 'Sí' : `No (+$${addOns.secondUsd})`}
@@ -362,8 +362,8 @@ export default function NuevaCotizacionPage() {
                                 onClick={() => updateService(service.key, { has_hosting: value })}
                                 className={`min-h-[44px] px-4 py-2 rounded-lg border text-sm ${
                                   service.has_hosting === value
-                                    ? 'border-indigo-500 bg-indigo-500/20 text-white'
-                                    : 'border-slate-700 text-slate-300'
+                                    ? 'border-brand/30 bg-brand/10 text-brand'
+                                    : 'border-slate-200 text-slate-600'
                                 }`}
                               >
                                 {value === 'si' ? 'Sí' : 'No'}
@@ -385,7 +385,7 @@ export default function NuevaCotizacionPage() {
                               max={50}
                               value={service.quantity_pages}
                               onChange={(e) => updateService(service.key, { quantity_pages: e.target.value })}
-                              className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+                              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
                             />
                           </label>
                         ) : null}
@@ -397,7 +397,7 @@ export default function NuevaCotizacionPage() {
                             min={0}
                             value={service.base_amount}
                             onChange={(e) => updateService(service.key, { base_amount: e.target.value })}
-                            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+                            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
                           />
                         </label>
                       </div>
@@ -410,14 +410,14 @@ export default function NuevaCotizacionPage() {
 
           {step === 3 ? (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-white">Detalles y seguimiento</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Detalles y seguimiento</h2>
               <label className="block">
                 <span className="text-xs text-slate-400">Comentarios para el cliente</span>
                 <textarea
                   value={form.comments}
                   onChange={(e) => setForm((current) => ({ ...current, comments: e.target.value }))}
                   rows={4}
-                  className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
                 />
               </label>
               <label className="block">
@@ -426,7 +426,7 @@ export default function NuevaCotizacionPage() {
                   value={form.internal_notes}
                   onChange={(e) => setForm((current) => ({ ...current, internal_notes: e.target.value }))}
                   rows={3}
-                  className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
                 />
               </label>
               <label className="block">
@@ -434,7 +434,7 @@ export default function NuevaCotizacionPage() {
                 <select
                   value={form.status}
                   onChange={(e) => setForm((current) => ({ ...current, status: e.target.value }))}
-                  className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
                 >
                   <option value="new">Nueva</option>
                   <option value="sent">Enviada</option>
@@ -447,18 +447,18 @@ export default function NuevaCotizacionPage() {
 
           {step === 4 ? (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-white">Revisión final</h2>
-              <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 sm:p-4 space-y-3 text-sm overflow-x-auto">
-                <p className="text-slate-200 break-words">
+              <h2 className="text-lg font-semibold text-slate-900">Revisión final</h2>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-4 space-y-3 text-sm overflow-x-auto">
+                <p className="text-slate-700 break-words">
                   <span className="text-slate-400">Cliente:</span> {form.client_first_name} {form.client_last_name}
                 </p>
-                <p className="text-slate-200 break-all">
+                <p className="text-slate-700 break-all">
                   <span className="text-slate-400">Correo:</span> {form.client_email}
                 </p>
-                <p className="text-slate-200 break-words">
+                <p className="text-slate-700 break-words">
                   <span className="text-slate-400">Teléfono:</span> {form.client_phone || '-'}
                 </p>
-                <p className="text-slate-200 break-words">
+                <p className="text-slate-700 break-words">
                   <span className="text-slate-400">Empresa:</span> {form.company || '-'}
                 </p>
                 <div className="space-y-3">
@@ -469,10 +469,10 @@ export default function NuevaCotizacionPage() {
                     })}
                   </p>
                   {bundle.services.map((service, index) => (
-                    <div key={`${service.serviceId}-${index}`} className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
+                    <div key={`${service.serviceId}-${index}`} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                        <p className="font-semibold text-white">{service.label}</p>
-                        <p className="font-semibold text-indigo-300">
+                        <p className="font-semibold text-slate-900">{service.label}</p>
+                        <p className="font-semibold text-brand">
                           ${service.total.toFixed(2)}
                           {bundle.monthly ? '/mes' : ''}
                         </p>
@@ -480,9 +480,9 @@ export default function NuevaCotizacionPage() {
                     </div>
                   ))}
                 </div>
-                <div className="border-t border-slate-800 pt-3 mt-2">
+                <div className="border-t border-slate-200 pt-3 mt-2">
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Desglose</p>
-                  <ul className="space-y-1 text-slate-200">
+                  <ul className="space-y-1 text-slate-700">
                     {bundle.lines.length === 0 ? (
                       <li className="text-slate-500">Sin partidas</li>
                     ) : (
@@ -497,20 +497,20 @@ export default function NuevaCotizacionPage() {
                   <p className="mt-2 text-slate-400 text-xs">
                     Subtotal base: ${bundle.subtotal.toFixed(2)} · Extras: ${bundle.extrasTotal.toFixed(2)}
                   </p>
-                  <p className="mt-2 text-lg font-bold text-white">
+                  <p className="mt-2 text-lg font-bold text-slate-900">
                     Total USD: ${bundle.total.toFixed(2)}
                     {bundle.monthly ? '/mes' : ''}
                   </p>
                 </div>
-                <div className="border-t border-slate-800 pt-3 mt-2 space-y-3">
+                <div className="border-t border-slate-200 pt-3 mt-2 space-y-3">
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
                     Lo que incluye cada servicio
                   </p>
                   {bundle.services.map((service, index) => (
-                    <div key={`${service.serviceId}-includes-${index}`} className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
-                      <p className="font-semibold text-white">{service.label}</p>
+                    <div key={`${service.serviceId}-includes-${index}`} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                      <p className="font-semibold text-slate-900">{service.label}</p>
                       {service.offerPoints.length > 0 ? (
-                        <ul className="mt-2 list-disc pl-5 space-y-1 text-slate-300">
+                        <ul className="mt-2 list-disc pl-5 space-y-1 text-slate-600">
                           {service.offerPoints.map((point) => (
                             <li key={point}>{point}</li>
                           ))}
@@ -530,7 +530,7 @@ export default function NuevaCotizacionPage() {
               type="button"
               onClick={() => setStep((current) => Math.max(1, current - 1))}
               disabled={step === 1 || loading}
-              className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl border border-slate-700 text-slate-200 hover:bg-slate-800 disabled:opacity-50 w-full sm:w-auto"
+              className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-50 w-full sm:w-auto"
             >
               <ChevronLeft className="w-4 h-4 shrink-0" />
               Anterior
@@ -541,7 +541,7 @@ export default function NuevaCotizacionPage() {
                 type="button"
                 onClick={() => setStep((current) => Math.min(4, current + 1))}
                 disabled={!canGoNextStep || loading}
-                className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-500 disabled:opacity-50 w-full sm:w-auto"
+                className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2 rounded-xl bg-brand text-white font-medium hover:bg-brand-light disabled:opacity-50 w-full sm:w-auto"
               >
                 Siguiente
                 <ChevronRight className="w-4 h-4 shrink-0" />

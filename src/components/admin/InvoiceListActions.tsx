@@ -126,27 +126,27 @@ export function InvoiceListActions({ id, invoiceNumber }: Props) {
         }}
         className={clsx(
           'overflow-hidden rounded-lg border py-1',
-          'border-slate-700/80 bg-slate-950/98 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.65)]',
+          'border-slate-200 bg-white shadow-lg',
           'backdrop-blur-md'
         )}
       >
-        <p className="border-b border-slate-800/80 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+        <p className="border-b border-slate-200 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
           Factura {invoiceNumber}
         </p>
         <div className="py-0.5" role="none">
           <Link
             href={`/admin/facturas/${id}`}
             role="menuitem"
-            className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 transition-colors hover:bg-slate-800/90"
+            className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50"
             onClick={() => setOpen(false)}
           >
-            <Eye className="h-4 w-4 shrink-0 text-indigo-400/90" aria-hidden />
+            <Eye className="h-4 w-4 shrink-0 text-brand" aria-hidden />
             Ver documento
           </Link>
           <Link
             href={`/admin/facturas/${id}/edit`}
             role="menuitem"
-            className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 transition-colors hover:bg-slate-800/90"
+            className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50"
             onClick={() => setOpen(false)}
           >
             <Pencil className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
@@ -155,18 +155,18 @@ export function InvoiceListActions({ id, invoiceNumber }: Props) {
           <Link
             href={`/admin/facturas/${id}`}
             role="menuitem"
-            className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 transition-colors hover:bg-slate-800/90"
+            className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50"
             onClick={() => setOpen(false)}
           >
             <Printer className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
             Imprimir / PDF
           </Link>
         </div>
-        <div className="border-t border-slate-800/90 py-0.5" role="none">
+        <div className="border-t border-slate-200 py-0.5" role="none">
           <button
             type="button"
             role="menuitem"
-            className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-red-400/95 transition-colors hover:bg-red-950/35"
+            className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-red-600/95 transition-colors hover:bg-red-950/35"
             onClick={remove}
           >
             <Trash2 className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
@@ -190,9 +190,9 @@ export function InvoiceListActions({ id, invoiceNumber }: Props) {
         title="Opciones"
         className={clsx(
           'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors',
-          'text-slate-500 hover:bg-slate-800/80 hover:text-slate-200',
-          'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500/50',
-          open && 'bg-slate-800 text-slate-100'
+          'text-slate-500 hover:bg-slate-50 hover:text-slate-700',
+          'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neon-blue/40',
+          open && 'bg-slate-100 text-slate-900'
         )}
       >
         <MoreVertical className="h-4 w-4" strokeWidth={2} aria-hidden />

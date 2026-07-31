@@ -18,7 +18,7 @@ export default async function NuevoContratoPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-white">Nuevo contrato</h1>
+      <h1 className="text-2xl font-bold text-slate-900">Nuevo contrato</h1>
       <ContractCreateForm quotes={(quotes ?? []) as never[]} prefillQuoteId={quoteId} />
     </div>
   )

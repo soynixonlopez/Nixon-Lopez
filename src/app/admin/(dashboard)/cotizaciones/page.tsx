@@ -15,13 +15,13 @@ export default async function CotizacionesPage() {
   return (
     <div className="space-y-8 max-w-6xl mx-auto w-full min-w-0">
       <div className="text-center sm:text-left">
-        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Cotizaciones</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Cotizaciones</h1>
         <p className="text-slate-400 text-sm mt-2 max-w-2xl mx-auto sm:mx-0">
           Solicitudes del sitio web y cotizaciones manuales. Usa el menú ⋮ para ver, imprimir PDF o editar.
         </p>
       </div>
       {error && (
-        <p className="text-red-400 text-sm">
+        <p className="text-red-600 text-sm">
           Error al cargar: {error.message}. Verifica variables NEXT_PUBLIC_SUPABASE_* y la migración SQL.
         </p>
       )}
@@ -29,7 +29,7 @@ export default async function CotizacionesPage() {
       <Link
         href="/admin/cotizacion-nueva"
         aria-label="Crear cotización"
-        className="fixed z-20 inline-flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-2xl shadow-indigo-900/40 transition-transform hover:scale-105 bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))] sm:bottom-6 sm:right-6"
+        className="fixed z-20 inline-flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-gradient-to-r from-brand to-neon-purple text-white shadow-2xl shadow-brand/30 transition-transform hover:scale-105 bottom-[max(1rem,env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))] sm:bottom-6 sm:right-6"
       >
         <Plus className="h-6 w-6" />
       </Link>

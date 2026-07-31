@@ -18,6 +18,7 @@ import {
   Home,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { adminUi } from '@/lib/admin-ui'
 import { clsx } from 'clsx'
 
 const STORAGE_KEY = 'admin-sidebar-collapsed'
@@ -63,23 +64,33 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex print:block print:min-h-0 print:h-auto print:overflow-visible print:bg-white print:text-slate-900">
-      {/* Sidebar */}
+    <div
+      className={clsx(
+        'admin-theme flex min-h-screen print:block print:min-h-0 print:h-auto print:overflow-visible print:bg-white',
+        adminUi.shellBg,
+        'text-slate-900'
+      )}
+    >
       <aside
         className={clsx(
-          'fixed inset-y-0 left-0 z-40 flex flex-col border-r border-slate-800 bg-slate-900/95 backdrop-blur',
+          'fixed inset-y-0 left-0 z-40 flex flex-col',
+          adminUi.sidebar,
           'transition-[width,transform] duration-300 ease-out print:hidden',
           'w-64 max-w-[min(100vw-1rem,16rem)]',
           collapsed ? 'lg:w-[72px]' : 'lg:w-64',
           open ? 'translate-x-0' : '-translate-x-full',
-          'lg:translate-x-0 lg:static lg:max-w-none lg:flex-shrink-0'
+          'lg:static lg:max-w-none lg:flex-shrink-0 lg:translate-x-0'
         )}
       >
-        {/* Cabecera sidebar */}
-        <div className="flex items-center justify-between gap-2 border-b border-slate-800 p-3 min-h-[3.5rem]">
+        <div
+          className={clsx(
+            'flex min-h-[3.5rem] items-center justify-between gap-2 p-3',
+            adminUi.sidebarHeader
+          )}
+        >
           <Link
             href="/admin"
-            className="min-w-0 flex-1 font-bold flex items-center gap-2"
+            className="flex min-w-0 flex-1 items-center gap-2 font-bold"
             onClick={() => setOpen(false)}
             title="Inicio del panel"
             aria-label="Nixon Lopez Services — panel de administración"
@@ -90,7 +101,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 alt=""
                 width={32}
                 height={32}
-                className="h-8 w-8 object-contain shrink-0 rounded"
+                className="h-8 w-8 shrink-0 rounded object-contain"
                 aria-hidden
               />
             ) : (
@@ -108,9 +119,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               className={clsx(
-                'hidden lg:inline-flex items-center justify-center rounded-lg border border-transparent p-2',
-                'text-slate-400 transition-colors hover:border-slate-700 hover:bg-slate-800 hover:text-white',
-                'focus:outline-none focus:ring-2 focus:ring-indigo-500/40'
+                'hidden items-center justify-center rounded-lg border border-transparent p-2 lg:inline-flex',
+                'text-slate-500 transition-colors hover:border-slate-200 hover:bg-slate-100 hover:text-brand',
+                adminUi.focusRing
               )}
               onClick={toggleCollapse}
               aria-expanded={!collapsed}
@@ -121,16 +132,16 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </button>
             <button
               type="button"
-              className="inline-flex p-2 rounded-lg hover:bg-slate-800 lg:hidden"
+              className="inline-flex rounded-lg p-2 hover:bg-slate-100 lg:hidden"
               onClick={() => setOpen(false)}
               aria-label="Cerrar menú"
             >
-              <X className="w-5 h-5" />
+              <X className="h-5 w-5" />
             </button>
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto overflow-x-hidden p-2 sm:p-3">
+        <nav className="flex-1 space-y-1 overflow-x-hidden overflow-y-auto p-2 sm:p-3">
           {nav.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || (href !== '/admin' && pathname.startsWith(href))
             return (
@@ -140,11 +151,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 onClick={() => setOpen(false)}
                 title={collapsed ? label : undefined}
                 className={clsx(
-                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
-                  collapsed && 'lg:justify-center lg:px-2 lg:py-2.5',
-                  active
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                  collapsed && 'lg:justify-center lg:px-2',
+                  active ? adminUi.navActive : adminUi.navIdle
                 )}
               >
                 <Icon className="h-5 w-5 shrink-0" aria-hidden />
@@ -154,13 +163,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="border-t border-slate-800 p-2 sm:p-3">
+        <div className={clsx('p-2 sm:p-3', adminUi.sidebarHeader, 'border-b-0 border-t')}>
           <button
             type="button"
             onClick={logout}
             title={collapsed ? 'Cerrar sesión' : undefined}
             className={clsx(
-              'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-white',
+              'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900',
               collapsed && 'lg:justify-center lg:px-2'
             )}
           >
@@ -169,7 +178,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </button>
           <Link
             href="/"
-            className="mt-2 block rounded-lg py-2 text-center text-xs text-slate-500 transition-colors hover:bg-slate-800/80 hover:text-slate-300"
+            className="mt-2 block rounded-lg py-2 text-center text-xs text-slate-500 transition-colors hover:bg-slate-100 hover:text-brand"
             title="Volver al sitio público"
             onClick={() => setOpen(false)}
           >
@@ -185,29 +194,34 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      {/* Overlay móvil / tablet drawer */}
       {open && (
         <button
           type="button"
-          className="fixed inset-0 z-30 bg-black/60 backdrop-blur-[1px] lg:hidden print:hidden"
+          className="fixed inset-0 z-30 bg-slate-900/20 backdrop-blur-[2px] lg:hidden print:hidden"
           aria-label="Cerrar menú"
           onClick={() => setOpen(false)}
         />
       )}
 
-      <div className="flex min-w-0 flex-1 flex-col print:block print:h-auto print:min-h-0 print:overflow-visible">
-        <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-800 bg-slate-950/90 px-4 py-3 backdrop-blur lg:hidden print:hidden">
+      <div className="relative flex min-w-0 flex-1 flex-col print:block print:h-auto print:min-h-0 print:overflow-visible">
+        <header
+          className={clsx(
+            'sticky top-0 z-20 flex items-center gap-3 px-4 py-3 lg:hidden print:hidden',
+            adminUi.headerMobile
+          )}
+        >
           <button
             type="button"
-            className="rounded-lg p-2 hover:bg-slate-800"
+            className="rounded-lg p-2 hover:bg-slate-100"
             onClick={() => setOpen(true)}
             aria-label="Abrir menú"
           >
-            <Menu className="h-6 w-6" />
+            <Menu className="h-6 w-6 text-brand" />
           </button>
-          <span className="font-semibold">Panel</span>
+          <span className="font-semibold text-brand">Panel Nixon López</span>
         </header>
-        <main className="flex-1 w-full min-w-0 overflow-x-hidden overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-6 md:p-8 print:block print:h-auto print:max-h-none print:flex-none print:overflow-visible print:p-0 print:bg-white">
+
+        <main className="relative z-10 flex-1 w-full min-w-0 overflow-x-hidden overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-6 md:p-8 print:block print:h-auto print:max-h-none print:flex-none print:overflow-visible print:bg-white print:p-0">
           {children}
         </main>
       </div>

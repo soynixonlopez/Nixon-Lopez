@@ -185,7 +185,7 @@ export function InvoiceCreateForm({ prefillQuote }: { prefillQuote?: PrefillQuot
     <form onSubmit={submit} className="max-w-3xl space-y-6">
       <div className="grid sm:grid-cols-2 gap-4">
         {prefillQuote && (
-          <p className="sm:col-span-2 text-xs text-indigo-300 rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-3 py-2">
+          <p className="sm:col-span-2 text-xs text-brand rounded-lg border border-neon-blue/30 bg-brand/10 px-3 py-2">
             Esta factura está vinculada a una cotización. Al crearla, se generará un proyecto automáticamente.
           </p>
         )}
@@ -194,7 +194,7 @@ export function InvoiceCreateForm({ prefillQuote }: { prefillQuote?: PrefillQuot
           <select
             value={invoiceKind}
             onChange={(e) => setInvoiceKind(e.target.value as 'prefactura' | 'final')}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           >
             <option value="prefactura">Prefactura (anticipo / parcial)</option>
             <option value="final">Factura final (total cerrado)</option>
@@ -208,7 +208,7 @@ export function InvoiceCreateForm({ prefillQuote }: { prefillQuote?: PrefillQuot
                 checked={isAbono}
                 onChange={(e) => setIsAbono(e.target.checked)}
               />
-              <span className="text-sm text-slate-300">Incluye abono / anticipo</span>
+              <span className="text-sm text-slate-600">Incluye abono / anticipo</span>
             </label>
             {isAbono && (
               <label>
@@ -218,7 +218,7 @@ export function InvoiceCreateForm({ prefillQuote }: { prefillQuote?: PrefillQuot
                   step="0.01"
                   value={abonoAmount}
                   onChange={(e) => setAbonoAmount(e.target.value)}
-                  className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
                 />
               </label>
             )}
@@ -226,7 +226,7 @@ export function InvoiceCreateForm({ prefillQuote }: { prefillQuote?: PrefillQuot
         )}
       </div>
 
-      <h2 className="text-lg font-semibold text-white">Cliente</h2>
+      <h2 className="text-lg font-semibold text-slate-900">Cliente</h2>
       <div className="grid sm:grid-cols-2 gap-4">
         <label className="sm:col-span-2">
           <span className="text-xs text-slate-400">Nombre / Razón social</span>
@@ -234,7 +234,7 @@ export function InvoiceCreateForm({ prefillQuote }: { prefillQuote?: PrefillQuot
             required
             value={clientName}
             onChange={(e) => setClientName(e.target.value)}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
         <label>
@@ -243,7 +243,7 @@ export function InvoiceCreateForm({ prefillQuote }: { prefillQuote?: PrefillQuot
             type="email"
             value={clientEmail}
             onChange={(e) => setClientEmail(e.target.value)}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
         <label>
@@ -251,7 +251,7 @@ export function InvoiceCreateForm({ prefillQuote }: { prefillQuote?: PrefillQuot
           <input
             value={clientTaxId}
             onChange={(e) => setClientTaxId(e.target.value)}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
         <label className="sm:col-span-2">
@@ -260,12 +260,12 @@ export function InvoiceCreateForm({ prefillQuote }: { prefillQuote?: PrefillQuot
             value={clientAddress}
             onChange={(e) => setClientAddress(e.target.value)}
             rows={2}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
       </div>
 
-      <h2 className="text-lg font-semibold text-white">Líneas</h2>
+      <h2 className="text-lg font-semibold text-slate-900">Líneas</h2>
       <div className="space-y-3">
         {lines.map((line, i) => (
           <div key={i} className="grid sm:grid-cols-12 gap-2 items-end">
@@ -278,7 +278,7 @@ export function InvoiceCreateForm({ prefillQuote }: { prefillQuote?: PrefillQuot
                   next[i] = { ...line, description: e.target.value }
                   setLines(next)
                 }}
-                className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white text-sm"
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
               />
             </label>
             <label className="sm:col-span-2">
@@ -291,7 +291,7 @@ export function InvoiceCreateForm({ prefillQuote }: { prefillQuote?: PrefillQuot
                   next[i] = { ...line, quantity: e.target.value }
                   setLines(next)
                 }}
-                className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white text-sm"
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
               />
             </label>
             <label className="sm:col-span-2">
@@ -305,7 +305,7 @@ export function InvoiceCreateForm({ prefillQuote }: { prefillQuote?: PrefillQuot
                   next[i] = { ...line, unit_price: e.target.value }
                   setLines(next)
                 }}
-                className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white text-sm"
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
               />
             </label>
             <div className="sm:col-span-2 text-sm text-slate-400 pb-2">
@@ -316,7 +316,7 @@ export function InvoiceCreateForm({ prefillQuote }: { prefillQuote?: PrefillQuot
         <button
           type="button"
           onClick={addLine}
-          className="text-sm text-indigo-400 hover:underline"
+          className="text-sm text-brand hover:underline"
         >
           + Añadir línea
         </button>
@@ -329,18 +329,18 @@ export function InvoiceCreateForm({ prefillQuote }: { prefillQuote?: PrefillQuot
           step="0.01"
           value={taxRate}
           onChange={(e) => setTaxRate(e.target.value)}
-          className="mt-1 w-full max-w-xs rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+          className="mt-1 w-full max-w-xs rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
         />
       </label>
 
-      <div className="rounded-xl border border-slate-700 p-4 text-sm space-y-1">
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm space-y-1">
         <p className="text-slate-400">
-          Subtotal: <span className="text-white">${subtotal.toFixed(2)}</span>
+          Subtotal: <span className="text-slate-900">${subtotal.toFixed(2)}</span>
         </p>
         <p className="text-slate-400">
-          Impuesto: <span className="text-white">${taxAmount.toFixed(2)}</span>
+          Impuesto: <span className="text-slate-900">${taxAmount.toFixed(2)}</span>
         </p>
-        <p className="text-lg font-bold text-white">Total: ${total.toFixed(2)} USD</p>
+        <p className="text-lg font-bold text-slate-900">Total: ${total.toFixed(2)} USD</p>
       </div>
 
       <label>
@@ -349,14 +349,14 @@ export function InvoiceCreateForm({ prefillQuote }: { prefillQuote?: PrefillQuot
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={2}
-          className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
         />
       </label>
 
       <button
         type="submit"
         disabled={loading}
-        className="px-6 py-3 rounded-xl bg-indigo-600 text-white font-medium disabled:opacity-50"
+        className="px-6 py-3 rounded-xl bg-brand text-white font-medium disabled:opacity-50"
       >
         {loading ? 'Guardando…' : 'Crear factura'}
       </button>

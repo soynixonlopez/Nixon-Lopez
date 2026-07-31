@@ -79,7 +79,7 @@ export function ContractCreateForm({
         <select
           value={quoteId}
           onChange={(e) => setQuoteId(e.target.value)}
-          className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           required
         >
           {quotes.map((q) => (
@@ -96,7 +96,7 @@ export function ContractCreateForm({
           <input
             value={clientTaxId}
             onChange={(e) => setClientTaxId(e.target.value)}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
         <label>
@@ -104,7 +104,7 @@ export function ContractCreateForm({
           <input
             value={city}
             onChange={(e) => setCity(e.target.value)}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
       </div>
@@ -114,7 +114,7 @@ export function ContractCreateForm({
           value={clientAddress}
           onChange={(e) => setClientAddress(e.target.value)}
           rows={2}
-          className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
         />
       </label>
       <label className="block">
@@ -123,13 +123,13 @@ export function ContractCreateForm({
           value={customNotes}
           onChange={(e) => setCustomNotes(e.target.value)}
           rows={4}
-          className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
         />
       </label>
       <button
         type="submit"
         disabled={loading || !selected}
-        className="px-6 py-3 rounded-xl bg-indigo-600 text-white font-medium disabled:opacity-50"
+        className="px-6 py-3 rounded-xl bg-brand text-white font-medium disabled:opacity-50"
       >
         {loading ? 'Creando…' : 'Crear contrato'}
       </button>

@@ -128,7 +128,7 @@ export function InvoiceEditForm({ invoice, lines: initialLines }: Props) {
       <div className="flex flex-wrap gap-2">
         <Link
           href={`/admin/facturas/${invoice.id}`}
-          className="text-sm text-indigo-400 hover:underline"
+          className="text-sm text-brand hover:underline"
         >
           ← Ver documento
         </Link>
@@ -140,7 +140,7 @@ export function InvoiceEditForm({ invoice, lines: initialLines }: Props) {
           <select
             value={invoiceStatus}
             onChange={(e) => setInvoiceStatus(e.target.value as InvoiceStatus)}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           >
             <option value="draft">Borrador</option>
             <option value="sent">Enviada</option>
@@ -154,7 +154,7 @@ export function InvoiceEditForm({ invoice, lines: initialLines }: Props) {
           <select
             value={invoiceKind}
             onChange={(e) => setInvoiceKind(e.target.value as 'prefactura' | 'final')}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           >
             <option value="prefactura">Prefactura (anticipo / parcial)</option>
             <option value="final">Factura final (total cerrado)</option>
@@ -168,7 +168,7 @@ export function InvoiceEditForm({ invoice, lines: initialLines }: Props) {
                 checked={isAbono}
                 onChange={(e) => setIsAbono(e.target.checked)}
               />
-              <span className="text-sm text-slate-300">Incluye abono / anticipo</span>
+              <span className="text-sm text-slate-600">Incluye abono / anticipo</span>
             </label>
             {isAbono && (
               <label>
@@ -178,7 +178,7 @@ export function InvoiceEditForm({ invoice, lines: initialLines }: Props) {
                   step="0.01"
                   value={abonoAmount}
                   onChange={(e) => setAbonoAmount(e.target.value)}
-                  className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
                 />
               </label>
             )}
@@ -188,7 +188,7 @@ export function InvoiceEditForm({ invoice, lines: initialLines }: Props) {
 
       <p className="text-xs text-slate-500 font-mono">Número: {invoice.invoice_number}</p>
 
-      <h2 className="text-lg font-semibold text-white">Cliente</h2>
+      <h2 className="text-lg font-semibold text-slate-900">Cliente</h2>
       <div className="grid sm:grid-cols-2 gap-4">
         <label className="sm:col-span-2">
           <span className="text-xs text-slate-400">Nombre / Razón social</span>
@@ -196,7 +196,7 @@ export function InvoiceEditForm({ invoice, lines: initialLines }: Props) {
             required
             value={clientName}
             onChange={(e) => setClientName(e.target.value)}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
         <label>
@@ -205,7 +205,7 @@ export function InvoiceEditForm({ invoice, lines: initialLines }: Props) {
             type="email"
             value={clientEmail}
             onChange={(e) => setClientEmail(e.target.value)}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
         <label>
@@ -213,7 +213,7 @@ export function InvoiceEditForm({ invoice, lines: initialLines }: Props) {
           <input
             value={clientTaxId}
             onChange={(e) => setClientTaxId(e.target.value)}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
         <label className="sm:col-span-2">
@@ -222,12 +222,12 @@ export function InvoiceEditForm({ invoice, lines: initialLines }: Props) {
             value={clientAddress}
             onChange={(e) => setClientAddress(e.target.value)}
             rows={2}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
       </div>
 
-      <h2 className="text-lg font-semibold text-white">Líneas</h2>
+      <h2 className="text-lg font-semibold text-slate-900">Líneas</h2>
       <div className="space-y-3">
         {lines.map((line, i) => (
           <div key={i} className="grid sm:grid-cols-12 gap-2 items-end">
@@ -240,7 +240,7 @@ export function InvoiceEditForm({ invoice, lines: initialLines }: Props) {
                   next[i] = { ...line, description: e.target.value }
                   setLines(next)
                 }}
-                className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white text-sm"
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
               />
             </label>
             <label className="sm:col-span-2">
@@ -253,7 +253,7 @@ export function InvoiceEditForm({ invoice, lines: initialLines }: Props) {
                   next[i] = { ...line, quantity: e.target.value }
                   setLines(next)
                 }}
-                className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white text-sm"
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
               />
             </label>
             <label className="sm:col-span-2">
@@ -267,7 +267,7 @@ export function InvoiceEditForm({ invoice, lines: initialLines }: Props) {
                   next[i] = { ...line, unit_price: e.target.value }
                   setLines(next)
                 }}
-                className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white text-sm"
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
               />
             </label>
             <div className="sm:col-span-2 text-sm text-slate-400 pb-2">
@@ -278,7 +278,7 @@ export function InvoiceEditForm({ invoice, lines: initialLines }: Props) {
         <button
           type="button"
           onClick={addLine}
-          className="text-sm text-indigo-400 hover:underline"
+          className="text-sm text-brand hover:underline"
         >
           + Añadir línea
         </button>
@@ -291,18 +291,18 @@ export function InvoiceEditForm({ invoice, lines: initialLines }: Props) {
           step="0.01"
           value={taxRate}
           onChange={(e) => setTaxRate(e.target.value)}
-          className="mt-1 w-full max-w-xs rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+          className="mt-1 w-full max-w-xs rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
         />
       </label>
 
-      <div className="rounded-xl border border-slate-700 p-4 text-sm space-y-1">
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm space-y-1">
         <p className="text-slate-400">
-          Subtotal: <span className="text-white">${subtotal.toFixed(2)}</span>
+          Subtotal: <span className="text-slate-900">${subtotal.toFixed(2)}</span>
         </p>
         <p className="text-slate-400">
-          Impuesto: <span className="text-white">${taxAmount.toFixed(2)}</span>
+          Impuesto: <span className="text-slate-900">${taxAmount.toFixed(2)}</span>
         </p>
-        <p className="text-lg font-bold text-white">Total: ${total.toFixed(2)} USD</p>
+        <p className="text-lg font-bold text-slate-900">Total: ${total.toFixed(2)} USD</p>
       </div>
 
       <label>
@@ -311,7 +311,7 @@ export function InvoiceEditForm({ invoice, lines: initialLines }: Props) {
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={2}
-          className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
         />
       </label>
       <label>
@@ -320,14 +320,14 @@ export function InvoiceEditForm({ invoice, lines: initialLines }: Props) {
           value={terms}
           onChange={(e) => setTerms(e.target.value)}
           rows={2}
-          className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
         />
       </label>
 
       <button
         type="submit"
         disabled={loading}
-        className="px-6 py-3 rounded-xl bg-indigo-600 text-white font-medium disabled:opacity-50"
+        className="px-6 py-3 rounded-xl bg-brand text-white font-medium disabled:opacity-50"
       >
         {loading ? 'Guardando…' : 'Guardar cambios'}
       </button>

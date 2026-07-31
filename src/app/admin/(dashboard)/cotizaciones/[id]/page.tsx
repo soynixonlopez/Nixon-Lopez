@@ -24,7 +24,7 @@ export default async function CotizacionDetailPage({ params }: { params: Promise
         clientName={`${q.client_first_name} ${q.client_last_name}`}
       />
       <QuotePrintView quote={q as never} />
-      <div className="print:hidden mt-10 border-t border-slate-800 pt-8" id="editar-cotizacion">
+      <div className="print:hidden mt-10 border-t border-slate-200 pt-8" id="editar-cotizacion">
         <QuoteEditorClient quote={quote as never} />
       </div>
     </div>

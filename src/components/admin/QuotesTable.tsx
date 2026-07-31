@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { QuoteListActions } from '@/components/admin/QuoteListActions'
+import { adminUi } from '@/lib/admin-ui'
 
 type Quote = {
   id: string
@@ -44,11 +45,11 @@ export function QuotesTable({ quotes }: { quotes: Quote[] }) {
         {quotes.map((q) => (
           <article
             key={q.id}
-            className="rounded-xl border border-slate-800/90 bg-slate-950/40 p-4 space-y-3 min-w-0"
+            className={`${adminUi.mobileCard} space-y-3 min-w-0`}
           >
             <div className="flex items-start justify-between gap-2 min-w-0">
               <div className="min-w-0 flex-1">
-                <p className="text-white font-medium truncate">
+                <p className="text-slate-900 font-medium truncate">
                   {q.client_first_name} {q.client_last_name}
                 </p>
                 <p className="text-xs text-slate-500 break-all">{q.client_email}</p>
@@ -61,15 +62,15 @@ export function QuotesTable({ quotes }: { quotes: Quote[] }) {
             <p className="text-xs text-slate-500">
               {new Date(q.created_at).toLocaleString('es')}
             </p>
-            <p className="text-sm text-slate-300 line-clamp-2">{q.service_label ?? '—'}</p>
+            <p className="text-sm text-slate-600 line-clamp-2">{q.service_label ?? '—'}</p>
             <div className="flex flex-wrap items-center gap-2 gap-y-2">
-              <span className="tabular-nums text-slate-200 font-medium shrink-0">
+              <span className="tabular-nums text-slate-700 font-medium shrink-0">
                 {q.total_amount != null ? `$${Number(q.total_amount).toFixed(2)}` : '—'}
               </span>
               <select
                 value={q.status}
                 onChange={(e) => setStatus(q.id, e.target.value)}
-                className="w-[min(100%,12.5rem)] shrink-0 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs print:hidden"
+                className="w-[min(100%,12.5rem)] shrink-0 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 shadow-sm print:hidden"
               >
                 {Object.keys(statusLabels).map((k) => (
                   <option key={k} value={k}>
@@ -83,9 +84,9 @@ export function QuotesTable({ quotes }: { quotes: Quote[] }) {
       </div>
 
       {/* Tablet/desktop: tabla */}
-      <div className="hidden md:block admin-table-scroll overflow-x-auto rounded-xl border border-slate-800/90 bg-slate-950/20">
+      <div className="hidden md:block admin-table-scroll overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="w-full min-w-[760px] text-sm text-left">
-          <thead className="border-b border-slate-800 bg-slate-900/80 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr>
               <th className="px-4 py-3">Fecha</th>
               <th className="px-4 py-3">Cliente</th>
@@ -97,25 +98,25 @@ export function QuotesTable({ quotes }: { quotes: Quote[] }) {
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60">
+          <tbody className="divide-y divide-slate-200">
             {quotes.map((q) => (
-              <tr key={q.id} className="hover:bg-slate-900/40 transition-colors">
+              <tr key={q.id} className="hover:bg-slate-50 transition-colors">
                 <td className="px-4 py-3 text-slate-500 whitespace-nowrap text-xs">
                   {new Date(q.created_at).toLocaleString('es')}
                 </td>
-                <td className="px-4 py-3 text-white">
+                <td className="px-4 py-3 text-slate-900">
                   {q.client_first_name} {q.client_last_name}
                   <div className="text-xs text-slate-500">{q.client_email}</div>
                 </td>
-                <td className="px-4 py-3 text-slate-300 max-w-[220px] truncate">{q.service_label ?? '—'}</td>
-                <td className="px-4 py-3 tabular-nums text-slate-200">
+                <td className="px-4 py-3 text-slate-600 max-w-[220px] truncate">{q.service_label ?? '—'}</td>
+                <td className="px-4 py-3 tabular-nums text-slate-700">
                   {q.total_amount != null ? `$${Number(q.total_amount).toFixed(2)}` : '—'}
                 </td>
                 <td className="px-4 py-3">
                   <select
                     value={q.status}
                     onChange={(e) => setStatus(q.id, e.target.value)}
-                    className="bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-xs max-w-[150px] print:hidden"
+                    className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900 shadow-sm max-w-[150px] print:hidden"
                   >
                     {Object.keys(statusLabels).map((k) => (
                       <option key={k} value={k}>

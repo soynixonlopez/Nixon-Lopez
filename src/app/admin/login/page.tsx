@@ -6,13 +6,15 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { ADMIN_EMAIL } from '@/lib/admin-constants'
-import { Lock, Mail } from 'lucide-react'
+import { adminUi } from '@/lib/admin-ui'
+import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
 
 function LoginForm() {
   const searchParams = useSearchParams()
   const err = searchParams.get('error')
   const [email, setEmail] = useState(ADMIN_EMAIL)
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
@@ -43,68 +45,122 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900/80 p-8 shadow-xl">
-        <div className="flex justify-center mb-6">
-          <Image
-            src="/images/logoweb.png"
-            alt="Nixon López — logo"
-            width={1306}
-            height={199}
-            className="h-8 w-auto max-w-full object-contain sm:h-9"
-            priority
-          />
-        </div>
-        <h1 className="text-2xl font-bold text-white mb-2 text-center">Acceso administrador</h1>
-        <p className="text-slate-400 text-sm text-center mb-6">
-          Solo el correo autorizado puede entrar.
-        </p>
-        {err === 'forbidden' && (
-          <p className="text-red-400 text-sm text-center mb-4">
-            Este correo no tiene permiso para el panel.
+    <div
+      className={`admin-login-page admin-theme relative flex min-h-[100dvh] items-center justify-center overflow-hidden p-4 sm:p-6`}
+    >
+      <div
+        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-white/30"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -right-24 top-1/4 h-96 w-96 rounded-full bg-neon-blue/15 blur-3xl"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -left-24 bottom-1/4 h-80 w-80 rounded-full bg-neon-purple/12 blur-3xl"
+        aria-hidden
+      />
+
+      <div className="relative w-full max-w-[420px]">
+        <div className={adminUi.loginCard}>
+          <div className="mb-8 flex justify-center">
+            <Image
+              src="/images/logoweb.png"
+              alt="Nixon López — logo"
+              width={1306}
+              height={199}
+              className="h-9 w-auto max-w-full object-contain sm:h-10"
+              priority
+            />
+          </div>
+
+          <h1 className="mb-2 text-center text-2xl font-bold tracking-tight text-slate-900 sm:text-[1.65rem]">
+            Acceso administrador
+          </h1>
+          <p className="mb-8 text-center text-sm leading-relaxed text-slate-600">
+            Solo el correo autorizado puede entrar.
           </p>
-        )}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs text-slate-400 mb-1">Correo</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm"
-                required
-                autoComplete="email"
-              />
+
+          {err === 'forbidden' && (
+            <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-center text-sm text-red-600">
+              Este correo no tiene permiso para el panel.
+            </p>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label htmlFor="admin-email" className="mb-2 block text-xs font-medium text-slate-600">
+                Correo
+              </label>
+              <div className="relative">
+                <Mail
+                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                  aria-hidden
+                />
+                <input
+                  id="admin-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={`${adminUi.loginInput} pl-12`}
+                  required
+                  autoComplete="email"
+                />
+              </div>
             </div>
-          </div>
-          <div>
-            <label className="block text-xs text-slate-400 mb-1">Contraseña</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm"
-                required
-                autoComplete="current-password"
-              />
+
+            <div>
+              <label htmlFor="admin-password" className="mb-2 block text-xs font-medium text-slate-600">
+                Contraseña
+              </label>
+              <div className="relative">
+                <Lock
+                  className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                  aria-hidden
+                />
+                <input
+                  id="admin-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={`${adminUi.loginInput} pl-12 pr-12`}
+                  required
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  aria-pressed={showPassword}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" aria-hidden />
+                  ) : (
+                    <Eye className="h-4 w-4" aria-hidden />
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
-          {message && <p className="text-red-400 text-sm">{message}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold hover:opacity-95 disabled:opacity-50"
+
+            {message && (
+              <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+                {message}
+              </p>
+            )}
+
+            <button type="submit" disabled={loading} className={adminUi.loginBtn}>
+              {loading ? 'Entrando…' : 'Entrar'}
+            </button>
+          </form>
+
+          <Link
+            href="/"
+            className="mt-8 block text-center text-sm text-slate-500 transition-colors hover:text-brand"
           >
-            {loading ? 'Entrando…' : 'Entrar'}
-          </button>
-        </form>
-        <Link href="/" className="block text-center text-sm text-slate-500 mt-6 hover:text-slate-300">
-          ← Volver al sitio
-        </Link>
+            ← Volver al sitio
+          </Link>
+        </div>
       </div>
     </div>
   )
@@ -112,7 +168,13 @@ function LoginForm() {
 
 export default function AdminLoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
+    <Suspense
+      fallback={
+        <div className={`flex min-h-[100dvh] items-center justify-center ${adminUi.loginPage}`}>
+          <div className="h-8 w-8 animate-pulse rounded-full bg-brand/20" />
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   )

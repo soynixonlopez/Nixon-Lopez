@@ -161,18 +161,18 @@ export function ContractListActions({ id, contractNumber, clientName, clientEmai
           width: MENU_WIDTH,
           zIndex: 9999,
         }}
-        className="overflow-hidden rounded-lg border border-slate-700/80 bg-slate-950/98 py-1 shadow-xl backdrop-blur-md"
+        className="overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
       >
-        <p className="border-b border-slate-800/80 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 truncate">
+        <p className="border-b border-slate-200 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500 truncate">
           {contractNumber}
         </p>
         <Link
           href={`/admin/contratos/${id}`}
           role="menuitem"
-          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800/90"
+          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
           onClick={() => setOpen(false)}
         >
-          <Eye className="h-4 w-4 shrink-0 text-indigo-400/90" />
+          <Eye className="h-4 w-4 shrink-0 text-brand" />
           Ver contrato / imprimir
         </Link>
         <a
@@ -180,7 +180,7 @@ export function ContractListActions({ id, contractNumber, clientName, clientEmai
           target="_blank"
           rel="noopener noreferrer"
           role="menuitem"
-          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800/90"
+          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
           onClick={() => setOpen(false)}
         >
           <Printer className="h-4 w-4 shrink-0 text-slate-400" />
@@ -189,7 +189,7 @@ export function ContractListActions({ id, contractNumber, clientName, clientEmai
         <a
           href={pdfDownloadUrl}
           role="menuitem"
-          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800/90"
+          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
           onClick={() => setOpen(false)}
         >
           <Download className="h-4 w-4 shrink-0 text-emerald-400/90" />
@@ -198,29 +198,29 @@ export function ContractListActions({ id, contractNumber, clientName, clientEmai
         <button
           type="button"
           role="menuitem"
-          className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-800/90"
+          className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
           onClick={() => {
             setOpen(false)
             setShowEmail(true)
           }}
         >
-          <Mail className="h-4 w-4 shrink-0 text-indigo-400/90" />
+          <Mail className="h-4 w-4 shrink-0 text-brand" />
           Enviar por correo
         </button>
         <Link
           href={`/admin/contratos/${id}/edit`}
           role="menuitem"
-          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800/90"
+          className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
           onClick={() => setOpen(false)}
         >
           <Pencil className="h-4 w-4 shrink-0 text-slate-400" />
           Editar
         </Link>
-        <div className="my-1 h-px bg-slate-800" />
+        <div className="my-1 h-px bg-slate-200" />
         <button
           type="button"
           role="menuitem"
-          className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-red-400 hover:bg-red-950/35"
+          className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-950/35"
           onClick={remove}
         >
           <Trash2 className="h-4 w-4 shrink-0" />
@@ -242,9 +242,9 @@ export function ContractListActions({ id, contractNumber, clientName, clientEmai
           title="Acciones"
           className={clsx(
             'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors',
-            'text-slate-500 hover:bg-slate-800/80 hover:text-slate-200',
-            'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500/50',
-            open && 'bg-slate-800 text-slate-100'
+            'text-slate-500 hover:bg-slate-50 hover:text-slate-700',
+            'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neon-blue/40',
+            open && 'bg-slate-100 text-slate-900'
           )}
         >
           <MoreVertical className="h-4 w-4" strokeWidth={2} />
@@ -254,21 +254,21 @@ export function ContractListActions({ id, contractNumber, clientName, clientEmai
       </div>
 
       {showEmail && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/70">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-xl">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/40">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">Enviar contrato</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Enviar contrato</h2>
               <button
                 type="button"
                 onClick={() => setShowEmail(false)}
-                className="p-2 rounded-lg hover:bg-slate-800 text-slate-400"
+                className="p-2 rounded-lg hover:bg-slate-100 text-slate-500"
                 aria-label="Cerrar"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <p className="text-xs text-slate-500 mb-3">
-              Para: <span className="text-slate-300">{clientName}</span>
+              Para: <span className="text-slate-600">{clientName}</span>
             </p>
             <form onSubmit={handleSend} className="space-y-4">
               <input
@@ -276,27 +276,27 @@ export function ContractListActions({ id, contractNumber, clientName, clientEmai
                 required
                 value={emailTo}
                 onChange={(e) => setEmailTo(e.target.value)}
-                className="w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white text-sm"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
               />
               <textarea
                 value={emailMsg}
                 onChange={(e) => setEmailMsg(e.target.value)}
                 rows={6}
-                className="w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white text-sm"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
               />
-              {sendError && <p className="text-sm text-red-400">{sendError}</p>}
+              {sendError && <p className="text-sm text-red-600">{sendError}</p>}
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShowEmail(false)}
-                  className="px-4 py-2 rounded-xl text-slate-400 hover:bg-slate-800 text-sm"
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-sm"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={busy}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-medium disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
                   {busy ? 'Enviando…' : 'Enviar con PDF'}

@@ -61,7 +61,7 @@ export function ContractEditForm({ contract }: { contract: ServiceContractRecord
   return (
     <form onSubmit={submit} className="max-w-3xl space-y-6">
       <p className="text-sm text-slate-500">
-        Contrato <span className="font-mono text-slate-300">{contract.contract_number}</span>
+        Contrato <span className="font-mono text-slate-600">{contract.contract_number}</span>
       </p>
       <div className="grid sm:grid-cols-2 gap-4">
         <label className="block">
@@ -70,7 +70,7 @@ export function ContractEditForm({ contract }: { contract: ServiceContractRecord
             required
             value={clientName}
             onChange={(e) => setClientName(e.target.value)}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
         <label className="block">
@@ -79,7 +79,7 @@ export function ContractEditForm({ contract }: { contract: ServiceContractRecord
             type="email"
             value={clientEmail}
             onChange={(e) => setClientEmail(e.target.value)}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
       </div>
@@ -89,7 +89,7 @@ export function ContractEditForm({ contract }: { contract: ServiceContractRecord
           <input
             value={clientTaxId}
             onChange={(e) => setClientTaxId(e.target.value)}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
         <label className="block">
@@ -97,7 +97,7 @@ export function ContractEditForm({ contract }: { contract: ServiceContractRecord
           <input
             value={city}
             onChange={(e) => setCity(e.target.value)}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           />
         </label>
       </div>
@@ -107,7 +107,7 @@ export function ContractEditForm({ contract }: { contract: ServiceContractRecord
           value={clientAddress}
           onChange={(e) => setClientAddress(e.target.value)}
           rows={2}
-          className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
         />
       </label>
       <label className="block">
@@ -115,7 +115,7 @@ export function ContractEditForm({ contract }: { contract: ServiceContractRecord
         <input
           value={serviceLabel}
           onChange={(e) => setServiceLabel(e.target.value)}
-          className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
         />
       </label>
       <div className="grid sm:grid-cols-2 gap-4">
@@ -125,7 +125,7 @@ export function ContractEditForm({ contract }: { contract: ServiceContractRecord
             inputMode="decimal"
             value={totalAmount}
             onChange={(e) => setTotalAmount(e.target.value)}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white tabular-nums"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15 tabular-nums"
           />
         </label>
         <label className="block">
@@ -133,7 +133,7 @@ export function ContractEditForm({ contract }: { contract: ServiceContractRecord
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as ContractStatus)}
-            className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           >
             {statusOptions.map((o) => (
               <option key={o.value} value={o.value}>
@@ -149,21 +149,21 @@ export function ContractEditForm({ contract }: { contract: ServiceContractRecord
           value={customNotes}
           onChange={(e) => setCustomNotes(e.target.value)}
           rows={4}
-          className="mt-1 w-full rounded-xl bg-slate-800 border border-slate-700 px-3 py-2 text-white"
+          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
         />
       </label>
       <div className="flex flex-wrap gap-3">
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-3 rounded-xl bg-indigo-600 text-white font-medium disabled:opacity-50"
+          className="px-6 py-3 rounded-xl bg-brand text-white font-medium disabled:opacity-50"
         >
           {loading ? 'Guardando…' : 'Guardar cambios'}
         </button>
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-6 py-3 rounded-xl border border-slate-600 text-slate-300 hover:bg-slate-800"
+          className="px-6 py-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50"
         >
           Cancelar
         </button>
