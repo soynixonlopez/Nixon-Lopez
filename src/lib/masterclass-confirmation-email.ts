@@ -6,9 +6,8 @@ import {
   buildMasterclassEmailHeader,
   buildMasterclassEmailShell,
   buildMasterclassEventDetails,
-  buildMasterclassUrgencyTip,
+  buildMasterclassThankYouBlock,
   buildMasterclassValueProps,
-  daysUntilMasterclassEvent,
   MASTERCLASS_EMAIL_FONT,
 } from '@/lib/masterclass-email-branding'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
@@ -22,24 +21,27 @@ export type MasterclassConfirmationEmailPayload = {
 export function buildMasterclassConfirmationContent({ nombre }: MasterclassConfirmationEmailPayload) {
   const first = escapeHtml(nombre.trim())
   const event = MASTERCLASS_EVENT
-  const days = daysUntilMasterclassEvent(event.startDateIso)
 
-  const preheader = `Cupo confirmado — ${event.dateLabel}. Únete al WhatsApp y guarda el enlace de Google Meet.`
-  const subject = `✅ Cupo confirmado — ${event.shortName}`
+  const preheader = `Gracias por registrarte — ${event.dateLabel}. Tu cupo está confirmado. Únete al WhatsApp y guarda el enlace de Meet.`
+  const subject = `✅ Gracias por registrarte — ${event.shortName}`
 
   const inner = `
-    ${buildMasterclassEmailHeader({ badge: 'Cupo confirmado', event })}
+    ${buildMasterclassEmailHeader({
+      badge: '¡Gracias por registrarte!',
+      event,
+      bannerHref: event.whatsappCommunityUrl,
+    })}
     <tr>
       <td style="padding:20px 20px 6px;font-family:${MASTERCLASS_EMAIL_FONT};">
         <p style="margin:0 0 10px;font-size:17px;line-height:1.45;color:#0f172a;">Hola <strong>${first}</strong>,</p>
-        <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#334155;"><strong>¡Felicitaciones!</strong> Tu cupo para la masterclass gratuita está confirmado. Aprenderás a crear <strong>sitios web profesionales con Inteligencia Artificial</strong> — sin ser programador.</p>
-        <p style="margin:0;font-size:14px;line-height:1.6;color:#64748b;">Completa estos <strong>2 pasos ahora</strong> (toma menos de 1 minuto) para no perderte nada:</p>
+        <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#334155;">Recibimos tu registro para la masterclass gratuita. Aprenderás a crear <strong>sitios web profesionales con Inteligencia Artificial</strong>, sin necesidad de ser programador.</p>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:#64748b;">Para asegurar tu lugar y recibir todo antes del evento, completa estos <strong>2 pasos ahora</strong> (toma menos de 1 minuto):</p>
       </td>
     </tr>
     <tr><td style="padding:0 20px 20px;font-family:${MASTERCLASS_EMAIL_FONT};">
-      ${buildMasterclassUrgencyTip(days)}
+      ${buildMasterclassThankYouBlock(event)}
       ${buildMasterclassValueProps()}
-      ${buildMasterclassAccessCards(event)}
+      ${buildMasterclassAccessCards(event, 'confirmation')}
       ${buildMasterclassCalendarCta(event)}
       ${buildMasterclassEventDetails(event)}
       ${buildMasterclassEmailFooter('Recibes este mensaje porque te registraste en la masterclass. Es un correo transaccional.')}
@@ -52,13 +54,15 @@ export function buildMasterclassConfirmationContent({ nombre }: MasterclassConfi
     '',
     `Hola ${nombre.trim()},`,
     '',
-    '¡Tu registro fue exitoso! Completa estos 2 pasos:',
+    '¡Gracias por registrarte! Tu cupo está confirmado.',
+    '',
+    `Te esperamos el ${event.dateLabel} a las ${event.timeLabel} (${event.timezoneLabel}).`,
+    '',
+    'Completa estos 2 pasos:',
     '',
     'WhatsApp:', event.whatsappCommunityUrl,
     'Google Meet:', event.googleMeetUrl,
     'Calendar:', event.googleCalendarUrl,
-    '',
-    `${event.dateLabel} · ${event.timeLabel} (${event.timezoneLabel})`,
     '',
     INVOICE_BRANDING.email,
     SITE_URL,

@@ -16,6 +16,11 @@ export const MASTERCLASS_EMAIL_BRANDING = {
   instructorTitle: 'Desarrollador web & especialista en IA',
   instagramHandle: 'nixonlopez.dev',
   instagramUrl: 'https://www.instagram.com/nixonlopez.dev/',
+  icons: {
+    ai: '/images/emails/icon-ai.png',
+    rocket: '/images/emails/icon-rocket.png',
+    globe: '/images/emails/icon-globe.png',
+  },
 } as const
 
 export const MASTERCLASS_EMAIL_FONT =
@@ -23,7 +28,6 @@ export const MASTERCLASS_EMAIL_FONT =
 
 const FONT = MASTERCLASS_EMAIL_FONT
 const ACCENT = INVOICE_BRANDING.accentHex
-const ACCENT_DARK = '#2a4a73'
 
 export function masterclassEmailAssetUrl(path: string): string {
   if (!path) return ''
@@ -34,19 +38,22 @@ export function masterclassEmailAssetUrl(path: string): string {
 type EmailHeaderOptions = {
   badge: string
   event: MasterclassEventConfig
+  /** Enlace del banner; por defecto Google Meet */
+  bannerHref?: string
 }
 
-export function buildMasterclassEmailHeader({ badge, event }: EmailHeaderOptions) {
+export function buildMasterclassEmailHeader({ badge, event, bannerHref }: EmailHeaderOptions) {
   const bannerUrl = escapeHtml(masterclassEmailAssetUrl(MASTERCLASS_EMAIL_BRANDING.bannerPath))
   const instructor = escapeHtml(MASTERCLASS_EMAIL_BRANDING.instructorName)
   const dateLabel = escapeHtml(event.dateLabel)
   const timeLabel = escapeHtml(event.timeLabel)
   const timezoneLabel = escapeHtml(event.timezoneLabel)
   const { bannerWidth, bannerHeight } = MASTERCLASS_EMAIL_BRANDING
+  const href = escapeHtml(bannerHref ?? event.googleMeetUrl)
 
   return `<tr>
       <td style="padding:0;line-height:0;font-size:0;background-color:#f8fafc;">
-        <a href="${escapeHtml(event.googleMeetUrl)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:block;">
+        <a href="${href}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:block;">
           <img
             src="${bannerUrl}"
             alt="${instructor} — Masterclass: sitios web profesionales con IA"
@@ -76,9 +83,13 @@ function ctaButton(href: string, label: string, bgColor: string) {
   </table>`
 }
 
+function valuePropIcon(path: string, alt: string) {
+  const url = escapeHtml(masterclassEmailAssetUrl(path))
+  return `<img src="${url}" alt="${escapeHtml(alt)}" width="40" height="40" style="display:block;margin:0 auto;border:0;outline:none;" />`
+}
+
 export function buildMasterclassValueProps() {
-  const pill = (letter: string, bg: string) =>
-    `<span style="display:inline-block;width:28px;height:28px;line-height:28px;border-radius:50%;background-color:${bg};color:#ffffff;font-size:13px;font-weight:800;text-align:center;">${letter}</span>`
+  const { icons } = MASTERCLASS_EMAIL_BRANDING
 
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
     <tr>
@@ -87,17 +98,17 @@ export function buildMasterclassValueProps() {
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
           <tr>
             <td width="33%" align="center" style="padding:6px 4px;vertical-align:top;">
-              ${pill('IA', ACCENT)}
+              ${valuePropIcon(icons.ai, 'Inteligencia Artificial')}
               <p style="margin:6px 0 0;font-size:12px;font-weight:700;color:#0f172a;">Sin código</p>
               <p style="margin:2px 0 0;font-size:11px;color:#64748b;line-height:1.35;">Crea con IA</p>
             </td>
             <td width="33%" align="center" style="padding:6px 4px;vertical-align:top;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
-              ${pill('R', ACCENT_DARK)}
+              ${valuePropIcon(icons.rocket, 'Rápido')}
               <p style="margin:6px 0 0;font-size:12px;font-weight:700;color:#0f172a;">Rápido</p>
               <p style="margin:2px 0 0;font-size:11px;color:#64748b;line-height:1.35;">Publica en menos tiempo</p>
             </td>
             <td width="33%" align="center" style="padding:6px 4px;vertical-align:top;">
-              ${pill('Pro', ACCENT)}
+              ${valuePropIcon(icons.globe, 'Profesional')}
               <p style="margin:6px 0 0;font-size:12px;font-weight:700;color:#0f172a;">Profesional</p>
               <p style="margin:2px 0 0;font-size:11px;color:#64748b;line-height:1.35;">Listo para tu negocio</p>
             </td>
@@ -108,27 +119,43 @@ export function buildMasterclassValueProps() {
   </table>`
 }
 
-export function buildMasterclassAccessCards(event: MasterclassEventConfig) {
+type AccessCardsVariant = 'confirmation' | 'reminder'
+
+export function buildMasterclassAccessCards(event: MasterclassEventConfig, variant: AccessCardsVariant = 'confirmation') {
   const meetUrl = escapeHtml(event.googleMeetUrl)
   const waUrl = escapeHtml(event.whatsappCommunityUrl)
   const timeLabel = escapeHtml(event.timeLabel)
   const timezoneLabel = escapeHtml(event.timezoneLabel)
+  const dateLabel = escapeHtml(event.dateLabel)
+
+  const waCopy =
+    variant === 'confirmation' ?
+      'Únete ahora para recibir materiales, recordatorios y soporte antes de la sesión.'
+    : '¿Aún no entraste? Aquí está el enlace al grupo — ahí enviamos avisos de último minuto.'
+
+  const meetCopy =
+    variant === 'confirmation' ?
+      `Guarda este enlace para el ${dateLabel} · ${timeLabel} (${timezoneLabel}).`
+    : `Mañana a las ${timeLabel} (${timezoneLabel}). Conéctate 5 minutos antes con este enlace.`
+
+  const waCta = variant === 'confirmation' ? 'Unirme al grupo de WhatsApp' : 'Abrir grupo de WhatsApp'
+  const meetCta = variant === 'confirmation' ? 'Guardar enlace de Google Meet' : 'Entrar a Google Meet mañana'
 
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin:0 0 16px;">
     <tr>
       <td style="padding:16px;background-color:#f0fdf4;border-bottom:1px solid #e2e8f0;font-family:${FONT};">
         <p style="margin:0 0 2px;font-size:10px;font-weight:800;color:#16a34a;text-transform:uppercase;letter-spacing:0.06em;">Paso 1</p>
         <p style="margin:0 0 6px;font-size:16px;font-weight:700;color:#0f172a;">Grupo de WhatsApp</p>
-        <p style="margin:0 0 14px;font-size:13px;line-height:1.5;color:#475569;">Recordatorios, materiales y soporte antes de la clase.</p>
-        ${ctaButton(waUrl, 'Entrar al grupo de WhatsApp', '#25D366')}
+        <p style="margin:0 0 14px;font-size:13px;line-height:1.5;color:#475569;">${waCopy}</p>
+        ${ctaButton(waUrl, waCta, '#25D366')}
       </td>
     </tr>
     <tr>
       <td style="padding:16px;background-color:#ffffff;font-family:${FONT};">
         <p style="margin:0 0 2px;font-size:10px;font-weight:800;color:${ACCENT};text-transform:uppercase;letter-spacing:0.06em;">Paso 2</p>
         <p style="margin:0 0 6px;font-size:16px;font-weight:700;color:#0f172a;">Google Meet en vivo</p>
-        <p style="margin:0 0 14px;font-size:13px;line-height:1.5;color:#475569;">Conéctate 5 min antes · ${timeLabel} (${timezoneLabel})</p>
-        ${ctaButton(meetUrl, 'Entrar a Google Meet', ACCENT)}
+        <p style="margin:0 0 14px;font-size:13px;line-height:1.5;color:#475569;">${meetCopy}</p>
+        ${ctaButton(meetUrl, meetCta, ACCENT)}
         <p style="margin:10px 0 0;font-size:11px;color:#94a3b8;word-break:break-all;">${meetUrl}</p>
       </td>
     </tr>
@@ -158,17 +185,51 @@ export function buildMasterclassEventDetails(event: MasterclassEventConfig) {
   </table>`
 }
 
-export function buildMasterclassUrgencyTip(daysUntil: number | null) {
-  const copy =
-    daysUntil === 1 ?
-      'Mañana es el día. Entra al WhatsApp y guarda el enlace de Meet — tu cupo ya está reservado.'
-    : daysUntil === 0 ?
-      'Hoy es el día. Conéctate 5 minutos antes con el enlace de Meet.'
-    : 'Completa los 2 pasos de abajo para no perderte la sesión gratuita.'
+/** Bloque de agradecimiento — solo correo de confirmación al registrarse */
+export function buildMasterclassThankYouBlock(event: MasterclassEventConfig) {
+  const dateLabel = escapeHtml(event.dateLabel)
+  const timeLabel = escapeHtml(event.timeLabel)
 
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
-    <tr><td style="padding:12px 14px;background-color:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-family:${FONT};">
-      <p style="margin:0;font-size:13px;line-height:1.5;color:#92400e;"><strong>Importante:</strong> ${escapeHtml(copy)}</p>
+    <tr><td style="padding:14px 16px;background-color:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;font-family:${FONT};">
+      <p style="margin:0 0 4px;font-size:10px;font-weight:800;color:#16a34a;text-transform:uppercase;letter-spacing:0.06em;">Registro confirmado</p>
+      <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#0f172a;">¡Gracias por confiar en esta masterclass!</p>
+      <p style="margin:0;font-size:13px;line-height:1.55;color:#166534;">Tu cupo está reservado para el <strong>${dateLabel}</strong> a las <strong>${timeLabel}</strong>. Completa los 2 pasos de abajo para estar listo el día del evento.</p>
+    </td></tr>
+  </table>`
+}
+
+/** Alerta de mañana — solo correo de recordatorio */
+export function buildMasterclassTomorrowAlert(event: MasterclassEventConfig, daysUntil: number | null) {
+  const dateLabel = escapeHtml(event.dateLabel)
+  const timeLabel = escapeHtml(event.timeLabel)
+  const timezoneLabel = escapeHtml(event.timezoneLabel)
+
+  const title =
+    daysUntil === 0 ? '¡Hoy es el día!' : daysUntil === 1 ? '¡Mañana es el día!' : 'Recordatorio de tu masterclass'
+
+  const copy =
+    daysUntil === 0 ?
+      `Tu sesión en vivo es hoy a las ${timeLabel} (${timezoneLabel}). Revisa los enlaces de abajo y conéctate 5 minutos antes.`
+    : daysUntil === 1 ?
+      `Mañana ${dateLabel} a las ${timeLabel} (${timezoneLabel}) nos vemos en vivo. Guarda los enlaces y entra al WhatsApp si aún no lo hiciste.`
+    : `Te esperamos el ${dateLabel} a las ${timeLabel}. Aquí tienes tus enlaces de acceso por si los necesitas.`
+
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
+    <tr><td style="padding:14px 16px;background-color:#fff7ed;border:1px solid #fed7aa;border-radius:10px;font-family:${FONT};">
+      <p style="margin:0 0 4px;font-size:10px;font-weight:800;color:#ea580c;text-transform:uppercase;letter-spacing:0.06em;">${title}</p>
+      <p style="margin:0;font-size:13px;line-height:1.55;color:#9a3412;">${copy}</p>
+    </td></tr>
+  </table>`
+}
+
+export function buildMasterclassReminderChecklist() {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
+    <tr><td style="padding:12px 14px;background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-family:${FONT};">
+      <p style="margin:0 0 8px;font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;">Checklist rápido</p>
+      <p style="margin:0 0 4px;font-size:13px;line-height:1.5;color:#334155;">☑ Entra al grupo de WhatsApp</p>
+      <p style="margin:0 0 4px;font-size:13px;line-height:1.5;color:#334155;">☑ Guarda el enlace de Google Meet</p>
+      <p style="margin:0;font-size:13px;line-height:1.5;color:#334155;">☑ Agrega el evento a tu calendario</p>
     </td></tr>
   </table>`
 }

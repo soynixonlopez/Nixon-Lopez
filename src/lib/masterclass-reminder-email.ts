@@ -7,8 +7,8 @@ import {
   buildMasterclassEmailHeader,
   buildMasterclassEmailShell,
   buildMasterclassEventDetails,
-  buildMasterclassUrgencyTip,
-  buildMasterclassValueProps,
+  buildMasterclassReminderChecklist,
+  buildMasterclassTomorrowAlert,
   daysUntilMasterclassEvent,
   MASTERCLASS_EMAIL_FONT,
 } from '@/lib/masterclass-email-branding'
@@ -36,12 +36,12 @@ function urgencyLead(event: MasterclassEventConfig): string {
   const timeLabel = escapeHtml(event.timeLabel)
 
   if (days === 0) {
-    return `Hoy es el día. Tu masterclass de <strong>sitios web con IA</strong> es ${dateLabel} a las ${timeLabel}.`
+    return `Hoy nos vemos en vivo. Tu masterclass de <strong>sitios web con IA</strong> es ${dateLabel} a las ${timeLabel}.`
   }
   if (days === 1) {
-    return `Mañana es el gran día. Tu cupo ya está reservado para la masterclass del <strong>${dateLabel}</strong> a las ${timeLabel}.`
+    return `Te escribo para recordarte que <strong>mañana</strong> es la masterclass del ${dateLabel} a las ${timeLabel}.`
   }
-  return `Te esperamos el <strong>${dateLabel}</strong> a las ${timeLabel}. Tu cupo sigue activo — no pierdas esta sesión gratuita.`
+  return `Recordatorio: tu masterclass es el <strong>${dateLabel}</strong> a las ${timeLabel}. Aquí tienes tus enlaces por si los necesitas.`
 }
 
 export function buildMasterclassReminderContent({
@@ -53,16 +53,22 @@ export function buildMasterclassReminderContent({
   const days = daysUntilMasterclassEvent(event.startDateIso)
   const badge = urgencyBadge(event)
 
-  const preheader = `Mañana: masterclass gratuita ${event.dateLabel} — enlaces de Google Meet y WhatsApp dentro.`
+  const preheader =
+    days === 1 ?
+      `Mañana ${event.dateLabel} — masterclass en vivo. Enlaces de WhatsApp y Google Meet aquí.`
+    : days === 0 ?
+      `Hoy ${event.dateLabel} — tu masterclass empieza pronto. Enlaces de acceso dentro.`
+    : `Recordatorio: ${event.dateLabel} — enlaces de Google Meet y WhatsApp.`
+
   const subject =
     days === 1 ?
-      `⏰ Mañana ${event.dateLabel}: masterclass de IA — tus enlaces aquí`
+      `⏰ Mañana ${event.dateLabel}: tu masterclass de IA — enlaces aquí`
     : days === 0 ?
       `🔴 Hoy: tu masterclass empieza pronto — Meet + WhatsApp`
     : `⏰ Recordatorio — ${event.shortName} (${event.dateLabel})`
 
   const inner = `
-    ${buildMasterclassEmailHeader({ badge, event })}
+    ${buildMasterclassEmailHeader({ badge, event, bannerHref: event.googleMeetUrl })}
     <tr>
       <td style="padding:20px 20px 6px;font-family:${MASTERCLASS_EMAIL_FONT};">
         <p style="margin:0 0 10px;font-size:17px;line-height:1.45;color:#0f172a;">Hola <strong>${first}</strong>,</p>
@@ -72,9 +78,9 @@ export function buildMasterclassReminderContent({
     </tr>
     <tr><td style="padding:0 20px 20px;font-family:${MASTERCLASS_EMAIL_FONT};">
       ${buildMasterclassCustomMessageBlock(customMessage ?? '')}
-      ${buildMasterclassUrgencyTip(days)}
-      ${buildMasterclassValueProps()}
-      ${buildMasterclassAccessCards(event)}
+      ${buildMasterclassTomorrowAlert(event, days)}
+      ${buildMasterclassReminderChecklist()}
+      ${buildMasterclassAccessCards(event, 'reminder')}
       ${buildMasterclassCalendarCta(event)}
       ${buildMasterclassEventDetails(event)}
       ${buildMasterclassEmailFooter('Recibes este recordatorio porque te registraste en la masterclass.')}
@@ -89,6 +95,8 @@ export function buildMasterclassReminderContent({
     '',
     days === 1 ?
       `MAÑANA — ${event.dateLabel} a las ${event.timeLabel} (${event.timezoneLabel}).`
+    : days === 0 ?
+      `HOY — ${event.dateLabel} a las ${event.timeLabel} (${event.timezoneLabel}).`
     : `${event.dateLabel} a las ${event.timeLabel} (${event.timezoneLabel}).`,
     '',
     customMessage?.trim() ?? '',
