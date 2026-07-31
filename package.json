@@ -13,6 +13,7 @@
     "generate-logos": "node scripts/generate-logos.mjs",
     "optimize-hero-profile": "node scripts/optimize-hero-profile.mjs",
     "optimize-masterclass-images": "node scripts/optimize-masterclass-images.mjs",
+    "optimize-email-banner": "node scripts/optimize-email-banner.mjs",
     "optimize-home-images": "node scripts/optimize-home-images.mjs",
     "lighthouse:mobile-batch": "node scripts/lighthouse-mobile-batch.mjs"
   },

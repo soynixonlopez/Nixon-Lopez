@@ -10,6 +10,7 @@ import {
   buildMasterclassUrgencyTip,
   buildMasterclassValueProps,
   daysUntilMasterclassEvent,
+  MASTERCLASS_EMAIL_FONT,
 } from '@/lib/masterclass-email-branding'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
 import { SITE_URL } from '@/lib/site-config'
@@ -63,13 +64,13 @@ export function buildMasterclassReminderContent({
   const inner = `
     ${buildMasterclassEmailHeader({ badge, event })}
     <tr>
-      <td style="padding:24px 24px 8px;font-family:system-ui,-apple-system,sans-serif;">
-        <p style="margin:0 0 12px;font-size:17px;line-height:1.5;color:#0f172a;">Hola <strong>${first}</strong>,</p>
+      <td style="padding:20px 20px 6px;font-family:${MASTERCLASS_EMAIL_FONT};">
+        <p style="margin:0 0 10px;font-size:17px;line-height:1.45;color:#0f172a;">Hola <strong>${first}</strong>,</p>
         <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#334155;">${urgencyLead(event)}</p>
         <p style="margin:0;font-size:14px;line-height:1.6;color:#64748b;">Si se te olvidaron los enlaces o no entraste al grupo, aquí está todo lo que necesitas para conectarte sin estrés:</p>
       </td>
     </tr>
-    <tr><td style="padding:0 24px 24px;font-family:system-ui,-apple-system,sans-serif;">
+    <tr><td style="padding:0 20px 20px;font-family:${MASTERCLASS_EMAIL_FONT};">
       ${buildMasterclassCustomMessageBlock(customMessage ?? '')}
       ${buildMasterclassUrgencyTip(days)}
       ${buildMasterclassValueProps()}

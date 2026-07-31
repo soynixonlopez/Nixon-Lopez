@@ -3,19 +3,27 @@ import type { MasterclassEventConfig } from '@/lib/masterclass'
 import { SITE_URL } from '@/lib/site-config'
 import { escapeHtml } from '@/lib/utils'
 
-/** Imágenes y marca para correos de masterclass — edita aquí. */
+/**
+ * Personaliza banner y marca de correos masterclass.
+ * Usa JPEG optimizado (pnpm run optimize-email-banner) — ~24 KB vs ~1.8 MB del PNG.
+ */
 export const MASTERCLASS_EMAIL_BRANDING = {
-  bannerPath: '/images/emails/email_banner.png',
+  /** JPEG 600px generado desde email_banner.png */
+  bannerPath: '/images/emails/email_banner.jpg',
+  bannerWidth: 600,
+  bannerHeight: 200,
   instructorName: 'Nixon López',
   instructorTitle: 'Desarrollador web & especialista en IA',
   instagramHandle: 'nixonlopez.dev',
   instagramUrl: 'https://www.instagram.com/nixonlopez.dev/',
 } as const
 
-const FONT =
+export const MASTERCLASS_EMAIL_FONT =
   "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif"
+
+const FONT = MASTERCLASS_EMAIL_FONT
 const ACCENT = INVOICE_BRANDING.accentHex
-const PURPLE = '#8B5CF6'
+const ACCENT_DARK = '#2a4a73'
 
 export function masterclassEmailAssetUrl(path: string): string {
   if (!path) return ''
@@ -28,52 +36,70 @@ type EmailHeaderOptions = {
   event: MasterclassEventConfig
 }
 
-/** Banner profesional + franja de urgencia con fecha/hora. */
 export function buildMasterclassEmailHeader({ badge, event }: EmailHeaderOptions) {
   const bannerUrl = escapeHtml(masterclassEmailAssetUrl(MASTERCLASS_EMAIL_BRANDING.bannerPath))
   const instructor = escapeHtml(MASTERCLASS_EMAIL_BRANDING.instructorName)
   const dateLabel = escapeHtml(event.dateLabel)
   const timeLabel = escapeHtml(event.timeLabel)
   const timezoneLabel = escapeHtml(event.timezoneLabel)
+  const { bannerWidth, bannerHeight } = MASTERCLASS_EMAIL_BRANDING
 
   return `<tr>
-      <td style="padding:0;line-height:0;font-size:0;">
-        <a href="${escapeHtml(event.googleMeetUrl)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
-          <img src="${bannerUrl}" alt="${instructor} — Masterclass: sitios web profesionales con IA" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;" />
+      <td style="padding:0;line-height:0;font-size:0;background-color:#f8fafc;">
+        <a href="${escapeHtml(event.googleMeetUrl)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:block;">
+          <img
+            src="${bannerUrl}"
+            alt="${instructor} — Masterclass: sitios web profesionales con IA"
+            width="${bannerWidth}"
+            height="${bannerHeight}"
+            style="display:block;width:100%;max-width:${bannerWidth}px;height:auto;border:0;outline:none;-ms-interpolation-mode:bicubic;"
+          />
         </a>
       </td>
     </tr>
     <tr>
-      <td style="padding:14px 20px;background:linear-gradient(90deg, ${ACCENT} 0%, #0f172a 60%, ${PURPLE} 100%);font-family:${FONT};text-align:center;">
-        <span style="display:inline-block;padding:5px 14px;border-radius:999px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.22);font-size:11px;font-weight:800;color:#ffffff;letter-spacing:0.08em;text-transform:uppercase;">${escapeHtml(badge)}</span>
-        <p style="margin:10px 0 0;font-size:15px;font-weight:700;color:#ffffff;line-height:1.4;">${dateLabel} · ${timeLabel}</p>
-        <p style="margin:4px 0 0;font-size:12px;color:rgba(255,255,255,0.78);">${timezoneLabel} · Google Meet · Cupos limitados</p>
+      <td style="padding:12px 16px;background-color:${ACCENT};font-family:${FONT};text-align:center;">
+        <span style="display:inline-block;padding:4px 12px;border-radius:999px;background-color:#ffffff;color:${ACCENT};font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">${escapeHtml(badge)}</span>
+        <p style="margin:8px 0 0;font-size:15px;font-weight:700;color:#ffffff;line-height:1.35;">${dateLabel} · ${timeLabel}</p>
+        <p style="margin:2px 0 0;font-size:11px;color:#cbd5e1;">${timezoneLabel} · Google Meet · Cupos limitados</p>
       </td>
     </tr>`
 }
 
-/** Tres pilares de valor (remarketing). */
-export function buildMasterclassValueProps() {
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
+function ctaButton(href: string, label: string, bgColor: string) {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
     <tr>
-      <td style="padding:16px 18px;background:linear-gradient(135deg,#f8fafc 0%,#eff6ff 100%);border:1px solid #e2e8f0;border-radius:12px;font-family:${FONT};">
-        <p style="margin:0 0 12px;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;">En la sesión en vivo aprenderás</p>
+      <td align="center" style="border-radius:8px;background-color:${bgColor};">
+        <a href="${href}" target="_blank" rel="noopener noreferrer" style="display:block;padding:14px 20px;font-family:${FONT};font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;text-align:center;">${label}</a>
+      </td>
+    </tr>
+  </table>`
+}
+
+export function buildMasterclassValueProps() {
+  const pill = (letter: string, bg: string) =>
+    `<span style="display:inline-block;width:28px;height:28px;line-height:28px;border-radius:50%;background-color:${bg};color:#ffffff;font-size:13px;font-weight:800;text-align:center;">${letter}</span>`
+
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
+    <tr>
+      <td style="padding:14px 16px;background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-family:${FONT};">
+        <p style="margin:0 0 10px;font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;">En la sesión en vivo</p>
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
           <tr>
-            <td width="33%" style="padding:8px 6px;text-align:center;vertical-align:top;">
-              <p style="margin:0 0 4px;font-size:22px;line-height:1;">💻</p>
-              <p style="margin:0;font-size:12px;font-weight:700;color:#0f172a;">Sin código</p>
-              <p style="margin:4px 0 0;font-size:11px;color:#64748b;line-height:1.4;">Crea con IA, sin ser programador</p>
+            <td width="33%" align="center" style="padding:6px 4px;vertical-align:top;">
+              ${pill('IA', ACCENT)}
+              <p style="margin:6px 0 0;font-size:12px;font-weight:700;color:#0f172a;">Sin código</p>
+              <p style="margin:2px 0 0;font-size:11px;color:#64748b;line-height:1.35;">Crea con IA</p>
             </td>
-            <td width="33%" style="padding:8px 6px;text-align:center;vertical-align:top;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
-              <p style="margin:0 0 4px;font-size:22px;line-height:1;">🚀</p>
-              <p style="margin:0;font-size:12px;font-weight:700;color:#0f172a;">Rápido</p>
-              <p style="margin:4px 0 0;font-size:11px;color:#64748b;line-height:1.4;">Sitios modernos en menos tiempo</p>
+            <td width="33%" align="center" style="padding:6px 4px;vertical-align:top;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+              ${pill('R', ACCENT_DARK)}
+              <p style="margin:6px 0 0;font-size:12px;font-weight:700;color:#0f172a;">Rápido</p>
+              <p style="margin:2px 0 0;font-size:11px;color:#64748b;line-height:1.35;">Publica en menos tiempo</p>
             </td>
-            <td width="33%" style="padding:8px 6px;text-align:center;vertical-align:top;">
-              <p style="margin:0 0 4px;font-size:22px;line-height:1;">🌐</p>
-              <p style="margin:0;font-size:12px;font-weight:700;color:#0f172a;">Profesional</p>
-              <p style="margin:4px 0 0;font-size:11px;color:#64748b;line-height:1.4;">Resultados listos para tu negocio</p>
+            <td width="33%" align="center" style="padding:6px 4px;vertical-align:top;">
+              ${pill('Pro', ACCENT)}
+              <p style="margin:6px 0 0;font-size:12px;font-weight:700;color:#0f172a;">Profesional</p>
+              <p style="margin:2px 0 0;font-size:11px;color:#64748b;line-height:1.35;">Listo para tu negocio</p>
             </td>
           </tr>
         </table>
@@ -82,41 +108,28 @@ export function buildMasterclassValueProps() {
   </table>`
 }
 
-function ctaButton(href: string, label: string, bg: string) {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
-    <tr>
-      <td style="border-radius:10px;background:${bg};box-shadow:0 4px 14px rgba(15,23,42,0.15);">
-        <a href="${href}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:14px 28px;font-family:${FONT};font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.02em;">${label}</a>
-      </td>
-    </tr>
-  </table>`
-}
-
-/** Tarjetas de acceso WhatsApp + Meet (conversión). */
 export function buildMasterclassAccessCards(event: MasterclassEventConfig) {
   const meetUrl = escapeHtml(event.googleMeetUrl)
   const waUrl = escapeHtml(event.whatsappCommunityUrl)
-  const waName = escapeHtml(event.whatsappCommunityName)
   const timeLabel = escapeHtml(event.timeLabel)
   const timezoneLabel = escapeHtml(event.timezoneLabel)
 
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;margin:0 0 20px;">
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin:0 0 16px;">
     <tr>
-      <td style="padding:18px 20px;background:#f0fdf4;border-bottom:1px solid #e2e8f0;font-family:${FONT};">
-        <p style="margin:0 0 4px;font-size:10px;font-weight:800;color:#16a34a;text-transform:uppercase;letter-spacing:0.08em;">Paso 1 · No lo dejes pasar</p>
-        <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#0f172a;">Únete al grupo de WhatsApp</p>
-        <p style="margin:0 0 16px;font-size:13px;line-height:1.55;color:#475569;">Recordatorios de último minuto, materiales exclusivos y soporte antes de la clase. <strong>Si no entraste, hazlo ahora.</strong></p>
-        ${ctaButton(waUrl, 'Entrar al grupo de WhatsApp →', '#25D366')}
-        <p style="margin:12px 0 0;font-size:11px;color:#94a3b8;">${waName}</p>
+      <td style="padding:16px;background-color:#f0fdf4;border-bottom:1px solid #e2e8f0;font-family:${FONT};">
+        <p style="margin:0 0 2px;font-size:10px;font-weight:800;color:#16a34a;text-transform:uppercase;letter-spacing:0.06em;">Paso 1</p>
+        <p style="margin:0 0 6px;font-size:16px;font-weight:700;color:#0f172a;">Grupo de WhatsApp</p>
+        <p style="margin:0 0 14px;font-size:13px;line-height:1.5;color:#475569;">Recordatorios, materiales y soporte antes de la clase.</p>
+        ${ctaButton(waUrl, 'Entrar al grupo de WhatsApp', '#25D366')}
       </td>
     </tr>
     <tr>
-      <td style="padding:18px 20px;background:#ffffff;font-family:${FONT};">
-        <p style="margin:0 0 4px;font-size:10px;font-weight:800;color:${ACCENT};text-transform:uppercase;letter-spacing:0.08em;">Paso 2 · Guarda este enlace</p>
-        <p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#0f172a;">Acceso a Google Meet</p>
-        <p style="margin:0 0 16px;font-size:13px;line-height:1.55;color:#475569;">Conéctate <strong>5 minutos antes</strong> de las ${timeLabel} (${timezoneLabel}). Prueba cámara y audio con anticipación.</p>
-        ${ctaButton(meetUrl, 'Entrar a Google Meet →', `linear-gradient(135deg, ${ACCENT} 0%, #2a4a73 100%)`)}
-        <p style="margin:12px 0 0;font-size:11px;color:#94a3b8;word-break:break-all;">${meetUrl}</p>
+      <td style="padding:16px;background-color:#ffffff;font-family:${FONT};">
+        <p style="margin:0 0 2px;font-size:10px;font-weight:800;color:${ACCENT};text-transform:uppercase;letter-spacing:0.06em;">Paso 2</p>
+        <p style="margin:0 0 6px;font-size:16px;font-weight:700;color:#0f172a;">Google Meet en vivo</p>
+        <p style="margin:0 0 14px;font-size:13px;line-height:1.5;color:#475569;">Conéctate 5 min antes · ${timeLabel} (${timezoneLabel})</p>
+        ${ctaButton(meetUrl, 'Entrar a Google Meet', ACCENT)}
+        <p style="margin:10px 0 0;font-size:11px;color:#94a3b8;word-break:break-all;">${meetUrl}</p>
       </td>
     </tr>
   </table>`
@@ -124,52 +137,48 @@ export function buildMasterclassAccessCards(event: MasterclassEventConfig) {
 
 export function buildMasterclassCalendarCta(event: MasterclassEventConfig) {
   const calendarUrl = escapeHtml(event.googleCalendarUrl)
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
     <tr><td align="center" style="font-family:${FONT};">
-      <a href="${calendarUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 22px;border-radius:10px;border:2px solid #e2e8f0;background:#ffffff;font-size:13px;font-weight:600;color:#334155;text-decoration:none;">Agregar a Google Calendar</a>
+      <a href="${calendarUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:11px 18px;border-radius:8px;border:1px solid #e2e8f0;background-color:#ffffff;font-size:13px;font-weight:600;color:#334155;text-decoration:none;">Agregar a Google Calendar</a>
     </td></tr>
   </table>`
 }
 
 export function buildMasterclassEventDetails(event: MasterclassEventConfig) {
-  const eventName = escapeHtml(event.shortName)
-  const dateLabel = escapeHtml(event.dateLabel)
-  const timeLabel = escapeHtml(event.timeLabel)
-  const timezoneLabel = escapeHtml(event.timezoneLabel)
-  const modality = escapeHtml(event.modality)
-  const cost = escapeHtml(event.cost)
+  const row = (label: string, value: string, bold = false) =>
+    `<tr><td style="padding:8px 12px;border-top:1px solid #e2e8f0;font-size:13px;color:#0f172a;">${label}</td><td style="padding:8px 12px;border-top:1px solid #e2e8f0;font-size:13px;color:#334155;text-align:right;${bold ? 'font-weight:700;' : ''}">${value}</td></tr>`
 
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin:0 0 20px;font-family:${FONT};">
-    <tr><td colspan="2" style="padding:10px 14px;background:#f8fafc;font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;">Detalles del evento</td></tr>
-    <tr><td style="padding:10px 14px;border-top:1px solid #e2e8f0;font-size:13px;color:#0f172a;">Evento</td><td style="padding:10px 14px;border-top:1px solid #e2e8f0;font-size:13px;color:#334155;text-align:right;">${eventName}</td></tr>
-    <tr><td style="padding:10px 14px;border-top:1px solid #e2e8f0;font-size:13px;color:#0f172a;">Fecha</td><td style="padding:10px 14px;border-top:1px solid #e2e8f0;font-size:13px;color:#334155;text-align:right;font-weight:700;">${dateLabel}</td></tr>
-    <tr><td style="padding:10px 14px;border-top:1px solid #e2e8f0;font-size:13px;color:#0f172a;">Horario</td><td style="padding:10px 14px;border-top:1px solid #e2e8f0;font-size:13px;color:#334155;text-align:right;">${timeLabel}</td></tr>
-    <tr><td style="padding:10px 14px;border-top:1px solid #e2e8f0;font-size:13px;color:#0f172a;">Zona horaria</td><td style="padding:10px 14px;border-top:1px solid #e2e8f0;font-size:13px;color:#334155;text-align:right;">${timezoneLabel}</td></tr>
-    <tr><td style="padding:10px 14px;border-top:1px solid #e2e8f0;font-size:13px;color:#0f172a;">Acceso</td><td style="padding:10px 14px;border-top:1px solid #e2e8f0;font-size:13px;color:#334155;text-align:right;">${modality} · ${cost}</td></tr>
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;margin:0 0 16px;font-family:${FONT};">
+    <tr><td colspan="2" style="padding:8px 12px;background-color:#f8fafc;font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Detalles</td></tr>
+    ${row('Evento', escapeHtml(event.shortName))}
+    ${row('Fecha', escapeHtml(event.dateLabel), true)}
+    ${row('Horario', escapeHtml(event.timeLabel))}
+    ${row('Zona', escapeHtml(event.timezoneLabel))}
+    ${row('Acceso', `${escapeHtml(event.modality)} · ${escapeHtml(event.cost)}`)}
   </table>`
 }
 
 export function buildMasterclassUrgencyTip(daysUntil: number | null) {
   const copy =
     daysUntil === 1 ?
-      'Mañana es el día. Agrega el evento a tu calendario, entra al WhatsApp y guarda el enlace de Meet — tu cupo ya está reservado.'
+      'Mañana es el día. Entra al WhatsApp y guarda el enlace de Meet — tu cupo ya está reservado.'
     : daysUntil === 0 ?
-      'Hoy es el día. Conéctate 5 minutos antes y revisa que tengas el enlace de Meet a mano.'
-    : 'No dejes pasar esta sesión gratuita. Completa los 2 pasos de abajo para no perderte nada.'
+      'Hoy es el día. Conéctate 5 minutos antes con el enlace de Meet.'
+    : 'Completa los 2 pasos de abajo para no perderte la sesión gratuita.'
 
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
-    <tr><td style="padding:14px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;font-family:${FONT};">
-      <p style="margin:0;font-size:14px;line-height:1.55;color:#92400e;"><strong>Importante:</strong> ${escapeHtml(copy)}</p>
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
+    <tr><td style="padding:12px 14px;background-color:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-family:${FONT};">
+      <p style="margin:0;font-size:13px;line-height:1.5;color:#92400e;"><strong>Importante:</strong> ${escapeHtml(copy)}</p>
     </td></tr>
   </table>`
 }
 
 export function buildMasterclassCustomMessageBlock(message: string) {
   if (!message.trim()) return ''
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
-    <tr><td style="padding:14px 16px;background:#eff6ff;border-left:4px solid ${ACCENT};border-radius:0 10px 10px 0;font-family:${FONT};">
-      <p style="margin:0 0 4px;font-size:10px;font-weight:800;color:${ACCENT};text-transform:uppercase;letter-spacing:0.06em;">Mensaje de Nixon</p>
-      <p style="margin:0;font-size:14px;line-height:1.55;color:#1e3a5f;white-space:pre-wrap;">${escapeHtml(message.trim())}</p>
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px;">
+    <tr><td style="padding:12px 14px;background-color:#eff6ff;border-left:3px solid ${ACCENT};font-family:${FONT};">
+      <p style="margin:0 0 2px;font-size:10px;font-weight:800;color:${ACCENT};text-transform:uppercase;">Mensaje de Nixon</p>
+      <p style="margin:0;font-size:14px;line-height:1.5;color:#1e3a5f;white-space:pre-wrap;">${escapeHtml(message.trim())}</p>
     </td></tr>
   </table>`
 }
@@ -183,33 +192,37 @@ export function buildMasterclassEmailFooter(reason: string) {
   const igUrl = escapeHtml(MASTERCLASS_EMAIL_BRANDING.instagramUrl)
   const instructor = escapeHtml(MASTERCLASS_EMAIL_BRANDING.instructorName)
 
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e2e8f0;margin-top:8px;">
-    <tr><td style="padding:20px 0 0;font-family:${FONT};">
-      <p style="margin:0 0 12px;font-size:14px;line-height:1.55;color:#334155;">¿Algún enlace no funciona? <strong>Responde a este correo</strong> y te ayudo personalmente.</p>
-      <p style="margin:0 0 8px;font-size:12px;color:#94a3b8;">${escapeHtml(reason)}</p>
-      <p style="margin:0 0 8px;font-size:12px;color:#94a3b8;">
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e2e8f0;">
+    <tr><td style="padding:16px 0 0;font-family:${FONT};">
+      <p style="margin:0 0 10px;font-size:13px;line-height:1.5;color:#475569;">¿Problemas con un enlace? <strong>Responde a este correo.</strong></p>
+      <p style="margin:0 0 6px;font-size:11px;color:#94a3b8;">${escapeHtml(reason)}</p>
+      <p style="margin:0;font-size:11px;color:#94a3b8;">
         <a href="${igUrl}" style="color:${ACCENT};font-weight:600;text-decoration:none;">@${ig}</a>
-        · <a href="${privacyUrl}" style="color:#64748b;">Privacidad</a>
-        · <a href="${site}" style="color:#64748b;">${site}</a>
+        · <a href="${privacyUrl}" style="color:#64748b;text-decoration:none;">Privacidad</a>
+        · <a href="${site}" style="color:#64748b;text-decoration:none;">${site}</a>
       </p>
-      <p style="margin:0;font-size:11px;color:#cbd5e1;">— ${instructor} · ${brand} · ${email}</p>
+      <p style="margin:10px 0 0;font-size:10px;color:#cbd5e1;">${instructor} · ${brand} · ${email}</p>
     </td></tr>
   </table>`
 }
 
 export function buildMasterclassEmailShell(innerRows: string, preheader: string, title: string) {
   return `<!DOCTYPE html>
-<html lang="es">
+<html lang="es" xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta name="format-detection" content="telephone=no,date=no,address=no,email=no,url=no" />
   <title>${escapeHtml(title)}</title>
+  <!--[if mso]><style>table{border-collapse:collapse;}td{font-family:Arial,sans-serif;}</style><![endif]-->
 </head>
-<body style="margin:0;padding:0;background-color:#eef2f7;-webkit-text-size-adjust:100%;">
-  <div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:transparent;">${escapeHtml(preheader)}</div>
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#eef2f7;padding:20px 10px;">
-    <tr><td align="center">
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 12px 40px rgba(15,23,42,0.12);">
+<body style="margin:0;padding:0;width:100%;background-color:#eef2f7;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${escapeHtml(preheader)}&#847;&zwnj;&nbsp;</div>
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#eef2f7;">
+    <tr><td align="center" style="padding:16px 8px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width:100%;max-width:600px;background-color:#ffffff;border-radius:12px;overflow:hidden;">
         ${innerRows}
       </table>
     </td></tr>
