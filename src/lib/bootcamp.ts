@@ -173,6 +173,10 @@ export const BOOTCAMP_SUPPORT = {
   email: 'info@nixonlopez.com',
   whatsappMessage:
     'Hola Nixon, quiero inscribirme al Bootcamp. Necesito pagar por Yappy o transferencia bancaria. ¿Me indicas los pasos?',
+  whatsappYappyMessage:
+    'Hola Nixon, quiero inscribirme al Bootcamp y pagar por Yappy. ¿Me confirmas el monto y los pasos para enviarte el comprobante?',
+  whatsappTransferMessage:
+    'Hola Nixon, quiero inscribirme al Bootcamp y pagar por transferencia bancaria. ¿Me confirmas el monto y los datos para enviarte el comprobante?',
 } as const
 
 export const BOOTCAMP_PAYMENT = {

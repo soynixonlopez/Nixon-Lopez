@@ -84,6 +84,8 @@ function BootcampCourseJsonLd() {
 export default function BootcampLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
+      <link rel="dns-prefetch" href="https://pay.hotmart.com" />
+      <link rel="preconnect" href="https://pay.hotmart.com" crossOrigin="anonymous" />
       <BootcampCourseJsonLd />
       <div className="min-h-screen scroll-pt-[4.5rem] bg-[#030712] text-white antialiased sm:scroll-pt-[4.75rem]">
         {children}
