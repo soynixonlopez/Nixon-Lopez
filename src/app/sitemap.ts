@@ -23,6 +23,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.95,
     },
     {
+      url: `${base}/bootcamp`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.98,
+    },
+    {
       url: `${base}/cotizacion`,
       lastModified: new Date(),
       changeFrequency: 'monthly',

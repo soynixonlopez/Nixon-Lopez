@@ -309,3 +309,52 @@ html {
     transform: none;
   }
 }
+
+/* Bootcamp — animaciones CSS (hero SSR, sin JS en critical path) */
+@keyframes bc-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bc-float-badge {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.bc-fade-up {
+  animation: bc-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.bc-delay-1 { animation-delay: 0.06s; }
+.bc-delay-2 { animation-delay: 0.12s; }
+.bc-delay-3 { animation-delay: 0.18s; }
+.bc-delay-4 { animation-delay: 0.24s; }
+.bc-delay-5 { animation-delay: 0.3s; }
+.bc-delay-6 { animation-delay: 0.36s; }
+.bc-delay-7 { animation-delay: 0.42s; }
+.bc-delay-8 { animation-delay: 0.48s; }
+.bc-delay-9 { animation-delay: 0.54s; }
+
+.bc-float-badge {
+  animation: bc-float-badge 4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bc-fade-up,
+  .bc-float-badge {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
