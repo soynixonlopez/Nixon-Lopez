@@ -7,8 +7,11 @@ import { Inter } from 'next/font/google'
 
 const inter = Inter({
   subsets: ['latin'],
+  weight: ['400', '600', '700'],
   display: 'swap',
   variable: '--font-inter',
+  preload: true,
+  adjustFontFallback: true,
 })
 
 export const viewport: Viewport = {
@@ -54,10 +57,11 @@ export const metadata: Metadata = {
   category: 'technology',
   icons: {
     icon: [
-      { url: '/images/faviconweb.png', type: 'image/png' },
+      { url: '/images/faviconweb-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/images/favicon-apple.png', sizes: '180x180', type: 'image/png' },
     ],
-    apple: [{ url: '/images/faviconweb.png', type: 'image/png' }],
-    shortcut: '/images/faviconweb.png',
+    apple: [{ url: '/images/favicon-apple.png', sizes: '180x180', type: 'image/png' }],
+    shortcut: '/images/faviconweb-32.png',
   },
   openGraph: {
     title: defaultTitle,
@@ -113,7 +117,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" suppressHydrationWarning data-scroll-behavior="smooth" className={inter.variable}>
-      <body className="font-sans antialiased">
+      <body className={`${inter.className} font-sans antialiased`}>
         <SiteJsonLd />
         <MetaPixel />
 

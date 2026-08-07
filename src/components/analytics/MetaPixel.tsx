@@ -1,21 +1,54 @@
 'use client'
 
 import Script from 'next/script'
+import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 
 /**
  * Meta (Facebook) Pixel — solo rutas públicas (no /admin).
- * ID: `NEXT_PUBLIC_META_PIXEL_ID` en `.env.local`.
+ * Carga diferida (idle / interacción) para no competir con LCP/TBT.
  */
 export function MetaPixel() {
   const pathname = usePathname()
+  const [ready, setReady] = useState(false)
   const pixelId =
     process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim() || '3255546571298614'
 
-  if (pathname?.startsWith('/admin')) return null
+  useEffect(() => {
+    if (pathname?.startsWith('/admin')) return
 
-  // Masterclass: pixel diferido vía lazyOnload (no bloquea LCP)
-  const isMasterclass = pathname === '/masterclass'
+    let done = false
+    let idleId: number | undefined
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+
+    const enable = () => {
+      if (done) return
+      done = true
+      setReady(true)
+      cleanup()
+    }
+
+    const cleanup = () => {
+      events.forEach((event) => window.removeEventListener(event, enable))
+      if (idleId != null && 'cancelIdleCallback' in window) {
+        window.cancelIdleCallback(idleId)
+      }
+      if (timeoutId != null) clearTimeout(timeoutId)
+    }
+
+    const events: Array<keyof WindowEventMap> = ['scroll', 'pointerdown', 'keydown', 'touchstart']
+    events.forEach((event) => window.addEventListener(event, enable, { once: true, passive: true }))
+
+    if (typeof window.requestIdleCallback === 'function') {
+      idleId = window.requestIdleCallback(enable, { timeout: 4500 })
+    } else {
+      timeoutId = setTimeout(enable, 3500)
+    }
+
+    return cleanup
+  }, [pathname])
+
+  if (pathname?.startsWith('/admin') || !ready) return null
 
   const idJson = JSON.stringify(pixelId)
 
@@ -23,7 +56,7 @@ export function MetaPixel() {
     <>
       <Script
         id="meta-pixel"
-        strategy={isMasterclass ? 'lazyOnload' : 'afterInteractive'}
+        strategy="lazyOnload"
         dangerouslySetInnerHTML={{
           __html: `
 !function(f,b,e,v,n,t,s)

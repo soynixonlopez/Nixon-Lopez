@@ -5,6 +5,8 @@ import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
 import { ArrowRight, Check, Clock, MessageCircle, Rocket, Search, Shield } from 'lucide-react'
 import TechLogo from '@/components/TechLogo'
+import { SectionLabel } from '@/components/marketing/SectionLabel'
+import { BRAND_ICON_TONES, type BrandIconTone } from '@/lib/brand-icons'
 import { buildWhatsAppUrl, HOME_PROBLEMS, WHATSAPP_MESSAGES, quoteUrl } from '@/lib/marketing'
 
 const PROBLEM_ICONS = {
@@ -12,6 +14,8 @@ const PROBLEM_ICONS = {
   message: MessageCircle,
   clock: Clock,
 } as const
+
+const PROBLEM_TONES: BrandIconTone[] = ['blue', 'purple', 'green']
 
 export function ProblemSection() {
   const ref = useRef(null)
@@ -43,12 +47,10 @@ export function ProblemSection() {
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-3xl text-center mb-10 sm:mb-14"
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand mb-3">
-            ¿Te suena familiar?
-          </p>
+          <SectionLabel>¿Te suena familiar?</SectionLabel>
           <h2 className="text-2xl sm:text-4xl md:text-[2.65rem] font-bold tracking-tight text-slate-900 leading-tight">
             Si no te encuentran online, tu competencia se queda con{' '}
-            <span className="gradient-text">tus clientes.</span>
+            <span className="text-brand">tus clientes.</span>
           </h2>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
             Estos son los problemas que resolvemos todos los días para dueños de negocio como tú.
@@ -61,32 +63,29 @@ export function ProblemSection() {
           transition={{ duration: 0.5, delay: 0.08 }}
           className="grid md:grid-cols-3 gap-5 sm:gap-6"
         >
-          {HOME_PROBLEMS.map((item) => {
+          {HOME_PROBLEMS.map((item, index) => {
             const Icon = PROBLEM_ICONS[item.icon]
+            const theme = BRAND_ICON_TONES[PROBLEM_TONES[index % PROBLEM_TONES.length]]
             return (
               <article
                 key={item.problem}
-                className="flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)]"
+                className="flex flex-col border-t border-slate-200 bg-white"
               >
                 <div className="flex flex-1 flex-col p-5 sm:p-6">
                   <div className="mb-4 flex items-start justify-between gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
+                    <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${theme.wrap}`}>
                       <Icon className="h-5 w-5" aria-hidden />
-                    </div>
-                    <span className="rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-rose-600 ring-1 ring-rose-100">
-                      Tu situación
                     </span>
+                    <span className="text-xs font-medium text-slate-500">Tu situación</span>
                   </div>
                   <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">{item.problem}</h3>
                 </div>
 
-                <div className="border-t border-slate-100 bg-slate-50/90 px-5 py-4 sm:px-6 sm:py-5">
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-white">
-                      <Check className="h-3 w-3 stroke-[3]" aria-hidden />
-                    </span>
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-brand">Cómo te ayudamos</p>
-                  </div>
+                <div className="border-t border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6 sm:py-5">
+                  <p className="mb-2 flex items-center gap-2 text-sm font-medium text-brand">
+                    <Check className="h-4 w-4 shrink-0" strokeWidth={2.5} aria-hidden />
+                    Cómo te ayudamos
+                  </p>
                   <p className="text-sm sm:text-[15px] text-slate-600 leading-relaxed">{item.solution}</p>
                 </div>
               </article>

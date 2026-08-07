@@ -9,12 +9,13 @@
 }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-inter), system-ui, -apple-system, 'Segoe UI', sans-serif;
   line-height: 1.6;
   overflow-x: hidden;
   max-width: 100%;
   background: #ffffff;
   color: #0f172a;
+  text-rendering: optimizeLegibility;
 }
 
 /* Evitar scroll horizontal: html + body (100vw y elementos posicionados suelen desbordar solo en body) */
@@ -96,6 +97,12 @@ html {
 .safe-area-nav {
   padding-right: env(safe-area-inset-right, 0);
   padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Reduce trabajo de paint en secciones bajo el fold (mejora scroll/INP) */
+main > section[id]:not(#hero):not(#benefits) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
 }
 
 /* Contenedor estándar para todas las secciones */

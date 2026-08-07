@@ -6,9 +6,9 @@ import {
   Play,
   Rocket,
   Shield,
-  Sparkles,
   TrendingUp,
   Users,
+  Repeat2,
 } from 'lucide-react'
 import TechLogo from '@/components/TechLogo'
 import { MASTERCLASS_HERO_FLOATS } from '@/lib/case-studies'
@@ -106,7 +106,7 @@ export function HeroSection() {
     >
       <div
         className="pointer-events-none absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/images/hero_background.png')" }}
+        style={{ backgroundImage: "url('/images/hero_background.webp')" }}
         aria-hidden
       />
       <div
@@ -117,14 +117,14 @@ export function HeroSection() {
       <div className="container-padding relative z-10 mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-4 sm:px-6 pb-4 sm:pb-5 lg:pb-6">
         <div className="grid min-h-0 flex-1 gap-7 sm:gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch lg:gap-8 xl:gap-10">
           <div className="flex w-full max-w-xl flex-col justify-center lg:max-w-none">
-            <p className="mb-4 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600 sm:mb-5 sm:text-xs sm:tracking-[0.18em]">
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand sm:h-2 sm:w-2" aria-hidden />
+            <p className="mb-4 flex items-center gap-2.5 text-sm font-medium text-brand sm:mb-5">
+              <span className="h-px w-5 shrink-0 bg-brand/50" aria-hidden />
               Desarrollo web para negocios
             </p>
 
             <h1 className="text-[1.65rem] font-bold leading-[1.12] tracking-tight text-slate-900 min-[380px]:text-[1.85rem] sm:text-4xl lg:text-[2.5rem] xl:text-[2.65rem]">
               Creo páginas web que convierten{' '}
-              <span className="gradient-text">visitantes en clientes.</span>
+              <span className="text-brand">visitantes en clientes.</span>
             </h1>
 
             <p className="mt-3 max-w-lg text-[0.9375rem] leading-relaxed text-slate-600 sm:mt-4 sm:text-base md:text-lg">
@@ -207,7 +207,7 @@ export function HeroSection() {
                 className="relative z-10 block h-auto w-full max-h-[min(40vh,340px)] object-contain object-bottom drop-shadow-[0_28px_56px_rgba(15,23,42,0.12)] min-[380px]:max-h-[min(44vh,380px)] sm:max-h-[min(48vh,440px)] md:max-h-[min(52vh,500px)] lg:max-h-full"
                 priority
                 fetchPriority="high"
-                quality={80}
+                quality={75}
                 sizes="(max-width: 380px) 300px, (max-width: 640px) 340px, (max-width: 1024px) 460px, 620px"
               />
             </div>
@@ -247,11 +247,11 @@ export function HeroSection() {
                 </li>
               ))}
               <li className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
-                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-purple-100 sm:h-7 sm:w-7">
-                  <Sparkles className="h-3.5 w-3.5 text-purple-600 sm:h-4 sm:w-4" aria-hidden />
+                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-neon-purple/12 sm:h-7 sm:w-7">
+                  <Repeat2 className="h-3.5 w-3.5 text-neon-purple sm:h-4 sm:w-4" aria-hidden />
                 </span>
-                <span className="hidden min-[420px]:inline">IA y Automatizaciones</span>
-                <span className="min-[420px]:hidden">IA</span>
+                <span className="hidden min-[420px]:inline">Automatizaciones</span>
+                <span className="min-[420px]:hidden">Auto</span>
               </li>
             </ul>
           </div>

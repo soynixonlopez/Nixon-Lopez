@@ -3,6 +3,7 @@
 import { motion, useInView } from 'framer-motion'
 import { useRef, type ReactNode } from 'react'
 import { CtaButtons } from '@/components/marketing/CtaButtons'
+import { SectionLabel } from '@/components/marketing/SectionLabel'
 
 type Props = {
   id?: string
@@ -46,9 +47,7 @@ export function SectionShell({
           transition={{ duration: 0.5 }}
           className="max-w-3xl mb-10 sm:mb-14"
         >
-          {eyebrow ? (
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand mb-3">{eyebrow}</p>
-          ) : null}
+          {eyebrow ? <SectionLabel align="left">{eyebrow}</SectionLabel> : null}
           <h2 className="text-2xl sm:text-4xl md:text-[2.75rem] font-bold tracking-tight text-slate-900 leading-tight">
             {title}
           </h2>

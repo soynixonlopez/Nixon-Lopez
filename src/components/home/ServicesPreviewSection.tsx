@@ -18,6 +18,8 @@ import {
   ShoppingCart,
 } from 'lucide-react'
 import TechLogo from '@/components/TechLogo'
+import { SectionLabel } from '@/components/marketing/SectionLabel'
+import { BRAND_ICON_TONES } from '@/lib/brand-icons'
 import {
   buildWhatsAppUrl,
   HOME_SERVICES,
@@ -31,40 +33,6 @@ const SERVICE_ICONS = {
   rocket: Rocket,
   cart: ShoppingCart,
   settings: Settings,
-} as const
-
-const SERVICE_THEMES = {
-  blue: {
-    iconBg: 'bg-blue-100 text-blue-600',
-    accent: 'bg-blue-500',
-    check: 'text-blue-500',
-    price: 'text-blue-600',
-  },
-  green: {
-    iconBg: 'bg-emerald-100 text-emerald-600',
-    accent: 'bg-emerald-500',
-    check: 'text-emerald-500',
-    price: 'text-emerald-600',
-  },
-  purple: {
-    iconBg: 'bg-purple-100 text-purple-600',
-    accent: 'bg-purple-500',
-    check: 'text-purple-500',
-    price: 'text-purple-600',
-  },
-  orange: {
-    iconBg: 'bg-orange-100 text-orange-600',
-    accent: 'bg-orange-500',
-    check: 'text-orange-500',
-    price: 'text-orange-600',
-  },
-} as const
-
-const PILL_THEMES = {
-  blue: 'bg-blue-100 text-blue-600',
-  green: 'bg-emerald-100 text-emerald-600',
-  purple: 'bg-purple-100 text-purple-600',
-  orange: 'bg-orange-100 text-orange-600',
 } as const
 
 const PILL_ICONS = {
@@ -113,12 +81,10 @@ export function ServicesPreviewSection() {
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-3xl text-center mb-10 sm:mb-14"
         >
-          <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/80 px-3.5 py-1.5 mb-4">
-            <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.16em] text-brand">Servicios</span>
-          </div>
+          <SectionLabel>Servicios</SectionLabel>
           <h2 className="text-2xl sm:text-4xl md:text-[2.65rem] font-bold tracking-tight text-slate-900 leading-tight">
             Soluciones digitales para{' '}
-            <span className="gradient-text">cada etapa de tu negocio</span>
+            <span className="text-brand">cada etapa de tu negocio</span>
           </h2>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
             Empieza con lo que necesitas hoy y escala cuando tu negocio crezca.
@@ -132,26 +98,26 @@ export function ServicesPreviewSection() {
           className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5"
         >
           {HOME_SERVICES.map((service) => {
-            const theme = SERVICE_THEMES[service.color]
             const Icon = SERVICE_ICONS[service.icon]
             const isWhatsApp = 'whatsapp' in service && service.whatsapp
+
+            const theme = BRAND_ICON_TONES[service.color]
 
             return (
               <article
                 key={service.id}
-                className="flex flex-col rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-[0_8px_30px_rgba(15,23,42,0.05)]"
+                className={`flex flex-col rounded-xl border px-5 py-6 sm:px-6 ${theme.card}`}
               >
-                <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl ${theme.iconBg}`}>
+                <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg ${theme.wrap}`}>
                   <Icon className="h-6 w-6" aria-hidden />
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 leading-snug">{service.title}</h3>
-                <span className={`mt-2 mb-3 h-1 w-10 rounded-full ${theme.accent}`} aria-hidden />
-                <p className="text-sm text-slate-600 leading-relaxed">{service.description}</p>
+                <p className="mt-2 text-sm text-slate-600 leading-relaxed">{service.description}</p>
 
                 <ul className="mt-4 space-y-2.5 flex-1">
                   {service.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-2 text-sm text-slate-700">
-                      <Check className={`mt-0.5 h-4 w-4 shrink-0 ${theme.check}`} strokeWidth={2.5} aria-hidden />
+                      <Check className={`mt-0.5 h-4 w-4 shrink-0 ${theme.icon}`} strokeWidth={2.5} aria-hidden />
                       {feature}
                     </li>
                   ))}
@@ -159,7 +125,7 @@ export function ServicesPreviewSection() {
 
                 <p className="mt-5 text-sm text-slate-500">
                   Inversión:{' '}
-                  <span className={`font-bold ${theme.price}`}>{service.priceLabel}</span>
+                  <span className="font-bold text-slate-900">{service.priceLabel}</span>
                 </p>
 
                 <div className="mt-4">
@@ -168,7 +134,7 @@ export function ServicesPreviewSection() {
                       href={buildWhatsAppUrl(serviceWhatsAppMessage(service.id))}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-brand px-5 py-3.5 min-h-[48px] text-sm font-semibold text-white transition hover:bg-brand-light active:scale-[0.98]"
+                      className={`inline-flex w-full items-center justify-center gap-2 rounded-md px-5 py-3.5 min-h-[48px] text-sm font-semibold text-white transition active:scale-[0.98] ${theme.button}`}
                     >
                       {service.ctaLabel}
                       <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
@@ -176,7 +142,7 @@ export function ServicesPreviewSection() {
                   ) : (
                     <Link
                       href={quoteUrl(service.id)}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-brand px-5 py-3.5 min-h-[48px] text-sm font-semibold text-white transition hover:bg-brand-light active:scale-[0.98]"
+                      className={`inline-flex w-full items-center justify-center gap-2 rounded-md px-5 py-3.5 min-h-[48px] text-sm font-semibold text-white transition active:scale-[0.98] ${theme.button}`}
                     >
                       {service.ctaLabel}
                       <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
@@ -192,13 +158,11 @@ export function ServicesPreviewSection() {
           initial={{ opacity: 0, y: 16 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
           transition={{ duration: 0.5, delay: 0.12 }}
-          className="mt-8 sm:mt-10 rounded-2xl sm:rounded-3xl border border-blue-100/80 bg-blue-50/60 px-5 py-5 sm:px-8 sm:py-6"
+          className="mt-8 sm:mt-10 border-y border-slate-200 bg-white px-5 py-5 sm:px-8 sm:py-6"
         >
           <div className="flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-8">
             <div className="flex items-start gap-4 lg:max-w-xl">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand text-white">
-                <ShieldCheck className="h-6 w-6" aria-hidden />
-              </div>
+              <ShieldCheck className="mt-0.5 h-6 w-6 shrink-0 text-brand" aria-hidden />
               <p className="text-sm sm:text-base text-slate-700 leading-relaxed">
                 <span className="font-bold text-slate-900">Enfoque en resultados, no en tecnología.</span> Cada
                 proyecto está pensado para ayudarte a conseguir más clientes, ahorrar tiempo y hacer crecer tu
@@ -208,13 +172,12 @@ export function ServicesPreviewSection() {
             <ul className="grid grid-cols-2 sm:grid-cols-4 gap-4 lg:gap-5 flex-1">
               {SERVICES_TRUST_PILLS.map((pill) => {
                 const PillIcon = PILL_ICONS[pill.icon]
+                const theme = BRAND_ICON_TONES[pill.color]
                 return (
                   <li key={pill.label} className="flex flex-col items-center text-center gap-2">
-                    <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-xl ${PILL_THEMES[pill.color]}`}
-                    >
+                    <span className={`inline-flex h-10 w-10 items-center justify-center rounded-lg ${theme.wrap}`}>
                       <PillIcon className="h-5 w-5" aria-hidden />
-                    </div>
+                    </span>
                     <span className="text-xs font-medium text-slate-600 leading-snug">{pill.label}</span>
                   </li>
                 )

@@ -165,7 +165,7 @@ export const SERVICES_TRUST_PILLS = [
 
 export const QUOTE_SECTION_BENEFITS = [
   {
-    icon: 'zap' as const,
+    icon: 'timer' as const,
     color: 'blue' as const,
     title: 'Rápido y sin compromiso',
     description: 'Obtén tu estimación en menos de 2 minutos.',
@@ -225,33 +225,6 @@ export const QUOTE_DETAIL_OPTIONS = [
   { value: 'otro', label: 'Otro — lo explico en la cotización' },
 ] as const
 
-export const QUOTE_PROCESS_FEATURES = [
-  {
-    icon: 'clock' as const,
-    color: 'blue' as const,
-    title: 'En menos de 2 minutos',
-    description: 'Obtén una estimación clara de tu proyecto.',
-  },
-  {
-    icon: 'list' as const,
-    color: 'green' as const,
-    title: 'Alcance y precio estimado',
-    description: 'Sabrás qué incluye y cuánto cuesta antes de hablar con nosotros.',
-  },
-  {
-    icon: 'mail' as const,
-    color: 'purple' as const,
-    title: 'Recibe tu propuesta',
-    description: 'Te la enviamos por correo y WhatsApp para que la revises tranquilo.',
-  },
-  {
-    icon: 'headphones' as const,
-    color: 'orange' as const,
-    title: 'Acompañamiento real',
-    description: 'Te asesoramos en cada paso para que tomes la mejor decisión.',
-  },
-] as const
-
 export const HOME_BENEFITS = [
   {
     icon: 'users' as const,
@@ -272,7 +245,7 @@ export const HOME_BENEFITS = [
     description: 'Tus clientes pueden contactarte fácilmente por WhatsApp con un solo clic.',
   },
   {
-    icon: 'zap' as const,
+    icon: 'process' as const,
     color: 'orange' as const,
     title: 'Proceso claro y sin complicaciones',
     description: 'Comunicación directa, contrato y acompañamiento durante todo el proyecto.',
@@ -303,18 +276,21 @@ export const HOME_PROCESS = [
   {
     step: '1',
     icon: 'quote' as const,
+    color: 'blue' as const,
     title: 'Cotizas en minutos',
     description: 'Eliges lo que necesitas en el cotizador online. Sin llamadas ni esperas.',
   },
   {
     step: '2',
     icon: 'proposal' as const,
+    color: 'green' as const,
     title: 'Recibes tu propuesta',
     description: 'PDF con precio, alcance y detalles. La revisas con calma, sin presiones.',
   },
   {
     step: '3',
     icon: 'contract' as const,
+    color: 'purple' as const,
     title: 'Firmamos contrato',
     description: 'Documento formal que protege a ambas partes.',
     highlight: '50% para iniciar.',
@@ -322,12 +298,14 @@ export const HOME_PROCESS = [
   {
     step: '4',
     icon: 'develop' as const,
+    color: 'orange' as const,
     title: 'Desarrollamos juntos',
     description: 'Comunicación directa conmigo. Sabes en qué va tu proyecto en todo momento.',
   },
   {
     step: '5',
     icon: 'launch' as const,
+    color: 'pink' as const,
     title: 'Lanzamos tu web',
     description: 'Entrega, ajustes finales y tu negocio listo para captar clientes.',
   },
@@ -361,9 +339,9 @@ export const HOME_FAQ = [
 ] as const
 
 export const ABOUT_STATS = [
-  { value: '+50', label: 'Proyectos entregados' },
-  { value: '5+', label: 'Años creando soluciones digitales' },
-  { value: '100%', label: 'Atención directa conmigo' },
+  { value: '+50', label: 'Proyectos entregados', color: 'blue' as const },
+  { value: '5+', label: 'Años creando soluciones digitales', color: 'purple' as const },
+  { value: '100%', label: 'Atención directa conmigo', color: 'green' as const },
 ] as const
 
 export const ABOUT_CHECKLIST = [
@@ -371,6 +349,24 @@ export const ABOUT_CHECKLIST = [
   'Soluciones personalizadas',
   'Diseño enfocado en resultados',
   'Tecnología moderna',
+] as const
+
+export const ABOUT_SOCIAL = [
+  {
+    label: 'LinkedIn',
+    href: 'https://www.linkedin.com/in/nixonlopez',
+    tone: 'linkedin' as const,
+  },
+  {
+    label: 'GitHub',
+    href: 'https://github.com/soynixonlopez',
+    tone: 'github' as const,
+  },
+  {
+    label: 'Instagram',
+    href: 'https://www.instagram.com/nixonlopes.dev/',
+    tone: 'instagram' as const,
+  },
 ] as const
 
 export const FOOTER_SERVICES = [

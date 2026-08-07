@@ -7,39 +7,28 @@ import { useRef, useState } from 'react'
 import {
   ArrowRight,
   Calculator,
-  Clock,
   Code,
   FileText,
-  Headphones,
-  ListChecks,
   Lock,
-  Mail,
   Monitor,
   Rocket,
   Shield,
   ShoppingCart,
-  Zap,
+  Timer,
 } from 'lucide-react'
+import { SectionLabel } from '@/components/marketing/SectionLabel'
+import { BRAND_ICON_TONES } from '@/lib/brand-icons'
 import {
   buildWhatsAppUrl,
   QUOTE_DETAIL_OPTIONS,
   QUOTE_FORM_OPTIONS,
-  QUOTE_PROCESS_FEATURES,
   QUOTE_SECTION_BENEFITS,
   WHATSAPP_MESSAGES,
   quoteUrl,
 } from '@/lib/marketing'
 
-const BENEFIT_ICONS = { zap: Zap, shield: Shield, document: FileText } as const
+const BENEFIT_ICONS = { timer: Timer, shield: Shield, document: FileText } as const
 const FORM_ICONS = { monitor: Monitor, rocket: Rocket, cart: ShoppingCart, code: Code } as const
-const PROCESS_ICONS = { clock: Clock, list: ListChecks, mail: Mail, headphones: Headphones } as const
-
-const COLOR_THEMES = {
-  blue: { bg: 'bg-blue-100', text: 'text-blue-600', ring: 'ring-blue-500', border: 'border-blue-200' },
-  green: { bg: 'bg-emerald-100', text: 'text-emerald-600', ring: 'ring-emerald-500', border: 'border-emerald-200' },
-  purple: { bg: 'bg-purple-100', text: 'text-purple-600', ring: 'ring-purple-500', border: 'border-purple-200' },
-  orange: { bg: 'bg-orange-100', text: 'text-orange-600', ring: 'ring-orange-500', border: 'border-orange-200' },
-} as const
 
 export function QuoteBannerSection() {
   const ref = useRef(null)
@@ -77,22 +66,17 @@ export function QuoteBannerSection() {
       />
 
       <div className="container-padding relative z-10 max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-start">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/80 px-3.5 py-1.5 mb-5">
-              <Calculator className="h-4 w-4 text-brand" aria-hidden />
-              <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.16em] text-brand">
-                Cotización transparente
-              </span>
-            </div>
+            <SectionLabel align="left">Cotización transparente</SectionLabel>
 
             <h2 className="text-2xl sm:text-4xl md:text-[2.5rem] font-bold tracking-tight text-slate-900 leading-tight">
               Descubre cuánto cuesta tu proyecto{' '}
-              <span className="gradient-text">en minutos</span>
+              <span className="text-brand">en minutos</span>
             </h2>
             <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
               Selecciona lo que necesitas y recibe una propuesta personalizada con alcance, inversión estimada y
@@ -102,11 +86,11 @@ export function QuoteBannerSection() {
             <ul className="mt-8 space-y-5">
               {QUOTE_SECTION_BENEFITS.map((benefit) => {
                 const Icon = BENEFIT_ICONS[benefit.icon]
-                const theme = COLOR_THEMES[benefit.color]
+                const theme = BRAND_ICON_TONES[benefit.color]
                 return (
                   <li key={benefit.title} className="flex items-start gap-4">
-                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${theme.bg}`}>
-                      <Icon className={`h-5 w-5 ${theme.text}`} aria-hidden />
+                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${theme.wrap}`}>
+                      <Icon className="h-5 w-5" aria-hidden />
                     </div>
                     <div>
                       <p className="font-bold text-slate-900">{benefit.title}</p>
@@ -140,7 +124,7 @@ export function QuoteBannerSection() {
               className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-6 lg:p-7 shadow-[0_12px_40px_rgba(15,23,42,0.08)]"
             >
               <div className="flex items-start gap-3 mb-6 pb-5 border-b border-slate-100">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
+                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${BRAND_ICON_TONES.blue.wrap}`}>
                   <Calculator className="h-5 w-5" aria-hidden />
                 </div>
                 <div>
@@ -158,7 +142,7 @@ export function QuoteBannerSection() {
                 </legend>
                 {QUOTE_FORM_OPTIONS.map((option) => {
                   const Icon = FORM_ICONS[option.icon]
-                  const theme = COLOR_THEMES[option.color]
+                  const theme = BRAND_ICON_TONES[option.color]
                   const isSelected = selectedService === option.id
                   return (
                     <label
@@ -177,8 +161,8 @@ export function QuoteBannerSection() {
                         onChange={() => setSelectedService(option.id)}
                         className="sr-only"
                       />
-                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${theme.bg}`}>
-                        <Icon className={`h-5 w-5 ${theme.text}`} aria-hidden />
+                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${theme.wrap}`}>
+                        <Icon className="h-5 w-5" aria-hidden />
                       </div>
                       <div className="min-w-0">
                         <p className="font-semibold text-slate-900">{option.title}</p>
@@ -213,7 +197,7 @@ export function QuoteBannerSection() {
 
               <button
                 type="submit"
-                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 min-h-[52px] text-base font-semibold text-white shadow-md transition hover:from-blue-700 hover:to-purple-700 active:scale-[0.98]"
+                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-md bg-brand px-6 py-4 min-h-[52px] text-base font-semibold text-white transition hover:bg-brand-light active:scale-[0.98]"
               >
                 Generar mi propuesta
                 <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
@@ -226,29 +210,6 @@ export function QuoteBannerSection() {
             </form>
           </motion.div>
         </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-          transition={{ duration: 0.5, delay: 0.14 }}
-          className="mt-10 sm:mt-12 rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white px-5 py-6 sm:px-8 shadow-[0_8px_30px_rgba(15,23,42,0.05)]"
-        >
-          <ul className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {QUOTE_PROCESS_FEATURES.map((feature) => {
-              const Icon = PROCESS_ICONS[feature.icon]
-              const theme = COLOR_THEMES[feature.color]
-              return (
-                <li key={feature.title} className="flex flex-col items-center text-center sm:items-start sm:text-left">
-                  <div className={`mb-3 flex h-11 w-11 items-center justify-center rounded-2xl ${theme.bg}`}>
-                    <Icon className={`h-5 w-5 ${theme.text}`} aria-hidden />
-                  </div>
-                  <p className="font-bold text-slate-900 text-sm sm:text-base">{feature.title}</p>
-                  <p className="mt-1 text-sm text-slate-600 leading-relaxed">{feature.description}</p>
-                </li>
-              )
-            })}
-          </ul>
-        </motion.div>
       </div>
     </section>
   )

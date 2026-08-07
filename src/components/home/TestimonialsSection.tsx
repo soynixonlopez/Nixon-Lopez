@@ -11,9 +11,9 @@ import {
   Shield,
   Star,
   User,
-  Users,
 } from 'lucide-react'
 import TechLogo from '@/components/TechLogo'
+import { SectionLabel } from '@/components/marketing/SectionLabel'
 import {
   buildWhatsAppUrl,
   TESTIMONIAL_TRUST_PILLS,
@@ -81,14 +81,9 @@ export function TestimonialsSection() {
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-3xl text-center mb-10 sm:mb-14"
         >
-          <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/80 px-3.5 py-1.5 mb-4">
-            <Users className="h-4 w-4 text-brand" aria-hidden />
-            <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.16em] text-brand">
-              Clientes reales
-            </span>
-          </div>
+          <SectionLabel>Clientes reales</SectionLabel>
           <h2 className="text-2xl sm:text-4xl md:text-[2.65rem] font-bold tracking-tight text-slate-900 leading-tight">
-            Negocios que confiaron en <span className="gradient-text">mi trabajo</span>
+            Negocios que confiaron en <span className="text-brand">mi trabajo</span>
           </h2>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
             Resultados y experiencias de clientes que decidieron mejorar su presencia digital.
@@ -110,7 +105,7 @@ export function TestimonialsSection() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 text-white shadow-sm">
                   <Quote className="h-5 w-5 fill-white/20" aria-hidden />
                 </div>
-                <div className="flex items-center gap-0.5" aria-label="5 estrellas">
+                <div className="flex items-center gap-0.5" role="img" aria-label="5 estrellas">
                   {Array.from({ length: 5 }).map((_, index) => (
                     <Star key={index} className="h-4 w-4 fill-amber-400 text-amber-400" aria-hidden />
                   ))}
@@ -166,25 +161,20 @@ export function TestimonialsSection() {
           initial={{ opacity: 0, y: 16 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
           transition={{ duration: 0.5, delay: 0.16 }}
-          className="mt-8 sm:mt-10 rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white px-5 py-5 sm:px-8 sm:py-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)]"
+          className="mt-8 sm:mt-10 border-y border-slate-200 bg-white px-5 py-5 sm:px-8 sm:py-6"
         >
           <div className="flex flex-col lg:flex-row lg:items-center gap-5 lg:gap-8">
-            <div className="flex items-start gap-4 flex-1">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand text-white">
-                <MessageCircle className="h-6 w-6" aria-hidden />
-              </div>
-              <div>
-                <p className="text-lg sm:text-xl font-bold text-slate-900">¿Listo para trabajar juntos?</p>
-                <p className="mt-1 text-sm sm:text-base text-slate-600">
-                  Hablemos de tu proyecto y hagamos que suceda.
-                </p>
-              </div>
+            <div className="flex-1">
+              <p className="text-lg sm:text-xl font-bold text-slate-900">¿Listo para trabajar juntos?</p>
+              <p className="mt-1 text-sm sm:text-base text-slate-600">
+                Hablemos de tu proyecto y hagamos que suceda.
+              </p>
             </div>
             <a
               href={buildWhatsAppUrl(WHATSAPP_MESSAGES.default)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex w-full lg:w-auto shrink-0 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 min-h-[52px] text-base font-semibold text-white shadow-md transition hover:from-blue-700 hover:to-purple-700 active:scale-[0.98]"
+              className="inline-flex w-full lg:w-auto shrink-0 items-center justify-center gap-2 rounded-md bg-brand px-6 py-4 min-h-[52px] text-base font-semibold text-white transition hover:bg-brand-light active:scale-[0.98]"
             >
               <TechLogo name="WhatsApp" size={22} light />
               Hablemos de tu proyecto

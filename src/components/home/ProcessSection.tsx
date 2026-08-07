@@ -6,7 +6,6 @@ import { useRef } from 'react'
 import {
   ArrowRight,
   Calculator,
-  Calendar,
   Check,
   FileText,
   MessageCircle,
@@ -15,6 +14,8 @@ import {
   Users,
 } from 'lucide-react'
 import TechLogo from '@/components/TechLogo'
+import { SectionLabel } from '@/components/marketing/SectionLabel'
+import { BRAND_ICON_TONES } from '@/lib/brand-icons'
 import { buildWhatsAppUrl, HOME_PROCESS, WHATSAPP_MESSAGES, quoteUrl } from '@/lib/marketing'
 
 const STEP_ICONS = {
@@ -76,13 +77,10 @@ export function ProcessSection() {
           className="grid items-center gap-10 lg:grid-cols-[1fr_auto] lg:gap-12"
         >
           <div className="max-w-2xl">
-            <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-brand/15 bg-brand/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand sm:text-xs">
-              <Calendar className="h-3.5 w-3.5 shrink-0" aria-hidden />
-              Proceso simple
-            </span>
+            <SectionLabel align="left">Proceso simple</SectionLabel>
             <h2 className="text-2xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-[2.65rem]">
               De la cotización a tu web publicada,{' '}
-              <span className="gradient-text">sin sorpresas</span>
+              <span className="text-brand">sin sorpresas</span>
             </h2>
             <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
               Sabes qué sigue en cada paso. Contrato formal, pago en dos partes y comunicación directa
@@ -105,41 +103,46 @@ export function ProcessSection() {
               aria-hidden
             />
             <ol className="relative grid grid-cols-5 gap-4">
-              {HOME_PROCESS.map((item) => (
-                <li key={item.step} className="flex justify-center">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand text-sm font-bold text-white shadow-md ring-4 ring-slate-50">
-                    {item.step}
-                  </span>
-                </li>
-              ))}
+              {HOME_PROCESS.map((item) => {
+                const theme = BRAND_ICON_TONES[item.color]
+                return (
+                  <li key={item.step} className="flex justify-center">
+                    <span
+                      className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white shadow-md ring-4 ring-slate-50 ${theme.button}`}
+                    >
+                      {item.step}
+                    </span>
+                  </li>
+                )
+              })}
             </ol>
           </div>
 
           <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:gap-5">
             {HOME_PROCESS.map((item) => {
               const Icon = STEP_ICONS[item.icon]
+              const theme = BRAND_ICON_TONES[item.color]
               return (
                 <li
                   key={item.step}
-                  className="flex flex-col items-center rounded-2xl border border-slate-200/80 bg-white px-4 py-6 text-center shadow-sm transition-shadow hover:shadow-md sm:px-5 sm:py-7"
+                  className={`flex flex-col items-center rounded-xl border px-4 py-6 text-center transition-shadow hover:shadow-md sm:px-5 sm:py-7 ${theme.card}`}
                 >
-                  <span className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-brand text-xs font-bold text-white lg:hidden">
+                  <span
+                    className={`mb-3 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white lg:hidden ${theme.button}`}
+                  >
                     {item.step}
                   </span>
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand/10">
-                    <Icon className="h-6 w-6 text-brand" strokeWidth={1.75} aria-hidden />
+                  <div className={`flex h-14 w-14 items-center justify-center rounded-lg ${theme.wrap}`}>
+                    <Icon className="h-6 w-6" strokeWidth={1.75} aria-hidden />
                   </div>
                   <h3 className="mt-4 text-sm font-bold text-slate-900 sm:text-base">{item.title}</h3>
-                  <div
-                    className="mt-3 h-0.5 w-8 rounded-full bg-gradient-to-r from-brand to-neon-purple"
-                    aria-hidden
-                  />
+                  <div className={`mt-3 h-0.5 w-8 rounded-full ${theme.accent}`} aria-hidden />
                   <p className="mt-3 text-xs leading-relaxed text-slate-600 sm:text-sm">
                     {item.description}
                     {'highlight' in item && item.highlight ? (
                       <>
                         {' '}
-                        <span className="font-semibold text-brand">{item.highlight}</span>
+                        <span className={`font-semibold ${theme.icon}`}>{item.highlight}</span>
                       </>
                     ) : null}
                   </p>

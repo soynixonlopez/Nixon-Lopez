@@ -4,8 +4,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
-import { ArrowRight, Check, Clock, Rocket, Send } from 'lucide-react'
+import { ArrowRight, Check, Clock, Send } from 'lucide-react'
 import TechLogo from '@/components/TechLogo'
+import { SectionLabel } from '@/components/marketing/SectionLabel'
 import { MASTERCLASS_HERO_FLOATS } from '@/lib/case-studies'
 import { buildWhatsAppUrl, FINAL_CTA_TRUST, WHATSAPP_MESSAGES, quoteUrl } from '@/lib/marketing'
 
@@ -63,14 +64,11 @@ export function FinalCtaSection() {
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
             transition={{ duration: 0.5 }}
           >
-            <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-brand/15 bg-brand/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand sm:text-xs">
-              <Rocket className="h-3.5 w-3.5 shrink-0" aria-hidden />
-              Listo para crecer
-            </span>
+            <SectionLabel align="left">Listo para crecer</SectionLabel>
 
             <h2 className="text-2xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-[2.65rem]">
               Tu negocio merece una presencia{' '}
-              <span className="gradient-text">digital profesional</span>
+              <span className="text-brand">digital profesional</span>
             </h2>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
               Cuéntame tu idea y encontremos la solución correcta para ayudarte a conseguir más clientes

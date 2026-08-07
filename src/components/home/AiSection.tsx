@@ -5,39 +5,42 @@ import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
 import {
   ArrowRight,
-  Bot,
-  Gauge,
+  Clock3,
+  Code2,
+  MessageCircle,
+  Repeat2,
   Rocket,
-  Sparkles,
+  Timer,
   TrendingUp,
   User,
-  Zap,
 } from 'lucide-react'
 import TechLogo from '@/components/TechLogo'
+import { SectionLabel } from '@/components/marketing/SectionLabel'
+import { BRAND_ICON_TONES, type BrandIconTone } from '@/lib/brand-icons'
 import { buildWhatsAppUrl, WHATSAPP_MESSAGES, quoteUrl } from '@/lib/marketing'
 
 const AI_FEATURES = [
   {
-    icon: Zap,
-    iconStyle: 'bg-brand text-white',
+    icon: Clock3,
+    tone: 'blue' as BrandIconTone,
     title: 'Entregamos en menos tiempo',
     description: 'sin sacrificar calidad ni atención personalizada.',
   },
   {
-    icon: Bot,
-    iconStyle: 'bg-gradient-to-br from-neon-blue/20 to-neon-purple/20 text-brand',
+    icon: Repeat2,
+    tone: 'orange' as BrandIconTone,
     title: 'Automatizamos lo repetitivo',
     description: 'para que tu proyecto avance más rápido.',
   },
   {
     icon: User,
-    iconStyle: 'bg-brand/10 text-brand',
+    tone: 'purple' as BrandIconTone,
     title: 'Tú hablas con Nixon en todo momento',
     description: '— la IA acelera, no reemplaza.',
   },
   {
     icon: TrendingUp,
-    iconStyle: 'bg-gradient-to-br from-neon-purple/15 to-neon-blue/15 text-brand',
+    tone: 'green' as BrandIconTone,
     title: 'Más eficiencia para ti',
     description: 'significa precios justos y entregas ágiles.',
   },
@@ -63,16 +66,16 @@ function AiIllustration() {
           <div className="absolute left-4 top-1/2 h-16 w-1 -translate-y-1/2 rounded-full bg-gradient-to-b from-transparent via-neon-blue/40 to-transparent" aria-hidden />
           <div className="absolute right-6 top-1/3 h-12 w-1 rounded-full bg-gradient-to-b from-transparent via-neon-purple/30 to-transparent" aria-hidden />
 
-          <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-brand to-neon-purple shadow-[0_16px_40px_rgba(30,58,95,0.25)] sm:h-28 sm:w-28">
-            <Sparkles className="h-10 w-10 text-white sm:h-12 sm:w-12" aria-hidden />
+          <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-brand shadow-[0_16px_40px_rgba(30,58,95,0.25)] sm:h-28 sm:w-28">
+            <Code2 className="h-10 w-10 text-white sm:h-12 sm:w-12" strokeWidth={1.75} aria-hidden />
           </div>
 
-          <div className="absolute bottom-5 left-5 flex h-11 w-11 items-center justify-center rounded-xl bg-brand text-xs font-bold text-white shadow-md">
-            AI
+          <div className="absolute bottom-5 left-5 flex h-11 w-11 items-center justify-center rounded-lg bg-neon-blue/15 text-neon-blue shadow-sm">
+            <MessageCircle className="h-5 w-5" aria-hidden />
           </div>
 
-          <div className="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200/80 bg-white shadow-sm">
-            <Gauge className="h-5 w-5 text-neon-purple" aria-hidden />
+          <div className="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200/80 bg-white shadow-sm">
+            <Timer className="h-5 w-5 text-neon-purple" aria-hidden />
           </div>
         </div>
       </div>
@@ -112,12 +115,10 @@ export function AiSection() {
           className="grid items-center gap-10 lg:grid-cols-[1fr_auto] lg:gap-14"
         >
           <div className="max-w-2xl">
-            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 sm:text-xs">
-              Velocidad sin atajos
-            </p>
+            <SectionLabel align="left">Velocidad sin atajos</SectionLabel>
             <h2 className="text-2xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-[2.65rem]">
               Usamos IA para que tu proyecto esté listo antes —{' '}
-              <span className="gradient-text">sin perder calidad</span>
+              <span className="text-brand">sin perder calidad</span>
             </h2>
             <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
               La tecnología nos ayuda a trabajar más rápido. Las decisiones importantes y la relación
@@ -139,24 +140,19 @@ export function AiSection() {
             <ul className="grid divide-y divide-slate-100 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4 lg:divide-y-0">
               {AI_FEATURES.map((feature) => {
                 const Icon = feature.icon
+                const theme = BRAND_ICON_TONES[feature.tone]
                 return (
                   <li
                     key={feature.title}
                     className="flex flex-col items-center px-5 py-8 text-center sm:px-6 sm:py-9"
                   >
-                    <div
-                      className={`flex h-12 w-12 items-center justify-center rounded-xl ${feature.iconStyle}`}
-                    >
+                    <span className={`inline-flex h-12 w-12 items-center justify-center rounded-lg ${theme.wrap}`}>
                       <Icon className="h-6 w-6" strokeWidth={1.75} aria-hidden />
-                    </div>
+                    </span>
                     <h3 className="mt-4 text-sm font-bold text-slate-900 sm:text-base">{feature.title}</h3>
                     <p className="mt-2 text-xs leading-relaxed text-slate-600 sm:text-sm">
                       {feature.description}
                     </p>
-                    <div
-                      className="mt-5 h-0.5 w-10 rounded-full bg-gradient-to-r from-brand to-neon-purple"
-                      aria-hidden
-                    />
                   </li>
                 )
               })}
