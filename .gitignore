@@ -121,3 +121,4 @@ temp/
 # Lighthouse / informes de rendimiento locales (regenerables con el CLI o pnpm run lighthouse:mobile-batch)
 lighthouse*.json
 reports/lighthouse-*.json
+.env*
