@@ -23,6 +23,7 @@ html {
   overflow-x: hidden;
   max-width: 100%;
   scroll-behavior: smooth;
+  scroll-padding-top: calc(5rem + env(safe-area-inset-top, 0px));
 }
 
 @media (max-width: 767px) {
@@ -92,6 +93,38 @@ html {
   padding-top: env(safe-area-inset-top, 0);
   padding-left: env(safe-area-inset-left, 0);
   padding-right: env(safe-area-inset-right, 0);
+}
+
+/* Título principal del hero — tamaño forzado (no depender de utilidades Tailwind) */
+.hero-title {
+  font-size: clamp(2.5rem, 7.5vw, 3.35rem) !important;
+  line-height: 1.12 !important;
+  letter-spacing: -0.03em;
+}
+
+/* Títulos de sección (h2): cerca del hero, un poco menores */
+.section-title {
+  font-size: clamp(2.2rem, 6.8vw, 3rem) !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.03em;
+  font-weight: 800 !important;
+}
+
+/* Móvil: aire bajo el header (un poco más compacto). Desktop: como antes. */
+.hero-section {
+  padding-top: calc(6.25rem + env(safe-area-inset-top, 0px)) !important;
+}
+
+@media (min-width: 640px) {
+  .hero-section {
+    padding-top: calc(5rem + env(safe-area-inset-top, 0px)) !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-section {
+    padding-top: calc(5.25rem + env(safe-area-inset-top, 0px)) !important;
+  }
 }
 
 .safe-area-nav {

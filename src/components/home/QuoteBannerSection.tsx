@@ -17,6 +17,7 @@ import {
   Timer,
 } from 'lucide-react'
 import { SectionLabel } from '@/components/marketing/SectionLabel'
+import { SectionTitle } from '@/components/marketing/SectionTitle'
 import { BRAND_ICON_TONES } from '@/lib/brand-icons'
 import {
   buildWhatsAppUrl,
@@ -74,10 +75,10 @@ export function QuoteBannerSection() {
           >
             <SectionLabel align="left">Cotización transparente</SectionLabel>
 
-            <h2 className="text-2xl sm:text-4xl md:text-[2.5rem] font-bold tracking-tight text-slate-900 leading-tight">
+            <SectionTitle>
               Descubre cuánto cuesta tu proyecto{' '}
               <span className="text-brand">en minutos</span>
-            </h2>
+            </SectionTitle>
             <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
               Selecciona lo que necesitas y recibe una propuesta personalizada con alcance, inversión estimada y
               próximos pasos.

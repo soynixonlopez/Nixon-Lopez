@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import TechLogo from '@/components/TechLogo'
 import { SectionLabel } from '@/components/marketing/SectionLabel'
+import { SectionTitle } from '@/components/marketing/SectionTitle'
 import {
   buildWhatsAppUrl,
   TESTIMONIAL_TRUST_PILLS,
@@ -82,9 +83,9 @@ export function TestimonialsSection() {
           className="mx-auto max-w-3xl text-center mb-10 sm:mb-14"
         >
           <SectionLabel>Clientes reales</SectionLabel>
-          <h2 className="text-2xl sm:text-4xl md:text-[2.65rem] font-bold tracking-tight text-slate-900 leading-tight">
+          <SectionTitle>
             Negocios que confiaron en <span className="text-brand">mi trabajo</span>
-          </h2>
+          </SectionTitle>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
             Resultados y experiencias de clientes que decidieron mejorar su presencia digital.
           </p>

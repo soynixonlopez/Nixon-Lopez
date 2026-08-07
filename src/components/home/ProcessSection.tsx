@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import TechLogo from '@/components/TechLogo'
 import { SectionLabel } from '@/components/marketing/SectionLabel'
+import { SectionTitle } from '@/components/marketing/SectionTitle'
 import { BRAND_ICON_TONES } from '@/lib/brand-icons'
 import { buildWhatsAppUrl, HOME_PROCESS, WHATSAPP_MESSAGES, quoteUrl } from '@/lib/marketing'
 
@@ -78,10 +79,10 @@ export function ProcessSection() {
         >
           <div className="max-w-2xl">
             <SectionLabel align="left">Proceso simple</SectionLabel>
-            <h2 className="text-2xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-[2.65rem]">
+            <SectionTitle>
               De la cotización a tu web publicada,{' '}
               <span className="text-brand">sin sorpresas</span>
-            </h2>
+            </SectionTitle>
             <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
               Sabes qué sigue en cada paso. Contrato formal, pago en dos partes y comunicación directa
               conmigo.

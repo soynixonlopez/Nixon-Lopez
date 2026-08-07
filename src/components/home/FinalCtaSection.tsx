@@ -7,6 +7,7 @@ import { useRef } from 'react'
 import { ArrowRight, Check, Clock, Send } from 'lucide-react'
 import TechLogo from '@/components/TechLogo'
 import { SectionLabel } from '@/components/marketing/SectionLabel'
+import { SectionTitle } from '@/components/marketing/SectionTitle'
 import { MASTERCLASS_HERO_FLOATS } from '@/lib/case-studies'
 import { buildWhatsAppUrl, FINAL_CTA_TRUST, WHATSAPP_MESSAGES, quoteUrl } from '@/lib/marketing'
 
@@ -66,10 +67,10 @@ export function FinalCtaSection() {
           >
             <SectionLabel align="left">Listo para crecer</SectionLabel>
 
-            <h2 className="text-2xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-[2.65rem]">
+            <SectionTitle>
               Tu negocio merece una presencia{' '}
               <span className="text-brand">digital profesional</span>
-            </h2>
+            </SectionTitle>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
               Cuéntame tu idea y encontremos la solución correcta para ayudarte a conseguir más clientes
               online.

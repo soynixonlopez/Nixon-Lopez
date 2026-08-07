@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useInView } from 'framer-motion'
 import { useRef, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { SectionLabel } from '@/components/marketing/SectionLabel'
+import { SectionTitle } from '@/components/marketing/SectionTitle'
 import { HOME_FAQ } from '@/lib/marketing'
 
 export function FaqSection() {
@@ -30,9 +31,9 @@ export function FaqSection() {
           className="text-center mb-10 sm:mb-14"
         >
           <SectionLabel>Preguntas frecuentes</SectionLabel>
-          <h2 className="text-2xl sm:text-4xl md:text-[2.65rem] font-bold tracking-tight text-slate-900 leading-tight">
+          <SectionTitle>
             Resolvemos tus dudas <span className="text-brand">antes de empezar</span>
-          </h2>
+          </SectionTitle>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
             Las respuestas que necesitas antes de crear una solución digital para tu negocio.
           </p>

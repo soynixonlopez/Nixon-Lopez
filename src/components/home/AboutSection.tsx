@@ -5,6 +5,7 @@ import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
 import { Check, Github, Instagram, Linkedin } from 'lucide-react'
 import { SectionLabel } from '@/components/marketing/SectionLabel'
+import { SectionTitle } from '@/components/marketing/SectionTitle'
 import { BRAND_ICON_TONES } from '@/lib/brand-icons'
 import { ABOUT_CHECKLIST, ABOUT_SOCIAL, ABOUT_STATS, HOME_IMAGES } from '@/lib/marketing'
 
@@ -43,10 +44,10 @@ export function AboutSection() {
           >
             <SectionLabel align="left">Sobre mí</SectionLabel>
 
-            <h2 className="text-2xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl md:text-[2.45rem]">
+            <SectionTitle>
               Trabajo contigo directamente,{' '}
               <span className="text-brand">no con una agencia donde nadie conoce tu proyecto</span>
-            </h2>
+            </SectionTitle>
 
             <p className="mt-5 text-base leading-relaxed text-slate-600 sm:text-lg">
               Soy Nixon López, desarrollador web especializado en crear páginas y soluciones digitales para negocios

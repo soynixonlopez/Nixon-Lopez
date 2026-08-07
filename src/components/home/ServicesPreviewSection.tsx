@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import TechLogo from '@/components/TechLogo'
 import { SectionLabel } from '@/components/marketing/SectionLabel'
+import { SectionTitle } from '@/components/marketing/SectionTitle'
 import { BRAND_ICON_TONES } from '@/lib/brand-icons'
 import {
   buildWhatsAppUrl,
@@ -82,10 +83,10 @@ export function ServicesPreviewSection() {
           className="mx-auto max-w-3xl text-center mb-10 sm:mb-14"
         >
           <SectionLabel>Servicios</SectionLabel>
-          <h2 className="text-2xl sm:text-4xl md:text-[2.65rem] font-bold tracking-tight text-slate-900 leading-tight">
+          <SectionTitle>
             Soluciones digitales para{' '}
             <span className="text-brand">cada etapa de tu negocio</span>
-          </h2>
+          </SectionTitle>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
             Empieza con lo que necesitas hoy y escala cuando tu negocio crezca.
           </p>

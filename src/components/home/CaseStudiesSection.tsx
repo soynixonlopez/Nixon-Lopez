@@ -8,6 +8,7 @@ import { quoteUrl } from '@/lib/marketing'
 import type { FeaturedProject } from '@/lib/case-studies'
 import { ProjectCarousel } from '@/components/marketing/ProjectCarousel'
 import { SectionLabel } from '@/components/marketing/SectionLabel'
+import { SectionTitle } from '@/components/marketing/SectionTitle'
 
 export function CaseStudiesSection({ projects }: { projects: FeaturedProject[] }) {
   const ref = useRef(null)
@@ -36,10 +37,10 @@ export function CaseStudiesSection({ projects }: { projects: FeaturedProject[] }
           className="mx-auto max-w-3xl text-center mb-10 sm:mb-14"
         >
           <SectionLabel>Proyectos destacados</SectionLabel>
-          <h2 className="text-2xl sm:text-4xl md:text-[2.65rem] font-bold tracking-tight text-slate-900 leading-tight">
+          <SectionTitle>
             Diseños que convierten ideas en{' '}
             <span className="text-brand">negocios digitales</span>
-          </h2>
+          </SectionTitle>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
             Una selección de proyectos reales creados para diferentes industrias y necesidades.
           </p>

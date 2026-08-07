@@ -6,6 +6,7 @@ import { useRef } from 'react'
 import { ArrowRight, ListChecks, Rocket, ShieldCheck, Smartphone, Users } from 'lucide-react'
 import TechLogo from '@/components/TechLogo'
 import { SectionLabel } from '@/components/marketing/SectionLabel'
+import { SectionTitle } from '@/components/marketing/SectionTitle'
 import { BRAND_ICON_TONES } from '@/lib/brand-icons'
 import { HOME_BENEFITS, quoteUrl } from '@/lib/marketing'
 
@@ -65,11 +66,11 @@ export function BenefitsSection() {
           className="mx-auto max-w-3xl text-center mb-10 sm:mb-14"
         >
           <SectionLabel>Por qué trabajar conmigo</SectionLabel>
-          <h2 className="text-2xl sm:text-4xl md:text-[2.65rem] font-bold tracking-tight text-slate-900 leading-tight">
+          <SectionTitle>
             No compras una página web.
             <br />
             <span className="text-brand">Construyes una herramienta para crecer.</span>
-          </h2>
+          </SectionTitle>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
             Una web profesional no solo se ve bien. Te ayuda a generar confianza, recibir consultas y convertir
             visitantes en clientes.

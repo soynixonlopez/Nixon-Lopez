@@ -6,13 +6,11 @@ import ScrollToTop from '@/components/ScrollToTop'
 import HashScroll from '@/components/HashScroll'
 import { HomeSeoContent } from '@/components/seo/HomeSeoContent'
 import { HeroSection } from '@/components/home/HeroSection'
+import { ProblemSection } from '@/components/home/ProblemSection'
 import { SITE_URL } from '@/lib/site-config'
 import { getHomePortfolioProjects } from '@/lib/portfolio'
 
 /** Secciones bajo el fold: HTML en SSR, JS diferido por chunk */
-const ProblemSection = dynamic(() =>
-  import('@/components/home/ProblemSection').then((m) => ({ default: m.ProblemSection })),
-)
 const BenefitsSection = dynamic(() =>
   import('@/components/home/BenefitsSection').then((m) => ({ default: m.BenefitsSection })),
 )
