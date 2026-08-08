@@ -66,152 +66,137 @@ const CARD_THEMES = [
 ] as const
 
 const AUTO_MS = 6500
-const CARD_WIDTH_CLASS = 'w-[min(86vw,30rem)]'
-/** Tres copias para loop infinito sin saltos visibles */
-const LOOP_COPIES = 3
+const SWIPE_THRESHOLD = 48
 
 export function ProblemSection() {
   const messages = useMessages()
   const p = messages.problems
   const chipTitles = p.chipTitles
   const chipResults = p.chipResults
-  const scrollerRef = useRef<HTMLDivElement>(null)
-  const jumpingRef = useRef(false)
-  const [activeLogical, setActiveLogical] = useState(0)
-  const [paused, setPaused] = useState(false)
   const total = HOME_PROBLEMS.length
-  const middleStart = total
+
+  // Índice en la pista triplicada: arranca en la copia del medio (primera tarjeta)
+  const [trackIndex, setTrackIndex] = useState<number>(total)
+  const [animate, setAnimate] = useState(true)
+  const [dragOffset, setDragOffset] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const [slideWidth, setSlideWidth] = useState(0)
+  const viewportRef = useRef<HTMLDivElement>(null)
+  const draggingRef = useRef(false)
+  const startXRef = useRef(0)
+  const dragOffsetRef = useRef(0)
+  const trackIndexRef = useRef(trackIndex)
+
+  useEffect(() => {
+    trackIndexRef.current = trackIndex
+  }, [trackIndex])
+
+  useEffect(() => {
+    const viewport = viewportRef.current
+    if (!viewport) return
+    const measure = () => setSlideWidth(viewport.clientWidth)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(viewport)
+    return () => observer.disconnect()
+  }, [])
+
+  const logicalIndex = ((trackIndex % total) + total) % total
 
   const loopSlides = useMemo(
     () =>
-      Array.from({ length: total * LOOP_COPIES }, (_, trackIndex) => ({
-        trackIndex,
-        logicalIndex: trackIndex % total,
+      Array.from({ length: total * 3 }, (_, i) => ({
+        trackIndex: i,
+        logicalIndex: i % total,
       })),
     [total],
   )
 
-  const scrollToTrack = useCallback((trackIndex: number, behavior: ScrollBehavior = 'smooth') => {
-    const scroller = scrollerRef.current
-    const slide = scroller?.children[trackIndex] as HTMLElement | undefined
-    if (!scroller || !slide) return
-    const left = slide.offsetLeft - (scroller.clientWidth - slide.offsetWidth) / 2
-    scroller.scrollTo({ left: Math.max(0, left), behavior })
+  const goBy = useCallback((delta: number) => {
+    setAnimate(true)
+    setDragOffset(0)
+    dragOffsetRef.current = 0
+    setTrackIndex((current) => current + delta)
   }, [])
 
-  const normalizeLoop = useCallback(() => {
-    const scroller = scrollerRef.current
-    if (!scroller || jumpingRef.current) return
-
-    const center = scroller.scrollLeft + scroller.clientWidth / 2
-    let closest = middleStart
-    let closestDist = Infinity
-    Array.from(scroller.children).forEach((child, index) => {
-      const el = child as HTMLElement
-      const mid = el.offsetLeft + el.offsetWidth / 2
-      const dist = Math.abs(mid - center)
-      if (dist < closestDist) {
-        closestDist = dist
-        closest = index
-      }
-    })
-
-    const logical = closest % total
-    setActiveLogical(logical)
-
-    // Si estamos en la copia inicial o final, saltar a la copia del medio (sin animación)
-    if (closest < total || closest >= total * 2) {
-      jumpingRef.current = true
-      const target = middleStart + logical
-      scroller.classList.remove('scroll-smooth')
-      scrollToTrack(target, 'auto')
-      requestAnimationFrame(() => {
-        scroller.classList.add('scroll-smooth')
-        jumpingRef.current = false
-      })
-    }
-  }, [middleStart, scrollToTrack, total])
+  const goPrev = useCallback(() => goBy(-1), [goBy])
+  const goNext = useCallback(() => goBy(1), [goBy])
 
   const goToLogical = useCallback(
-    (logicalIndex: number, direction: 1 | -1 | 0 = 0) => {
-      const scroller = scrollerRef.current
-      if (!scroller) return
-
-      const center = scroller.scrollLeft + scroller.clientWidth / 2
-      let currentTrack = middleStart
-      let closestDist = Infinity
-      Array.from(scroller.children).forEach((child, index) => {
-        const el = child as HTMLElement
-        const mid = el.offsetLeft + el.offsetWidth / 2
-        const dist = Math.abs(mid - center)
-        if (dist < closestDist) {
-          closestDist = dist
-          currentTrack = index
-        }
-      })
-
-      let targetTrack: number
-      if (direction === 1) {
-        targetTrack = currentTrack + 1
-      } else if (direction === -1) {
-        targetTrack = currentTrack - 1
-      } else {
-        // Ir al mismo slide lógico más cercano en la copia del medio
-        targetTrack = middleStart + ((logicalIndex % total) + total) % total
-      }
-
-      scrollToTrack(targetTrack, 'smooth')
-      setActiveLogical(((logicalIndex % total) + total) % total)
+    (targetLogical: number) => {
+      const current = trackIndexRef.current
+      const currentLogical = ((current % total) + total) % total
+      let delta = targetLogical - currentLogical
+      if (delta > total / 2) delta -= total
+      if (delta < -total / 2) delta += total
+      if (delta === 0) return
+      goBy(delta)
     },
-    [middleStart, scrollToTrack, total],
+    [goBy, total],
   )
 
-  const goPrev = useCallback(() => {
-    goToLogical((activeLogical - 1 + total) % total, -1)
-  }, [activeLogical, goToLogical, total])
+  // Loop infinito: al terminar la transición, saltar a la copia del medio
+  const handleTransitionEnd = useCallback(
+    (event: React.TransitionEvent<HTMLDivElement>) => {
+      if (event.target !== event.currentTarget) return
+      if (draggingRef.current) return
+      const current = trackIndexRef.current
+      if (current < total || current >= total * 2) {
+        const normalized = total + (((current % total) + total) % total)
+        setAnimate(false)
+        setTrackIndex(normalized)
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => setAnimate(true))
+        })
+      }
+    },
+    [total],
+  )
 
-  const goNext = useCallback(() => {
-    goToLogical((activeLogical + 1) % total, 1)
-  }, [activeLogical, goToLogical, total])
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return
+    draggingRef.current = true
+    setPaused(true)
+    setAnimate(false)
+    startXRef.current = event.clientX
+    dragOffsetRef.current = 0
+    setDragOffset(0)
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
 
-  // Arrancar en la primera tarjeta de la copia del medio (centrada)
-  useEffect(() => {
-    const id = window.requestAnimationFrame(() => {
-      const scroller = scrollerRef.current
-      scroller?.classList.remove('scroll-smooth')
-      scrollToTrack(middleStart, 'auto')
-      requestAnimationFrame(() => scroller?.classList.add('scroll-smooth'))
-    })
-    return () => window.cancelAnimationFrame(id)
-  }, [middleStart, scrollToTrack])
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current) return
+    const delta = event.clientX - startXRef.current
+    dragOffsetRef.current = delta
+    setDragOffset(delta)
+  }
 
-  useEffect(() => {
-    const scroller = scrollerRef.current
-    if (!scroller) return
-
-    let raf = 0
-    const onScroll = () => {
-      if (jumpingRef.current) return
-      cancelAnimationFrame(raf)
-      raf = requestAnimationFrame(normalizeLoop)
+  const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current) return
+    draggingRef.current = false
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    } catch {
+      /* ignore */
     }
 
-    scroller.addEventListener('scroll', onScroll, { passive: true })
-    scroller.addEventListener('scrollend', normalizeLoop)
-    return () => {
-      cancelAnimationFrame(raf)
-      scroller.removeEventListener('scroll', onScroll)
-      scroller.removeEventListener('scrollend', normalizeLoop)
-    }
-  }, [normalizeLoop])
+    const delta = dragOffsetRef.current
+    setAnimate(true)
+    setDragOffset(0)
+    dragOffsetRef.current = 0
+    setPaused(false)
+
+    if (delta <= -SWIPE_THRESHOLD) goNext()
+    else if (delta >= SWIPE_THRESHOLD) goPrev()
+  }
 
   useEffect(() => {
-    if (paused) return
-    const id = window.setInterval(() => {
-      goNext()
-    }, AUTO_MS)
+    if (paused || draggingRef.current) return
+    const id = window.setInterval(() => goNext(), AUTO_MS)
     return () => window.clearInterval(id)
   }, [goNext, paused])
+
+  const trackOffsetPx = slideWidth > 0 ? -trackIndex * slideWidth + dragOffset : 0
 
   return (
     <section id="problem" className="relative isolate overflow-hidden bg-slate-50/90 py-16 sm:py-24">
@@ -233,8 +218,8 @@ export function ProblemSection() {
         aria-hidden
       />
 
-      <div className="relative z-10 mx-auto max-w-6xl">
-        <div className="container-padding mx-auto mb-8 max-w-3xl px-4 text-center sm:mb-10 sm:px-6">
+      <div className="container-padding relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="mx-auto mb-8 max-w-3xl text-center sm:mb-10">
           <SectionLabel>{p.sectionLabel}</SectionLabel>
           <SectionTitle>
             {p.titleBefore}
@@ -244,105 +229,119 @@ export function ProblemSection() {
         </div>
 
         <div
-          className="relative"
+          className="relative mx-auto w-full max-w-xl"
           onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
+          onMouseLeave={() => {
+            if (!draggingRef.current) setPaused(false)
+          }}
           onFocusCapture={() => setPaused(true)}
           onBlurCapture={() => setPaused(false)}
         >
           <div
-            ref={scrollerRef}
-            className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-5"
-            style={{
-              paddingLeft: 'max(1rem, calc((100% - min(86vw, 30rem)) / 2))',
-              paddingRight: 'max(1rem, calc((100% - min(86vw, 30rem)) / 2))',
-            }}
+            ref={viewportRef}
+            className={`cursor-grab overflow-hidden touch-pan-y select-none active:cursor-grabbing ${
+              slideWidth > 0 ? 'opacity-100' : 'opacity-0'
+            }`}
             aria-roledescription="carrusel"
             aria-label={p.carouselLabel}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
           >
-            {loopSlides.map(({ trackIndex, logicalIndex }) => {
-              const item = HOME_PROBLEMS[logicalIndex]
-              const Icon = PROBLEM_ICONS[item.icon]
-              const copy = p.items[logicalIndex]
-              const chipTitle = chipTitles[logicalIndex] ?? ''
-              const theme = CARD_THEMES[logicalIndex % CARD_THEMES.length]
-              if (!copy) return null
-              const active = logicalIndex === activeLogical
-              return (
-                <article
-                  key={`${chipTitle}-${trackIndex}`}
-                  className={`${CARD_WIDTH_CLASS} shrink-0 snap-center`}
-                  aria-roledescription="slide"
-                  aria-label={`${p.situationLabel} ${logicalIndex + 1}: ${chipTitle}`}
-                  aria-hidden={trackIndex < total || trackIndex >= total * 2}
-                >
-                  <div
-                    className={`flex h-full flex-col overflow-hidden rounded-[1.75rem] border backdrop-blur-sm transition duration-300 ${theme.card} ${
-                      active ? theme.activeRing : 'opacity-85 scale-[0.985]'
-                    }`}
+            <div
+              className={`flex will-change-transform ${animate && slideWidth > 0 ? 'transition-transform duration-500 ease-out' : ''}`}
+              style={{
+                transform: `translate3d(${trackOffsetPx}px, 0, 0)`,
+              }}
+              onTransitionEnd={handleTransitionEnd}
+            >
+              {loopSlides.map(({ trackIndex: slideTrack, logicalIndex: slideLogical }) => {
+                const item = HOME_PROBLEMS[slideLogical]
+                const Icon = PROBLEM_ICONS[item.icon]
+                const copy = p.items[slideLogical]
+                const chipTitle = chipTitles[slideLogical] ?? ''
+                const theme = CARD_THEMES[slideLogical % CARD_THEMES.length]
+                if (!copy) return null
+                const active = slideTrack === trackIndex
+
+                return (
+                  <article
+                    key={`${chipTitle}-${slideTrack}`}
+                    className="w-full shrink-0 grow-0 basis-full px-0.5"
+                    style={{ width: slideWidth > 0 ? slideWidth : undefined, flexBasis: slideWidth > 0 ? slideWidth : '100%' }}
+                    aria-roledescription="slide"
+                    aria-label={`${p.situationLabel} ${slideLogical + 1}: ${chipTitle}`}
+                    aria-hidden={!active}
                   >
-                    <div className={`flex items-center gap-3 border-b px-5 py-4 sm:px-7 ${theme.header}`}>
-                      <span
-                        className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl shadow-sm ${theme.icon}`}
-                      >
-                        <Icon className="h-5 w-5" aria-hidden />
-                      </span>
-                      <div>
-                        <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${theme.label}`}>
-                          {p.situationLabel} {logicalIndex + 1}
-                        </p>
-                        <p className="text-base font-bold text-slate-900 dark:text-slate-50">{chipTitle}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-1 flex-col px-5 py-6 sm:px-7 sm:py-7">
-                      <div className={`border-l-4 pl-4 sm:pl-5 ${theme.accent}`}>
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                          {p.problemLabel}
-                        </p>
-                        <h3 className="mt-2 text-xl font-bold leading-snug tracking-tight text-slate-900 dark:text-slate-50 sm:text-2xl">
-                          {copy.problem}
-                        </h3>
-                      </div>
-
-                      <div className={`my-5 flex items-center gap-3 ${theme.divider}`} aria-hidden>
-                        <span className="h-px flex-1 bg-current opacity-25" />
-                        <ArrowDown className="h-4 w-4" />
-                        <span className="h-px flex-1 bg-current opacity-25" />
-                      </div>
-
-                      <div className={`mt-auto rounded-2xl px-4 py-4 sm:px-5 sm:py-5 ${theme.solutionBox}`}>
-                        <p
-                          className={`mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] ${theme.solutionLabel}`}
+                    <div
+                      className={`flex h-full flex-col overflow-hidden rounded-[1.75rem] border backdrop-blur-sm transition duration-300 ${theme.card} ${
+                        active ? theme.activeRing : ''
+                      }`}
+                    >
+                      <div className={`flex items-center gap-3 border-b px-5 py-4 sm:px-7 ${theme.header}`}>
+                        <span
+                          className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl shadow-sm ${theme.icon}`}
                         >
-                          <Check className="h-4 w-4 shrink-0" strokeWidth={2.5} aria-hidden />
-                          {p.solutionLabel}
-                        </p>
-                        <p className="text-base leading-relaxed text-slate-700 dark:text-slate-300 sm:text-[1.05rem]">
-                          {copy.solution}
-                        </p>
-                        <p className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
-                          <span className={`h-1.5 w-8 rounded-full ${theme.accentBar}`} aria-hidden />
-                          {chipResults[logicalIndex]}
-                        </p>
+                          <Icon className="h-5 w-5" aria-hidden />
+                        </span>
+                        <div>
+                          <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${theme.label}`}>
+                            {p.situationLabel} {slideLogical + 1}
+                          </p>
+                          <p className="text-base font-bold text-slate-900 dark:text-slate-50">{chipTitle}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-1 flex-col px-5 py-6 sm:px-7 sm:py-7">
+                        <div className={`border-l-4 pl-4 sm:pl-5 ${theme.accent}`}>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                            {p.problemLabel}
+                          </p>
+                          <h3 className="mt-2 text-xl font-bold leading-snug tracking-tight text-slate-900 dark:text-slate-50 sm:text-2xl">
+                            {copy.problem}
+                          </h3>
+                        </div>
+
+                        <div className={`my-5 flex items-center gap-3 ${theme.divider}`} aria-hidden>
+                          <span className="h-px flex-1 bg-current opacity-25" />
+                          <ArrowDown className="h-4 w-4" />
+                          <span className="h-px flex-1 bg-current opacity-25" />
+                        </div>
+
+                        <div className={`mt-auto rounded-2xl px-4 py-4 sm:px-5 sm:py-5 ${theme.solutionBox}`}>
+                          <p
+                            className={`mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] ${theme.solutionLabel}`}
+                          >
+                            <Check className="h-4 w-4 shrink-0" strokeWidth={2.5} aria-hidden />
+                            {p.solutionLabel}
+                          </p>
+                          <p className="text-base leading-relaxed text-slate-700 dark:text-slate-300 sm:text-[1.05rem]">
+                            {copy.solution}
+                          </p>
+                          <p className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                            <span className={`h-1.5 w-8 rounded-full ${theme.accentBar}`} aria-hidden />
+                            {chipResults[slideLogical]}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </article>
-              )
-            })}
+                  </article>
+                )
+              })}
+            </div>
           </div>
 
-          <div className="container-padding mx-auto mt-5 flex max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
+          <div className="mt-5 flex items-center justify-between gap-3">
             <div className="flex items-center gap-1.5">
               {HOME_PROBLEMS.map((_, index) => (
                 <button
                   key={chipTitles[index] ?? index}
                   type="button"
                   aria-label={`${p.goToSituation} ${chipTitles[index] ?? index + 1}`}
-                  onClick={() => goToLogical(index, 0)}
+                  onClick={() => goToLogical(index)}
                   className={`h-1.5 rounded-full transition-all ${
-                    index === activeLogical ? 'w-8 bg-brand' : 'w-1.5 bg-slate-300 hover:bg-brand/40'
+                    index === logicalIndex ? 'w-8 bg-brand' : 'w-1.5 bg-slate-300 hover:bg-brand/40'
                   }`}
                 />
               ))}
@@ -368,7 +367,7 @@ export function ProblemSection() {
           </div>
         </div>
 
-        <div className="container-padding mx-auto mt-10 flex max-w-6xl flex-col items-center px-4 sm:mt-12 sm:px-6">
+        <div className="mt-10 flex flex-col items-center sm:mt-12">
           <div className="flex w-full max-w-xl flex-col justify-center gap-3 sm:flex-row">
             <Link
               href={quoteUrl()}
