@@ -286,13 +286,20 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
 
     return (
       <main className="relative isolate overflow-hidden bg-white pt-24 pb-16 sm:pt-28">
-        <div className="pointer-events-none absolute top-0 left-0 h-64 w-64 rounded-full bg-gradient-to-br from-blue-100/50 to-transparent blur-3xl" aria-hidden />
-        <div className="container-padding relative z-10 mx-auto max-w-2xl px-4 sm:px-6">
-          <SectionLabel align="left">Propuesta lista</SectionLabel>
-          <SectionTitle>
-            Tu cotización <span className="text-brand">estimada</span>
-          </SectionTitle>
-          <p className="mt-3 text-slate-600">Gracias, {state.nombre.split(' ')[0]}. Resumen de lo configurado.</p>
+        <div
+          className="pointer-events-none absolute top-0 left-0 h-64 w-64 rounded-full bg-gradient-to-br from-blue-100/50 to-transparent blur-3xl"
+          aria-hidden
+        />
+        <div className="relative z-10 mx-auto w-full max-w-xl px-5 sm:px-6">
+          <div className="text-center">
+            <SectionLabel>Propuesta lista</SectionLabel>
+            <SectionTitle>
+              Tu cotización <span className="text-brand">estimada</span>
+            </SectionTitle>
+            <p className="mt-3 text-slate-600">
+              Gracias, {state.nombre.split(' ')[0]}. Resumen de lo configurado.
+            </p>
+          </div>
 
           <div className="mt-8 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:rounded-3xl sm:p-8">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Proyecto</p>
@@ -307,17 +314,21 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
             </ul>
             <div className="mt-6 grid gap-4 border-t border-slate-100 pt-5 sm:grid-cols-2">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Tiempo estimado</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Tiempo estimado
+                </p>
                 <p className="mt-1 font-semibold text-slate-900">{quote.delivery}</p>
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Inversión estimada</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Inversión estimada
+                </p>
                 <p className="mt-1 text-3xl font-bold tabular-nums text-brand">${quote.total} USD</p>
               </div>
             </div>
-            <p className="mt-5 text-xs leading-relaxed text-slate-500">
-              Este valor es una estimación basada en las opciones seleccionadas. La propuesta final puede variar
-              ligeramente dependiendo de requerimientos adicionales.
+            <p className="mt-5 text-center text-xs leading-relaxed text-slate-500">
+              Este valor es una estimación basada en las opciones seleccionadas. La propuesta final
+              puede variar ligeramente dependiendo de requerimientos adicionales.
             </p>
           </div>
 
