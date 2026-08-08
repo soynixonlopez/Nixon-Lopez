@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowDown,
   ArrowRight,
@@ -66,8 +66,9 @@ const CARD_THEMES = [
 ] as const
 
 const AUTO_MS = 6500
-/** Ancho de tarjeta: foco uno a uno, con un poco de peek lateral */
 const CARD_WIDTH_CLASS = 'w-[min(86vw,30rem)]'
+/** Tres copias para loop infinito sin saltos visibles */
+const LOOP_COPIES = 3
 
 export function ProblemSection() {
   const messages = useMessages()
@@ -75,43 +76,69 @@ export function ProblemSection() {
   const chipTitles = p.chipTitles
   const chipResults = p.chipResults
   const scrollerRef = useRef<HTMLDivElement>(null)
-  const [activeIndex, setActiveIndex] = useState(0)
+  const jumpingRef = useRef(false)
+  const [activeLogical, setActiveLogical] = useState(0)
   const [paused, setPaused] = useState(false)
   const total = HOME_PROBLEMS.length
+  const middleStart = total
 
-  const scrollToIndex = useCallback((index: number, behavior: ScrollBehavior = 'smooth') => {
+  const loopSlides = useMemo(
+    () =>
+      Array.from({ length: total * LOOP_COPIES }, (_, trackIndex) => ({
+        trackIndex,
+        logicalIndex: trackIndex % total,
+      })),
+    [total],
+  )
+
+  const scrollToTrack = useCallback((trackIndex: number, behavior: ScrollBehavior = 'smooth') => {
     const scroller = scrollerRef.current
-    const slide = scroller?.children[index] as HTMLElement | undefined
+    const slide = scroller?.children[trackIndex] as HTMLElement | undefined
     if (!scroller || !slide) return
     const left = slide.offsetLeft - (scroller.clientWidth - slide.offsetWidth) / 2
     scroller.scrollTo({ left: Math.max(0, left), behavior })
   }, [])
 
-  const goTo = useCallback(
-    (index: number) => {
-      const next = (index + total) % total
-      scrollToIndex(next, 'smooth')
-      setActiveIndex(next)
-    },
-    [scrollToIndex, total],
-  )
-
-  const goPrev = useCallback(() => goTo(activeIndex - 1), [activeIndex, goTo])
-  const goNext = useCallback(() => goTo(activeIndex + 1), [activeIndex, goTo])
-
-  // Primera tarjeta centrada al montar
-  useEffect(() => {
-    const id = window.requestAnimationFrame(() => scrollToIndex(0, 'auto'))
-    return () => window.cancelAnimationFrame(id)
-  }, [scrollToIndex])
-
-  useEffect(() => {
+  const normalizeLoop = useCallback(() => {
     const scroller = scrollerRef.current
-    if (!scroller) return
+    if (!scroller || jumpingRef.current) return
 
-    const onScroll = () => {
+    const center = scroller.scrollLeft + scroller.clientWidth / 2
+    let closest = middleStart
+    let closestDist = Infinity
+    Array.from(scroller.children).forEach((child, index) => {
+      const el = child as HTMLElement
+      const mid = el.offsetLeft + el.offsetWidth / 2
+      const dist = Math.abs(mid - center)
+      if (dist < closestDist) {
+        closestDist = dist
+        closest = index
+      }
+    })
+
+    const logical = closest % total
+    setActiveLogical(logical)
+
+    // Si estamos en la copia inicial o final, saltar a la copia del medio (sin animación)
+    if (closest < total || closest >= total * 2) {
+      jumpingRef.current = true
+      const target = middleStart + logical
+      scroller.classList.remove('scroll-smooth')
+      scrollToTrack(target, 'auto')
+      requestAnimationFrame(() => {
+        scroller.classList.add('scroll-smooth')
+        jumpingRef.current = false
+      })
+    }
+  }, [middleStart, scrollToTrack, total])
+
+  const goToLogical = useCallback(
+    (logicalIndex: number, direction: 1 | -1 | 0 = 0) => {
+      const scroller = scrollerRef.current
+      if (!scroller) return
+
       const center = scroller.scrollLeft + scroller.clientWidth / 2
-      let closest = 0
+      let currentTrack = middleStart
       let closestDist = Infinity
       Array.from(scroller.children).forEach((child, index) => {
         const el = child as HTMLElement
@@ -119,23 +146,72 @@ export function ProblemSection() {
         const dist = Math.abs(mid - center)
         if (dist < closestDist) {
           closestDist = dist
-          closest = index
+          currentTrack = index
         }
       })
-      setActiveIndex(closest)
+
+      let targetTrack: number
+      if (direction === 1) {
+        targetTrack = currentTrack + 1
+      } else if (direction === -1) {
+        targetTrack = currentTrack - 1
+      } else {
+        // Ir al mismo slide lógico más cercano en la copia del medio
+        targetTrack = middleStart + ((logicalIndex % total) + total) % total
+      }
+
+      scrollToTrack(targetTrack, 'smooth')
+      setActiveLogical(((logicalIndex % total) + total) % total)
+    },
+    [middleStart, scrollToTrack, total],
+  )
+
+  const goPrev = useCallback(() => {
+    goToLogical((activeLogical - 1 + total) % total, -1)
+  }, [activeLogical, goToLogical, total])
+
+  const goNext = useCallback(() => {
+    goToLogical((activeLogical + 1) % total, 1)
+  }, [activeLogical, goToLogical, total])
+
+  // Arrancar en la primera tarjeta de la copia del medio (centrada)
+  useEffect(() => {
+    const id = window.requestAnimationFrame(() => {
+      const scroller = scrollerRef.current
+      scroller?.classList.remove('scroll-smooth')
+      scrollToTrack(middleStart, 'auto')
+      requestAnimationFrame(() => scroller?.classList.add('scroll-smooth'))
+    })
+    return () => window.cancelAnimationFrame(id)
+  }, [middleStart, scrollToTrack])
+
+  useEffect(() => {
+    const scroller = scrollerRef.current
+    if (!scroller) return
+
+    let raf = 0
+    const onScroll = () => {
+      if (jumpingRef.current) return
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(normalizeLoop)
     }
 
     scroller.addEventListener('scroll', onScroll, { passive: true })
-    return () => scroller.removeEventListener('scroll', onScroll)
-  }, [])
+    scroller.addEventListener('scrollend', normalizeLoop)
+    return () => {
+      cancelAnimationFrame(raf)
+      scroller.removeEventListener('scroll', onScroll)
+      scroller.removeEventListener('scrollend', normalizeLoop)
+    }
+  }, [normalizeLoop])
 
   useEffect(() => {
     if (paused) return
     const id = window.setInterval(() => {
-      goTo(activeIndex + 1)
+      goNext()
     }, AUTO_MS)
     return () => window.clearInterval(id)
-  }, [activeIndex, goTo, paused])
+  }, [goNext, paused])
 
   return (
     <section id="problem" className="relative isolate overflow-hidden bg-slate-50/90 py-16 sm:py-24">
@@ -184,19 +260,21 @@ export function ProblemSection() {
             aria-roledescription="carrusel"
             aria-label={p.carouselLabel}
           >
-            {HOME_PROBLEMS.map((item, index) => {
+            {loopSlides.map(({ trackIndex, logicalIndex }) => {
+              const item = HOME_PROBLEMS[logicalIndex]
               const Icon = PROBLEM_ICONS[item.icon]
-              const copy = p.items[index]
-              const chipTitle = chipTitles[index] ?? ''
-              const theme = CARD_THEMES[index % CARD_THEMES.length]
+              const copy = p.items[logicalIndex]
+              const chipTitle = chipTitles[logicalIndex] ?? ''
+              const theme = CARD_THEMES[logicalIndex % CARD_THEMES.length]
               if (!copy) return null
-              const active = index === activeIndex
+              const active = logicalIndex === activeLogical
               return (
                 <article
-                  key={chipTitle + String(index)}
+                  key={`${chipTitle}-${trackIndex}`}
                   className={`${CARD_WIDTH_CLASS} shrink-0 snap-center`}
                   aria-roledescription="slide"
-                  aria-label={`${p.situationLabel} ${index + 1}: ${chipTitle}`}
+                  aria-label={`${p.situationLabel} ${logicalIndex + 1}: ${chipTitle}`}
+                  aria-hidden={trackIndex < total || trackIndex >= total * 2}
                 >
                   <div
                     className={`flex h-full flex-col overflow-hidden rounded-[1.75rem] border backdrop-blur-sm transition duration-300 ${theme.card} ${
@@ -211,7 +289,7 @@ export function ProblemSection() {
                       </span>
                       <div>
                         <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${theme.label}`}>
-                          {p.situationLabel} {index + 1}
+                          {p.situationLabel} {logicalIndex + 1}
                         </p>
                         <p className="text-base font-bold text-slate-900 dark:text-slate-50">{chipTitle}</p>
                       </div>
@@ -245,7 +323,7 @@ export function ProblemSection() {
                         </p>
                         <p className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
                           <span className={`h-1.5 w-8 rounded-full ${theme.accentBar}`} aria-hidden />
-                          {chipResults[index]}
+                          {chipResults[logicalIndex]}
                         </p>
                       </div>
                     </div>
@@ -262,9 +340,9 @@ export function ProblemSection() {
                   key={chipTitles[index] ?? index}
                   type="button"
                   aria-label={`${p.goToSituation} ${chipTitles[index] ?? index + 1}`}
-                  onClick={() => goTo(index)}
+                  onClick={() => goToLogical(index, 0)}
                   className={`h-1.5 rounded-full transition-all ${
-                    index === activeIndex ? 'w-8 bg-brand' : 'w-1.5 bg-slate-300 hover:bg-brand/40'
+                    index === activeLogical ? 'w-8 bg-brand' : 'w-1.5 bg-slate-300 hover:bg-brand/40'
                   }`}
                 />
               ))}
