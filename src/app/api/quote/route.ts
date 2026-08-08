@@ -15,6 +15,7 @@ import {
   buildSyntheticContractRecordForQuotePdf,
 } from '@/lib/quote-client-confirmation-email'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
+import { buildClientDocumentFilename } from '@/lib/document-filename'
 import { extractQuoteServiceSnapshots } from '@/lib/quote-pricing'
 
 function parseQuoteLines(body: Record<string, unknown>): QuoteSummaryLine[] {
@@ -52,6 +53,7 @@ export async function POST(request: NextRequest) {
     const nombre = String(body.nombre ?? '')
     const apellido = String(body.apellido ?? '')
     const correo = String(body.correo ?? '').trim()
+    const empresa = typeof body.empresa === 'string' ? body.empresa.trim() : ''
     const tipoServicio = body.tipoServicio
     const servicio = String(body.servicio ?? '')
     const cantidadPaginas = body.cantidadPaginas
@@ -109,6 +111,9 @@ export async function POST(request: NextRequest) {
         client_first_name: nombre,
         client_last_name: apellido,
         client_email: correo,
+        company: empresa || null,
+        client_phone:
+          typeof body.whatsapp === 'string' && body.whatsapp.trim() ? body.whatsapp.trim() : null,
         service_id: selectedServices.length > 1 ? 'multiple' : typeof tipoServicio === 'string' ? tipoServicio : null,
         service_label: servicio || null,
         quantity_pages: selectedServices.length === 1 && Number.isFinite(pages) ? pages : null,
@@ -210,6 +215,7 @@ export async function POST(request: NextRequest) {
       ])
 
       const ref = quoteId.slice(0, 8).toUpperCase()
+      const clientFullName = `${nombre.trim()} ${apellido.trim()}`.trim()
       const clientPayload = buildQuoteClientConfirmationContent({
         nombre,
         apellido,
@@ -240,11 +246,21 @@ export async function POST(request: NextRequest) {
         messageIdPrefix: `quote.${quoteId}`,
         attachments: [
           {
-            filename: `Cotizacion-Nixon-Lopez-Services-${ref}.pdf`,
+            filename: buildClientDocumentFilename({
+              kind: 'Cotizacion',
+              clientName: clientFullName,
+              company: empresa || null,
+              ref,
+            }),
             content: Buffer.from(quotePdf),
           },
           {
-            filename: `Contrato-borrador-${ref}.pdf`,
+            filename: buildClientDocumentFilename({
+              kind: 'Contrato',
+              clientName: clientFullName,
+              company: empresa || null,
+              ref: `borrador-${ref}`,
+            }),
             content: Buffer.from(contractPdf),
           },
         ],

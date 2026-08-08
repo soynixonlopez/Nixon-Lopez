@@ -186,6 +186,8 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
           nombre,
           apellido,
           correo: state.correo.trim(),
+          empresa: state.empresa.trim() || undefined,
+          whatsapp: state.whatsapp.trim() || undefined,
           tipoServicio: state.projectType,
           servicio: quote.projectLabel,
           total: `$${quote.total} USD`,
@@ -243,7 +245,8 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
       ...quote.lines.filter((line) => !line.id.startsWith('project-')).map((line) => line.label),
     ]
     const logoUrl = `${window.location.origin}/images/logoweb.png`
-    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/><title>Cotización — ${quote.projectLabel}</title>
+    const clientLabel = [state.nombre.trim(), state.empresa.trim()].filter(Boolean).join(' — ')
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/><title>Cotizacion ${clientLabel || quote.projectLabel}</title>
       <style>
         body{font-family:Segoe UI,system-ui,sans-serif;color:#0f172a;padding:40px;max-width:720px;margin:0 auto}
         h1{font-size:28px;margin:8px 0 0} .muted{color:#64748b;font-size:14px}

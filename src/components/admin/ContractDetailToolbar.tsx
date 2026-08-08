@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { ArrowLeft, Mail, Printer, Send, Trash2, X } from 'lucide-react'
+import { buildClientDocumentPrintTitle } from '@/lib/document-filename'
 import { createClient } from '@/lib/supabase/client'
 
 type Props = {
@@ -11,6 +12,7 @@ type Props = {
   contractNumber: string
   clientName: string
   clientEmail: string | null
+  company?: string | null
 }
 
 export function ContractDetailToolbar({
@@ -18,6 +20,7 @@ export function ContractDetailToolbar({
   contractNumber,
   clientName,
   clientEmail,
+  company,
 }: Props) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
@@ -74,7 +77,19 @@ export function ContractDetailToolbar({
         </Link>
         <button
           type="button"
-          onClick={() => window.print()}
+          onClick={() => {
+            const prev = document.title
+            document.title = buildClientDocumentPrintTitle({
+              kind: 'Contrato',
+              clientName,
+              company,
+              ref: contractNumber,
+            })
+            window.print()
+            window.setTimeout(() => {
+              document.title = prev
+            }, 500)
+          }}
           className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 shadow-sm hover:bg-slate-50"
         >
           <Printer className="w-4 h-4" />

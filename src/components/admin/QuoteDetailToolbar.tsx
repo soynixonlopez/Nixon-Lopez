@@ -4,14 +4,16 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { ArrowLeft, Printer, Pencil, Trash2, ReceiptText } from 'lucide-react'
+import { buildClientDocumentPrintTitle } from '@/lib/document-filename'
 import { createClient } from '@/lib/supabase/client'
 
 type Props = {
   quoteId: string
   clientName: string
+  company?: string | null
 }
 
-export function QuoteDetailToolbar({ quoteId, clientName }: Props) {
+export function QuoteDetailToolbar({ quoteId, clientName, company }: Props) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
 
@@ -29,6 +31,20 @@ export function QuoteDetailToolbar({ quoteId, clientName }: Props) {
     router.refresh()
   }
 
+  function handlePrint() {
+    const prev = document.title
+    document.title = buildClientDocumentPrintTitle({
+      kind: 'Cotizacion',
+      clientName,
+      company,
+      ref: quoteId.slice(0, 8).toUpperCase(),
+    })
+    window.print()
+    window.setTimeout(() => {
+      document.title = prev
+    }, 500)
+  }
+
   return (
     <div className="print:hidden no-print flex flex-wrap items-stretch sm:items-center gap-2 mb-6 w-full min-w-0">
       <Link
@@ -40,7 +56,7 @@ export function QuoteDetailToolbar({ quoteId, clientName }: Props) {
       </Link>
       <button
         type="button"
-        onClick={() => window.print()}
+        onClick={handlePrint}
         className="inline-flex items-center justify-center gap-2 min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 shadow-sm hover:bg-slate-50 flex-1 sm:flex-initial min-w-0"
       >
         <Printer className="w-4 h-4" />

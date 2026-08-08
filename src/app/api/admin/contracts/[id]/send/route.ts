@@ -1,11 +1,23 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { ADMIN_EMAIL } from '@/lib/admin-constants'
+import { buildClientDocumentFilename } from '@/lib/document-filename'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
 import { generateContractPdfBuffer } from '@/lib/pdf/generateContractPdf'
 import { sendEmailWithAttachments } from '@/lib/mailer'
 import { escapeHtml } from '@/lib/utils'
 import type { ServiceContractRecord } from '@/lib/types/contract'
+
+function companyFromTerms(terms: ServiceContractRecord['terms_payload']): string | null {
+  if (!terms || typeof terms !== 'object') return null
+  const client = (terms as Record<string, unknown>).client
+  if (client && typeof client === 'object' && !Array.isArray(client)) {
+    const empresa = (client as Record<string, unknown>).empresa
+    if (typeof empresa === 'string' && empresa.trim()) return empresa.trim()
+  }
+  const company = (terms as Record<string, unknown>).company
+  return typeof company === 'string' && company.trim() ? company.trim() : null
+}
 
 export async function POST(
   request: Request,
@@ -64,7 +76,12 @@ export async function POST(
       replyTo: ADMIN_EMAIL,
       attachments: [
         {
-          filename: `${contract.contract_number.replace(/[^\w.-]+/g, '_')}.pdf`,
+          filename: buildClientDocumentFilename({
+            kind: 'Contrato',
+            clientName: contract.client_name,
+            company: companyFromTerms(contract.terms_payload),
+            ref: contract.contract_number,
+          }),
           content: Buffer.from(pdfBuffer),
         },
       ],

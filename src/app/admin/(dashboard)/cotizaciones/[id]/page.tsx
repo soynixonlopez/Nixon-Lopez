@@ -15,6 +15,7 @@ export default async function CotizacionDetailPage({ params }: { params: Promise
     id: string
     client_first_name: string
     client_last_name: string
+    company?: string | null
   }
 
   return (
@@ -22,6 +23,7 @@ export default async function CotizacionDetailPage({ params }: { params: Promise
       <QuoteDetailToolbar
         quoteId={q.id}
         clientName={`${q.client_first_name} ${q.client_last_name}`}
+        company={q.company}
       />
       <QuotePrintView quote={q as never} />
       <div className="print:hidden mt-10 border-t border-slate-200 pt-8" id="editar-cotizacion">
