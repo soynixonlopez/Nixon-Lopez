@@ -375,36 +375,32 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
       />
 
       <div className="container-padding relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-10 lg:items-stretch">
-          {/* Izquierda — imagen con resumen flotante encima */}
-          <div className="lg:sticky lg:top-28">
-            <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:rounded-3xl">
-              <Image
-                src="/images/cotizador.png"
-                alt="Nixon Lopez — Descubre cuánto cuesta tu proyecto"
-                width={1092}
-                height={1440}
-                priority
-                unoptimized
-                className="h-auto w-full object-cover object-center"
-                sizes="(max-width: 1024px) 100vw, 540px"
-              />
+        <div className="grid items-start gap-6 lg:grid-cols-2 lg:items-stretch lg:gap-8">
+          {/* Izquierda — la altura la marca el formulario; la imagen se recorta para llenar */}
+          <div className="relative order-1 min-h-[240px] overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:min-h-[280px] sm:rounded-3xl lg:order-none lg:min-h-0">
+            <Image
+              src="/images/cotizador.png"
+              alt="Nixon Lopez — Descubre cuánto cuesta tu proyecto"
+              fill
+              priority
+              unoptimized
+              className="object-cover object-[center_18%]"
+              sizes="(max-width: 1024px) 100vw, 540px"
+            />
 
-              {/* Resumen vivo sobre la imagen (estilo mockup flotante) */}
-              <div
-                className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-900/35 via-transparent to-transparent lg:from-slate-900/25"
-                aria-hidden
-              />
-              <div className="absolute bottom-3 left-3 right-3 z-10 flex justify-end sm:bottom-5 sm:left-auto sm:right-5 lg:bottom-6 lg:right-6">
-                <div className="origin-bottom-right sm:rotate-1">
-                  <QuoteSummaryPanel state={state} overlay />
-                </div>
+            <div
+              className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent"
+              aria-hidden
+            />
+            <div className="absolute bottom-3 left-3 right-3 z-10 flex justify-end sm:bottom-5 sm:left-auto sm:right-5 lg:bottom-6 lg:right-6">
+              <div className="origin-bottom-right sm:rotate-1">
+                <QuoteSummaryPanel state={state} overlay />
               </div>
             </div>
           </div>
 
-          {/* Derecha — card blanca como homepage */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:rounded-3xl sm:p-6 lg:p-7">
+          {/* Derecha — define la altura de la fila en desktop */}
+          <div className="order-2 flex h-full flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:rounded-3xl sm:p-6 lg:order-none lg:p-7">
             <div className="mb-6 flex items-start gap-3 border-b border-slate-100 pb-5">
               <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${BRAND_ICON_TONES.blue.wrap}`}>
                 <Calculator className="h-5 w-5" aria-hidden />
@@ -728,47 +724,48 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
               </motion.div>
             </AnimatePresence>
 
-            <div className="mt-6 flex items-center justify-between gap-3 border-t border-slate-100 pt-5">
-              {step > 1 ? (
-                <button
-                  type="button"
-                  onClick={goBack}
-                  className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-brand"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Atrás
-                </button>
-              ) : (
-                <span />
-              )}
+            <div className="mt-6 border-t border-slate-100 pt-5">
+              <div className="flex items-center justify-between gap-3">
+                {step > 1 ? (
+                  <button
+                    type="button"
+                    onClick={goBack}
+                    className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-brand"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Atrás
+                  </button>
+                ) : (
+                  <span />
+                )}
 
-              {step < TOTAL_STEPS ? (
-                <button
-                  type="button"
-                  onClick={goNext}
-                  disabled={!canContinue(step, state) || pending}
-                  className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-md bg-brand px-6 py-3.5 text-base font-semibold text-white transition hover:bg-brand-light disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Continuar
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleGenerate}
-                  disabled={!canContinue(6, state) || sending}
-                  className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-md bg-brand px-6 py-3.5 text-base font-semibold text-white transition hover:bg-brand-light disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <WalletCards className="h-4 w-4" />
-                  {sending ? 'Generando…' : 'Generar propuesta'}
-                </button>
-              )}
+                {step < TOTAL_STEPS ? (
+                  <button
+                    type="button"
+                    onClick={goNext}
+                    disabled={!canContinue(step, state) || pending}
+                    className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-md bg-brand px-6 py-3.5 text-base font-semibold text-white transition hover:bg-brand-light disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Continuar
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleGenerate}
+                    disabled={!canContinue(6, state) || sending}
+                    className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-md bg-brand px-6 py-3.5 text-base font-semibold text-white transition hover:bg-brand-light disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <WalletCards className="h-4 w-4" />
+                    {sending ? 'Generando…' : 'Generar propuesta'}
+                  </button>
+                )}
+              </div>
+              <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs text-slate-500">
+                <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                Precio transparente · Sin compromiso · Menos de 2 minutos
+              </p>
             </div>
-
-            <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs text-slate-500">
-              <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden />
-              Precio transparente · Sin compromiso · Menos de 2 minutos
-            </p>
           </div>
         </div>
       </div>

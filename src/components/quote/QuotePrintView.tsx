@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { parseClientExtraFromPayload } from '@/lib/admin-configurator-quote'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
 import { extractQuoteServiceSnapshots, formatQuoteProjectSummary } from '@/lib/quote-pricing'
 
@@ -62,6 +63,7 @@ export function QuotePrintView({ quote }: { quote: QuoteRow }) {
     company: quote.company,
     clientName: `${quote.client_first_name} ${quote.client_last_name}`.trim(),
   })
+  const clientExtra = parseClientExtraFromPayload(quote.raw_payload)
 
   return (
     <article
@@ -130,6 +132,14 @@ export function QuotePrintView({ quote }: { quote: QuoteRow }) {
           {quote.company ? <p className="text-slate-600 break-words">{String(quote.company)}</p> : null}
           <p className="text-slate-600 break-all">{quote.client_email}</p>
           {quote.client_phone ? <p className="text-slate-600 break-words">{quote.client_phone}</p> : null}
+          {clientExtra.client_ruc ? (
+            <p className="text-slate-600 break-words">RUC / cédula: {clientExtra.client_ruc}</p>
+          ) : null}
+          {clientExtra.client_city || clientExtra.client_address ? (
+            <p className="text-slate-600 break-words">
+              {[clientExtra.client_city, clientExtra.client_address].filter(Boolean).join(' · ')}
+            </p>
+          ) : null}
         </div>
       </div>
 

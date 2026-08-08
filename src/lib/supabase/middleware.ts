@@ -5,7 +5,7 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'info@nixonlopez.com'
 
 /** Evita redirección abierta tras login: solo rutas internas relativas bajo el mismo origen. */
 function safeAdminRedirectPath(next: string | null): string {
-  if (!next || typeof next !== 'string') return '/admin'
+  if (!next || typeof next !== 'string') return '/admin/cotizaciones'
   const t = next.trim()
   if (
     !t.startsWith('/') ||
@@ -13,7 +13,7 @@ function safeAdminRedirectPath(next: string | null): string {
     /[\s\\]/.test(t) ||
     /:/.test(t)
   ) {
-    return '/admin'
+    return '/admin/cotizaciones'
   }
   return t
 }
@@ -64,7 +64,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (isAdminLogin && user?.email === ADMIN_EMAIL) {
-    const next = safeAdminRedirectPath(request.nextUrl.searchParams.get('next')) || '/admin'
+    const next = safeAdminRedirectPath(request.nextUrl.searchParams.get('next')) || '/admin/cotizaciones'
     return NextResponse.redirect(new URL(next, request.url))
   }
 

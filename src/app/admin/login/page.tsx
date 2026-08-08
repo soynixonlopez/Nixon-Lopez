@@ -29,7 +29,7 @@ function LoginForm() {
         setMessage(error.message)
         return
       }
-      const next = searchParams.get('next') || '/admin'
+      const next = searchParams.get('next') || '/admin/cotizaciones'
       window.location.href = next
     } catch (err) {
       const text =

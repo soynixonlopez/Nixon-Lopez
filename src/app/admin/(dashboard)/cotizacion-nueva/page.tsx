@@ -329,15 +329,17 @@ export default function NuevaCotizacionPage() {
                 <p>
                   <span className="text-slate-400">Correo:</span> {form.client_email}
                 </p>
-                <p>
-                  <span className="text-slate-400">RUC / cédula:</span>{' '}
-                  {form.client_ruc.trim() || '—'}
-                </p>
-                <p>
-                  <span className="text-slate-400">Lugar:</span>{' '}
-                  {form.client_city.trim() || '—'}
-                  {form.client_address.trim() ? ` · ${form.client_address.trim()}` : ''}
-                </p>
+                {form.client_ruc.trim() ? (
+                  <p>
+                    <span className="text-slate-400">RUC / cédula:</span> {form.client_ruc.trim()}
+                  </p>
+                ) : null}
+                {form.client_city.trim() || form.client_address.trim() ? (
+                  <p>
+                    <span className="text-slate-400">Lugar:</span>{' '}
+                    {[form.client_city.trim(), form.client_address.trim()].filter(Boolean).join(' · ')}
+                  </p>
+                ) : null}
                 <p>
                   <span className="text-slate-400">Proyecto:</span> {totals.quote.projectLabel}
                 </p>

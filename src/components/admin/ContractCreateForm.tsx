@@ -67,8 +67,14 @@ export function ContractCreateForm({
       currency: 'USD',
       custom_notes: customNotes || null,
       terms_payload:
-        selected.raw_payload && extractQuoteServiceSnapshots(selected.raw_payload).length > 0
-          ? { selected_services: extractQuoteServiceSnapshots(selected.raw_payload) }
+        selected.raw_payload && typeof selected.raw_payload === 'object' && !Array.isArray(selected.raw_payload)
+          ? {
+              ...(selected.raw_payload as Record<string, unknown>),
+              selected_services:
+                extractQuoteServiceSnapshots(selected.raw_payload).length > 0
+                  ? extractQuoteServiceSnapshots(selected.raw_payload)
+                  : (selected.raw_payload as { selected_services?: unknown }).selected_services,
+            }
           : null,
     }
     const { data, error } = await supabase.from('service_contracts').insert(payload).select('id').single()

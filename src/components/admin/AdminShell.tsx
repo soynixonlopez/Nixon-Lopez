@@ -5,7 +5,6 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import {
-  LayoutDashboard,
   FileText,
   FolderKanban,
   Receipt,
@@ -18,6 +17,7 @@ import {
   Home,
   Images,
   PanelsTopLeft,
+  ScrollText,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { adminUi } from '@/lib/admin-ui'
@@ -25,16 +25,27 @@ import { clsx } from 'clsx'
 
 const STORAGE_KEY = 'admin-sidebar-collapsed'
 
-const nav = [
-  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/cotizaciones', label: 'Cotizaciones', icon: FileText },
-  { href: '/admin/masterclass', label: 'Masterclass', icon: GraduationCap },
-  { href: '/admin/contratos', label: 'Contratos', icon: FileText },
-  { href: '/admin/proyectos', label: 'Proyectos', icon: FolderKanban },
-  { href: '/admin/landings', label: 'Landings', icon: PanelsTopLeft },
-  { href: '/admin/portafolio', label: 'Portafolio web', icon: Images },
-  { href: '/admin/facturas', label: 'Facturas', icon: Receipt },
-]
+const navSections = [
+  {
+    id: 'admin',
+    label: 'Administración',
+    items: [
+      { href: '/admin/cotizaciones', label: 'Cotizaciones', icon: FileText },
+      { href: '/admin/contratos', label: 'Contratos', icon: ScrollText },
+      { href: '/admin/proyectos', label: 'Proyectos', icon: FolderKanban },
+      { href: '/admin/facturas', label: 'Facturas', icon: Receipt },
+    ],
+  },
+  {
+    id: 'web',
+    label: 'Sitio web',
+    items: [
+      { href: '/admin/landings', label: 'Landings', icon: PanelsTopLeft },
+      { href: '/admin/portafolio', label: 'Portafolio web', icon: Images },
+      { href: '/admin/masterclass', label: 'Masterclass', icon: GraduationCap },
+    ],
+  },
+] as const
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -93,11 +104,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           )}
         >
           <Link
-            href="/admin"
+            href="/admin/cotizaciones"
             className="flex min-w-0 flex-1 items-center gap-2 font-bold"
             onClick={() => setOpen(false)}
-            title="Inicio del panel"
-            aria-label="Nixon Lopez Services — panel de administración"
+            title="Cotizaciones"
+            aria-label="Nixon Lopez Services — administración"
           >
             {collapsed ? (
               <Image
@@ -145,26 +156,44 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-x-hidden overflow-y-auto p-2 sm:p-3">
-          {nav.map(({ href, label, icon: Icon }) => {
-            const active = pathname === href || (href !== '/admin' && pathname.startsWith(href))
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setOpen(false)}
-                title={collapsed ? label : undefined}
+        <nav className="flex-1 space-y-5 overflow-x-hidden overflow-y-auto p-2 sm:p-3">
+          {navSections.map((section) => (
+            <div key={section.id}>
+              <p
                 className={clsx(
-                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
-                  collapsed && 'lg:justify-center lg:px-2',
-                  active ? adminUi.navActive : adminUi.navIdle
+                  'mb-1.5 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400',
+                  collapsed && 'lg:px-0 lg:text-center lg:tracking-normal'
                 )}
+                title={collapsed ? section.label : undefined}
               >
-                <Icon className="h-5 w-5 shrink-0" aria-hidden />
-                <span className={clsx('truncate', collapsed && 'lg:sr-only')}>{label}</span>
-              </Link>
-            )
-          })}
+                <span className={clsx(collapsed && 'lg:hidden')}>{section.label}</span>
+                <span className={clsx('hidden', collapsed && 'lg:inline')}>
+                  {section.id === 'admin' ? 'Admin' : 'Web'}
+                </span>
+              </p>
+              <div className="space-y-1">
+                {section.items.map(({ href, label, icon: Icon }) => {
+                  const active = pathname === href || pathname.startsWith(`${href}/`)
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={() => setOpen(false)}
+                      title={collapsed ? label : undefined}
+                      className={clsx(
+                        'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                        collapsed && 'lg:justify-center lg:px-2',
+                        active ? adminUi.navActive : adminUi.navIdle
+                      )}
+                    >
+                      <Icon className="h-5 w-5 shrink-0" aria-hidden />
+                      <span className={clsx('truncate', collapsed && 'lg:sr-only')}>{label}</span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         <div className={clsx('p-2 sm:p-3', adminUi.sidebarHeader, 'border-b-0 border-t')}>
@@ -222,7 +251,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           >
             <Menu className="h-6 w-6 text-brand" />
           </button>
-          <span className="font-semibold text-brand">Panel Nixon López</span>
+          <span className="font-semibold text-brand">Admin Nixon López</span>
         </header>
 
         <main className="relative z-10 flex-1 w-full min-w-0 overflow-x-hidden overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-6 md:p-8 print:block print:h-auto print:max-h-none print:flex-none print:overflow-visible print:bg-white print:p-0">

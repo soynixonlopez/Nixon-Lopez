@@ -27,8 +27,20 @@ function hexToRgb01(hex: string) {
   }
 }
 
+/** Helvetica (WinAnsi) no soporta bien tildes; normalizamos para el PDF. */
+function pdfSafe(text: string) {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[–—]/g, '-')
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/…/g, '...')
+    .replace(/•/g, '-')
+}
+
 function wrapText(text: string, maxWidth: number, font: any, size: number) {
-  const words = text.split(/\s+/)
+  const words = pdfSafe(text).split(/\s+/)
   const lines: string[] = []
   let line = ''
   for (const word of words) {
@@ -51,7 +63,8 @@ function introSegmentsToWords(segments: ContractIntroSegment[]): WordRun[] {
   for (const seg of segments) {
     const re = /\S+\s*/g
     let m: RegExpExecArray | null
-    while ((m = re.exec(seg.value)) !== null) {
+    const value = pdfSafe(seg.value)
+    while ((m = re.exec(value)) !== null) {
       out.push({ text: m[0], key: seg.kind === 'key' })
     }
   }
@@ -199,7 +212,7 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
       y = H - M
     }
     y -= 6
-    page.drawText(t, { x: M, y, size: 10, font: bold, color: accent })
+    page.drawText(pdfSafe(t), { x: M, y, size: 10, font: bold, color: accent })
     y -= 22
   }
 
@@ -244,15 +257,32 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
     y = r.y - 18
   }
 
-  drawTitle('PRIMERA: OBJETO DEL CONTRATO')
-  drawParagraph(clauses.primera)
-  drawTitle('SEGUNDA: ALCANCE DEL SERVICIO')
-  drawParagraph('El servicio incluye:')
-  drawBullets(clauses.segundaIncluye)
-  drawParagraph('No incluye:')
-  drawBullets(clauses.segundaNoIncluye)
-  drawTitle('TERCERA: COSTO Y FORMA DE PAGO')
-  drawBullets(clauses.tercera)
+  if (clauses.serviceSubtitle) {
+    const sub = wrapText(clauses.serviceSubtitle, maxWidth, bold, 9)
+    for (const line of sub) {
+      if (y < M + 80) {
+        page = pdf.addPage([W, H])
+        y = H - M
+      }
+      page.drawText(line, { x: centerTextX(line, bold, 9), y, size: 9, font: bold, color: muted })
+      y -= 13
+    }
+    y -= 8
+  }
+
+  for (const block of clauses.blocks) {
+    drawTitle(block.title)
+    for (const p of block.paragraphs ?? []) drawParagraph(p)
+    if (block.bullets?.length) drawBullets(block.bullets)
+    for (const p of block.afterBullets ?? []) drawParagraph(p)
+    for (const sub of block.subsections ?? []) {
+      drawParagraph(sub.heading)
+      for (const p of sub.paragraphs ?? []) drawParagraph(p)
+      if (sub.bullets?.length) drawBullets(sub.bullets)
+    }
+  }
+
+  drawTitle('DATOS PARA EL PAGO')
   drawPaymentBlock(CONTRACT_PAYMENT_BANK.title, [
     { label: 'Banco', value: CONTRACT_PAYMENT_BANK.bankName },
     { label: 'Tipo de cuenta', value: CONTRACT_PAYMENT_BANK.accountType },
@@ -263,33 +293,6 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
     { label: 'Nombre en Yappy', value: CONTRACT_PAYMENT_YAPPY.displayName, key: true },
     { label: 'Telefono', value: CONTRACT_PAYMENT_YAPPY.phone, key: true },
   ])
-  drawTitle('CUARTA: DOMINIO, HOSTING Y CORREO')
-  drawBullets(clauses.cuarta)
-  drawTitle('QUINTA: PLAZO DE ENTREGA')
-  drawParagraph(clauses.quinta)
-  drawTitle('SEXTA: PROPIEDAD INTELECTUAL')
-  drawBullets([
-    'Una vez realizado el pago total, EL CLIENTE sera propietario del producto final entregado.',
-    'EL PRESTADOR podra mostrar el proyecto en su portafolio profesional.',
-    'El codigo base reutilizable seguira siendo propiedad intelectual del PRESTADOR.',
-  ])
-  drawTitle('SEPTIMA: MANTENIMIENTO Y SOPORTE')
-  drawParagraph(
-    'El mantenimiento mensual o bimestral tendra un costo de USD $20 e incluye actualizaciones tecnicas, supervision basica, ajustes menores y soporte preventivo.'
-  )
-  drawTitle('OCTAVA: CANCELACION')
-  drawBullets([
-    'Si EL CLIENTE cancela el proyecto, el anticipo no sera reembolsable.',
-    'Si EL PRESTADOR cancela sin causa justificada, debera devolver el anticipo recibido.',
-  ])
-  drawTitle('NOVENA: LEGISLACION APLICABLE')
-  drawParagraph(
-    'El presente contrato se rige por las leyes de la Republica de Panama. Cualquier disputa sera resuelta ante los tribunales competentes de Panama.'
-  )
-  if (contract.custom_notes) {
-    drawTitle('OBSERVACIONES ADICIONALES')
-    drawParagraph(contract.custom_notes)
-  }
 
   if (y < M + 200) {
     page = pdf.addPage([W, H])
@@ -323,15 +326,21 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
   y -= 12
   page.drawText(`RUC ${INVOICE_BRANDING.ruc}`, { x: colL, y, size: 9, font, color: muted })
   let yAfterRucRow = y
+  const clientTax = contract.client_tax_id?.trim() || ''
+  if (clientTax) {
+    page.drawText(`Cedula / RUC: ${clientTax}`, { x: colR, y, size: 9, font, color: muted })
+  }
   if (contract.client_address?.trim()) {
     const addr = contract.client_address.trim()
     const addrLines = wrapText(addr, sigW, font, 8).slice(0, 2)
-    let yAddr = y
+    let yAddr = y - (clientTax ? 12 : 0)
     for (let i = 0; i < addrLines.length; i++) {
       page.drawText(addrLines[i], { x: colR, y: yAddr, size: 8, font, color: muted })
       if (i < addrLines.length - 1) yAddr -= 10
     }
-    yAfterRucRow = yAddr
+    yAfterRucRow = Math.min(yAfterRucRow, yAddr)
+  } else if (clientTax) {
+    yAfterRucRow = y
   }
   y = yAfterRucRow - 14
 
@@ -366,11 +375,6 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
     }
     y -= 11
   }
-  y -= 4
-  page.drawText(
-    `Cedula / RUC: ${contract.client_tax_id || '________________________'}`,
-    { x: colR, y, size: 9, font, color: text }
-  )
 
   return pdf.save()
 }

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  ArrowDown,
   ArrowRight,
   Check,
   ChevronLeft,
@@ -17,7 +18,6 @@ import {
 import TechLogo from '@/components/TechLogo'
 import { SectionLabel } from '@/components/marketing/SectionLabel'
 import { SectionTitle } from '@/components/marketing/SectionTitle'
-import { BRAND_ICON_TONES, type BrandIconTone } from '@/lib/brand-icons'
 import { buildWhatsAppUrl, HOME_PROBLEMS, WHATSAPP_MESSAGES, quoteUrl } from '@/lib/marketing'
 
 const PROBLEM_ICONS = {
@@ -26,66 +26,15 @@ const PROBLEM_ICONS = {
   clock: Clock,
 } as const
 
-const PROBLEM_TONES: BrandIconTone[] = ['blue', 'purple', 'green']
 const PROBLEM_TITLES = ['Visibilidad', 'Presencia', 'Tiempo'] as const
-const AUTO_MS = 6000
+const PROBLEM_RESULTS = [
+  'Más confianza cuando te buscan.',
+  'Más contactos sin depender solo del boca a boca.',
+  'Más tiempo para vender y crecer.',
+] as const
+
+const AUTO_MS = 7000
 const SWIPE_THRESHOLD = 48
-
-function ProblemSlide({ index }: { index: number }) {
-  const item = HOME_PROBLEMS[index]
-  const Icon = PROBLEM_ICONS[item.icon]
-  const theme = BRAND_ICON_TONES[PROBLEM_TONES[index % PROBLEM_TONES.length]]
-  const number = String(index + 1).padStart(2, '0')
-
-  return (
-    <article
-      className="overflow-hidden rounded-2xl border border-slate-200 bg-white"
-      aria-roledescription="slide"
-      aria-label={`Situación ${index + 1} de ${HOME_PROBLEMS.length}`}
-    >
-      <div className="grid min-h-[340px] sm:min-h-[380px] lg:min-h-[400px] lg:grid-cols-2">
-        <div className="bg-slate-50/90">
-          <div className="flex h-full flex-col justify-between gap-8 px-7 py-8 sm:px-8 sm:py-9 lg:px-10 lg:py-10">
-            <div>
-              <div className="mb-6 flex items-center justify-between gap-4">
-                <span className={`inline-flex h-12 w-12 items-center justify-center rounded-xl ${theme.wrap} shadow-sm`}>
-                  <Icon className="h-6 w-6" aria-hidden />
-                </span>
-                <span className="font-mono text-sm tracking-widest text-slate-400">{number}</span>
-              </div>
-              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">El problema</p>
-              <h3 className="max-w-md text-xl font-bold leading-snug tracking-tight text-slate-900 sm:text-2xl lg:text-[1.7rem]">
-                {item.problem}
-              </h3>
-            </div>
-            <p className="text-sm text-slate-500">
-              Situación {index + 1} de {HOME_PROBLEMS.length} · {PROBLEM_TITLES[index]}
-            </p>
-          </div>
-        </div>
-
-        <div className="border-t border-slate-200 lg:border-t-0 lg:border-l">
-          <div className="flex h-full flex-col justify-between gap-8 px-7 py-8 sm:px-8 sm:py-9 lg:px-10 lg:py-10">
-            <div>
-              <p className={`mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] ${theme.icon}`}>
-                <Check className="h-4 w-4 shrink-0" aria-hidden />
-                Cómo lo resolvemos
-              </p>
-              <p className="max-w-md text-base leading-relaxed text-slate-600 sm:text-lg">{item.solution}</p>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <span className={`mt-1.5 h-1.5 w-10 shrink-0 rounded-full ${theme.accent}`} aria-hidden />
-              <span className="text-sm font-medium leading-snug text-slate-700">
-                Resultado: más clientes, menos fricción.
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </article>
-  )
-}
 
 export function ProblemSection() {
   const [mounted, setMounted] = useState(false)
@@ -102,7 +51,7 @@ export function ProblemSection() {
     (index: number) => {
       setActiveIndex((index + total) % total)
     },
-    [total],
+    [total]
   )
 
   const goPrev = useCallback(() => goTo(activeIndex - 1), [activeIndex, goTo])
@@ -130,106 +79,156 @@ export function ProblemSection() {
     setPaused(false)
   }
 
+  const active = HOME_PROBLEMS[activeIndex]
+  const ActiveIcon = PROBLEM_ICONS[active.icon]
+
   return (
-    <section id="problem" className="relative overflow-hidden bg-slate-50/80 py-16 sm:py-24">
+    <section id="problem" className="relative isolate overflow-hidden bg-white py-16 sm:py-24">
       <div
-        className="pointer-events-none absolute top-8 left-6 h-24 w-24 opacity-40 sm:left-10"
+        className="pointer-events-none absolute -top-24 left-0 h-72 w-72 rounded-full bg-gradient-to-br from-brand/10 to-transparent blur-3xl"
         aria-hidden
-        style={{
-          backgroundImage: 'radial-gradient(circle, #94a3b8 1.5px, transparent 1.5px)',
-          backgroundSize: '12px 12px',
-        }}
+      />
+      <div
+        className="pointer-events-none absolute right-0 bottom-0 h-80 w-80 rounded-full bg-gradient-to-tl from-neon-purple/10 to-transparent blur-3xl"
+        aria-hidden
       />
 
-      <div className="relative mx-auto max-w-6xl px-5 sm:px-6 lg:px-8">
-        <div className="mx-auto mb-10 max-w-3xl text-center sm:mb-12">
+      <div className="container-padding relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="mx-auto mb-10 max-w-3xl text-center sm:mb-14">
           <SectionLabel>¿Te suena familiar?</SectionLabel>
           <SectionTitle>
             Si no te encuentran online, tu competencia se queda con{' '}
             <span className="text-brand">tus clientes.</span>
           </SectionTitle>
           <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
-            Estos son los problemas que resolvemos todos los días para dueños de negocio como tú.
+            Tres situaciones reales. Una solución clara para cada una.
           </p>
         </div>
 
         <div
-          className="mb-5 grid grid-cols-3 gap-2 sm:gap-3"
-          role="tablist"
-          aria-label="Situaciones"
-        >
-          {HOME_PROBLEMS.map((problem, index) => {
-            const active = index === activeIndex
-            const theme = BRAND_ICON_TONES[PROBLEM_TONES[index % PROBLEM_TONES.length]]
-            return (
-              <button
-                key={problem.problem}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                aria-label={`Ver situación ${index + 1}: ${PROBLEM_TITLES[index]}`}
-                  onClick={() => goTo(index)}
-                className={`rounded-xl border px-3 py-3 text-left transition sm:px-4 sm:py-3.5 ${
-                  active
-                    ? `${theme.card} shadow-sm`
-                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                }`}
-              >
-                <span className={`block text-[11px] font-semibold uppercase tracking-wider ${active ? theme.icon : 'text-slate-400'}`}>
-                  0{index + 1}
-                </span>
-                <span className={`mt-1 block text-sm font-semibold sm:text-[15px] ${active ? 'text-slate-900' : 'text-slate-600'}`}>
-                  {PROBLEM_TITLES[index]}
-                </span>
-              </button>
-            )
-          })}
-        </div>
-
-        <div
-          className="relative"
+          className="grid items-start gap-8 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
-          <div className="overflow-hidden">
-            {!mounted ? (
-              <ProblemSlide index={0} />
-            ) : (
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={HOME_PROBLEMS[activeIndex].problem}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.28, ease: 'easeOut' }}
+          {/* Selector lateral / móvil */}
+          <div
+            className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:gap-2 lg:overflow-visible lg:pb-0"
+            role="tablist"
+            aria-label="Situaciones"
+          >
+            {HOME_PROBLEMS.map((item, index) => {
+              const isActive = index === activeIndex
+              const Icon = PROBLEM_ICONS[item.icon]
+              return (
+                <button
+                  key={PROBLEM_TITLES[index]}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-controls="problem-panel"
+                  onClick={() => goTo(index)}
+                  className={`group relative min-w-[9.5rem] flex-1 rounded-2xl border px-4 py-3.5 text-left transition lg:min-w-0 lg:flex-none ${
+                    isActive
+                      ? 'border-brand/25 bg-brand text-white shadow-[0_12px_32px_rgba(30,58,95,0.22)]'
+                      : 'border-slate-200/90 bg-white text-slate-700 hover:border-brand/20 hover:bg-brand/[0.03]'
+                  }`}
                 >
-                  <ProblemSlide index={activeIndex} />
-                </motion.div>
-              </AnimatePresence>
-            )}
+                  <span className="flex items-center gap-3">
+                    <span
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                        isActive ? 'bg-white/15 text-white' : 'bg-brand/[0.06] text-brand'
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" aria-hidden />
+                    </span>
+                    <span className="min-w-0">
+                      <span
+                        className={`block text-[11px] font-semibold uppercase tracking-[0.16em] ${
+                          isActive ? 'text-white/70' : 'text-slate-400'
+                        }`}
+                      >
+                        0{index + 1}
+                      </span>
+                      <span className="mt-0.5 block text-sm font-bold sm:text-[15px]">
+                        {PROBLEM_TITLES[index]}
+                      </span>
+                    </span>
+                  </span>
+                </button>
+              )
+            })}
           </div>
 
-          <div className="mt-5 flex items-center justify-between gap-4">
-            <p className="text-xs text-slate-500 sm:text-sm">Desliza o usa las flechas. Cambia sola cada unos segundos.</p>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={goPrev}
-                aria-label="Situación anterior"
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-brand shadow-sm transition hover:border-brand/30 hover:bg-slate-50"
-              >
-                <ChevronLeft className="h-5 w-5" aria-hidden />
-              </button>
-              <button
-                type="button"
-                onClick={goNext}
-                aria-label="Situación siguiente"
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-brand shadow-sm transition hover:border-brand/30 hover:bg-slate-50"
-              >
-                <ChevronRight className="h-5 w-5" aria-hidden />
-              </button>
+          {/* Panel narrativo */}
+          <div
+            id="problem-panel"
+            role="tabpanel"
+            aria-live="polite"
+            className="relative min-w-0"
+          >
+            <div className="overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-gradient-to-br from-white via-white to-slate-50 shadow-[0_20px_50px_rgba(30,58,95,0.08)]">
+              {!mounted ? (
+                <ProblemPanel
+                  index={0}
+                  icon={PROBLEM_ICONS[HOME_PROBLEMS[0].icon]}
+                  problem={HOME_PROBLEMS[0].problem}
+                  solution={HOME_PROBLEMS[0].solution}
+                  result={PROBLEM_RESULTS[0]}
+                  title={PROBLEM_TITLES[0]}
+                />
+              ) : (
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={active.problem}
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.28, ease: 'easeOut' }}
+                  >
+                    <ProblemPanel
+                      index={activeIndex}
+                      icon={ActiveIcon}
+                      problem={active.problem}
+                      solution={active.solution}
+                      result={PROBLEM_RESULTS[activeIndex]}
+                      title={PROBLEM_TITLES[activeIndex]}
+                    />
+                  </motion.div>
+                </AnimatePresence>
+              )}
+
+              <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-5 py-4 sm:px-8">
+                <div className="flex items-center gap-1.5" aria-hidden>
+                  {HOME_PROBLEMS.map((_, index) => (
+                    <span
+                      key={PROBLEM_TITLES[index]}
+                      className={`h-1.5 rounded-full transition-all ${
+                        index === activeIndex ? 'w-7 bg-brand' : 'w-1.5 bg-slate-200'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={goPrev}
+                    aria-label="Situación anterior"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-brand transition hover:border-brand/30 hover:bg-brand/[0.04]"
+                  >
+                    <ChevronLeft className="h-5 w-5" aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={goNext}
+                    aria-label="Situación siguiente"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-brand transition hover:border-brand/30 hover:bg-brand/[0.04]"
+                  >
+                    <ChevronRight className="h-5 w-5" aria-hidden />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -261,5 +260,62 @@ export function ProblemSection() {
         </div>
       </div>
     </section>
+  )
+}
+
+function ProblemPanel({
+  index,
+  icon: Icon,
+  problem,
+  solution,
+  result,
+  title,
+}: {
+  index: number
+  icon: typeof Search
+  problem: string
+  solution: string
+  result: string
+  title: string
+}) {
+  return (
+    <div className="px-5 py-7 sm:px-8 sm:py-9 lg:px-10 lg:py-10">
+      <div className="mb-6 flex items-center gap-3">
+        <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/[0.08] text-brand">
+          <Icon className="h-6 w-6" aria-hidden />
+        </span>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand/80">
+            Situación {index + 1}
+          </p>
+          <p className="text-sm font-bold text-slate-900">{title}</p>
+        </div>
+      </div>
+
+      <div className="relative border-l-4 border-brand/80 pl-5 sm:pl-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">El problema</p>
+        <h3 className="mt-2 max-w-2xl text-xl font-bold leading-snug tracking-tight text-slate-900 sm:text-2xl lg:text-[1.75rem]">
+          {problem}
+        </h3>
+      </div>
+
+      <div className="my-6 flex items-center gap-3 text-brand/50 sm:my-7" aria-hidden>
+        <span className="h-px flex-1 bg-gradient-to-r from-brand/25 to-transparent" />
+        <ArrowDown className="h-4 w-4" />
+        <span className="h-px flex-1 bg-gradient-to-l from-brand/25 to-transparent" />
+      </div>
+
+      <div className="rounded-2xl bg-brand/[0.04] px-5 py-5 sm:px-6 sm:py-6">
+        <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-brand">
+          <Check className="h-4 w-4 shrink-0" strokeWidth={2.5} aria-hidden />
+          Cómo lo resolvemos
+        </p>
+        <p className="max-w-2xl text-base leading-relaxed text-slate-700 sm:text-lg">{solution}</p>
+        <p className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
+          <span className="h-1.5 w-8 rounded-full bg-brand" aria-hidden />
+          {result}
+        </p>
+      </div>
+    </div>
   )
 }
