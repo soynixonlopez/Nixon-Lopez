@@ -22,17 +22,18 @@ import { SectionTitle } from '@/components/marketing/SectionTitle'
 import { QuoteProgress } from '@/components/quote/configurator/QuoteProgress'
 import { QuoteSummaryPanel } from '@/components/quote/configurator/QuoteSummaryPanel'
 import { BRAND_ICON_TONES } from '@/lib/brand-icons'
+import { useMessages } from '@/i18n/LocaleProvider'
+import {
+  buildLocalizedQuoteCatalog,
+  calculateLocalizedQuote,
+  getLocalizedBusinessLabel,
+} from '@/i18n/quote-localized'
 import { buildWhatsAppUrl } from '@/lib/marketing'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
 import { rateLimitFriendlyMessage } from '@/lib/utils'
 import {
-  BUSINESS_TYPES,
-  calculateQuote,
-  FEATURES,
   getProjectType,
   INITIAL_CONFIGURATOR_STATE,
-  PROJECT_TYPES,
-  TIMELINES,
   TOTAL_STEPS,
   type BusinessId,
   type ConfiguratorState,
@@ -51,16 +52,6 @@ const PROJECT_ICONS = {
   tienda: Store,
   sistema: Code2,
 } as const
-
-const EMAIL_OPTIONS: Array<{ value: EmailCount; label: string }> = [
-  { value: 0, label: 'No' },
-  { value: 1, label: '1' },
-  { value: 2, label: '2' },
-  { value: 3, label: '3' },
-  { value: 4, label: '4' },
-  { value: 5, label: '5' },
-  { value: 6, label: 'Más' },
-]
 
 const fieldClass =
   'w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm outline-none transition focus:border-brand/40 focus:ring-2 focus:ring-brand/15'
@@ -81,20 +72,25 @@ function canContinue(step: number, state: ConfiguratorState) {
   return false
 }
 
-function buildWhatsAppMessage(state: ConfiguratorState) {
-  const quote = calculateQuote(state)
+function buildWhatsAppMessage(
+  state: ConfiguratorState,
+  catalog: ReturnType<typeof buildLocalizedQuoteCatalog>,
+) {
+  const q = catalog.quote
+  const quote = calculateLocalizedQuote(state, catalog)
   const lines = quote.lines.map((line) => `• ${line.label}: $${line.amount}`).join('\n')
+  const business = getLocalizedBusinessLabel(catalog, state.business) ?? '—'
   return (
-    `Hola Nixon, generé una cotización en nixonlopez.com:\n\n` +
-    `Proyecto: ${quote.projectLabel}\n` +
-    `Negocio: ${state.business ?? '—'}\n` +
+    `${q.whatsappQuoteIntro}\n\n` +
+    `${q.whatsappQuoteProject}: ${quote.projectLabel}\n` +
+    `${q.whatsappQuoteBusiness}: ${business}\n` +
     `${lines}\n\n` +
-    `Total estimado: $${quote.total} USD\n` +
-    `Entrega: ${quote.delivery}\n` +
-    `Nombre: ${state.nombre}\n` +
-    `Empresa: ${state.empresa || '—'}\n` +
-    `Correo: ${state.correo}\n` +
-    `WhatsApp: ${state.whatsapp}`
+    `${q.whatsappQuoteTotal}: $${quote.total} USD\n` +
+    `${q.whatsappQuoteDelivery}: ${quote.delivery}\n` +
+    `${q.whatsappQuoteName}: ${state.nombre}\n` +
+    `${q.whatsappQuoteCompany}: ${state.empresa || '—'}\n` +
+    `${q.whatsappQuoteEmail}: ${state.correo}\n` +
+    `${q.whatsappQuoteWhatsapp}: ${state.whatsapp}`
   )
 }
 
@@ -103,6 +99,9 @@ type Props = {
 }
 
 export function QuoteConfigurator({ initialServiceId = null }: Props) {
+  const messages = useMessages()
+  const q = messages.quote
+  const catalog = useMemo(() => buildLocalizedQuoteCatalog(q), [q])
   const preselected = Boolean(initialServiceId && mapLegacyServiceToProject(initialServiceId))
   const [step, setStep] = useState(1)
   const [state, setState] = useState<ConfiguratorState>(() => ({
@@ -115,7 +114,7 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
   const [error, setError] = useState('')
   const [fromHome, setFromHome] = useState(preselected)
   const [pending, startTransition] = useTransition()
-  const quote = useMemo(() => calculateQuote(state), [state])
+  const quote = useMemo(() => calculateLocalizedQuote(state, catalog), [state, catalog])
 
   useEffect(() => {
     if (!initialServiceId) return
@@ -231,9 +230,9 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
         return
       }
       const data = (await response.json().catch(() => null)) as { error?: string } | null
-      setError(data?.error || 'No se pudo generar la propuesta. Intenta de nuevo.')
+      setError(data?.error || q.errorGeneric)
     } catch {
-      setError('No se pudo generar la propuesta. Intenta de nuevo.')
+      setError(q.errorGeneric)
     } finally {
       setSending(false)
     }
@@ -295,17 +294,17 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
         />
         <div className="relative z-10 mx-auto w-full max-w-xl px-5 sm:px-6">
           <div className="text-center">
-            <SectionLabel>Propuesta lista</SectionLabel>
+            <SectionLabel>{q.doneSectionLabel}</SectionLabel>
             <SectionTitle>
-              Tu cotización <span className="text-brand">estimada</span>
+              {q.doneTitleBefore} <span className="text-brand">{q.doneTitleAccent}</span>
             </SectionTitle>
             <p className="mt-3 text-slate-600">
-              Gracias, {state.nombre.split(' ')[0]}. Resumen de lo configurado.
+              {q.doneThanks.replace('{name}', state.nombre.split(' ')[0] ?? state.nombre)}
             </p>
           </div>
 
           <div className="mt-8 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:rounded-3xl sm:p-8">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Proyecto</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{q.doneProjectLabel}</p>
             <p className="mt-1 text-2xl font-bold text-slate-900">{quote.projectLabel}</p>
             <ul className="mt-5 grid gap-2 sm:grid-cols-2">
               {includes.map((item) => (
@@ -318,21 +317,18 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
             <div className="mt-6 grid gap-4 border-t border-slate-100 pt-5 sm:grid-cols-2">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  Tiempo estimado
+                  {q.doneDeliveryLabel}
                 </p>
                 <p className="mt-1 font-semibold text-slate-900">{quote.delivery}</p>
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  Inversión estimada
+                  {q.doneInvestmentLabel}
                 </p>
                 <p className="mt-1 text-3xl font-bold tabular-nums text-brand">${quote.total} USD</p>
               </div>
             </div>
-            <p className="mt-5 text-center text-xs leading-relaxed text-slate-500">
-              Este valor es una estimación basada en las opciones seleccionadas. La propuesta final
-              puede variar ligeramente dependiendo de requerimientos adicionales.
-            </p>
+            <p className="mt-5 text-center text-xs leading-relaxed text-slate-500">{q.doneDisclaimer}</p>
           </div>
 
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
@@ -342,23 +338,23 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
               className="inline-flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3.5 font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50"
             >
               <Download className="h-5 w-5" />
-              Descargar PDF
+              {q.downloadPdf}
             </button>
             <a
-              href={buildWhatsAppUrl(buildWhatsAppMessage(state))}
+              href={buildWhatsAppUrl(buildWhatsAppMessage(state, catalog))}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-5 py-3.5 font-semibold text-emerald-800 transition hover:bg-emerald-100"
             >
               <MessageCircle className="h-5 w-5" />
-              WhatsApp
+              {messages.common.whatsapp}
             </a>
           </div>
           <a
-            href={`mailto:${INVOICE_BRANDING.email}?subject=${encodeURIComponent(`Propuesta formal — ${quote.projectLabel}`)}&body=${encodeURIComponent(buildWhatsAppMessage(state))}`}
+            href={`mailto:${INVOICE_BRANDING.email}?subject=${encodeURIComponent(`${q.formalProposalSubject} — ${quote.projectLabel}`)}&body=${encodeURIComponent(buildWhatsAppMessage(state, catalog))}`}
             className="mt-3 inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-brand px-5 py-3.5 font-semibold text-white shadow-md transition hover:bg-brand-light"
           >
-            Solicitar propuesta formal
+            {q.requestFormalProposal}
             <ArrowRight className="h-4 w-4" />
           </a>
         </div>
@@ -383,7 +379,7 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
           <div className="relative order-1 min-h-[240px] overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:min-h-[280px] sm:rounded-3xl lg:order-none lg:min-h-0">
             <Image
               src="/images/cotizador.png"
-              alt="Nixon Lopez — Descubre cuánto cuesta tu proyecto"
+              alt={q.pageImageAlt}
               fill
               priority
               unoptimized
@@ -409,8 +405,8 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                 <Calculator className="h-5 w-5" aria-hidden />
               </div>
               <div>
-                <p className="font-bold text-slate-900">Cotizador online</p>
-                <p className="text-sm text-slate-500">Configura tu proyecto paso a paso</p>
+                <p className="font-bold text-slate-900">{q.configuratorTitle}</p>
+                <p className="text-sm text-slate-500">{q.configuratorSubtitle}</p>
               </div>
             </div>
 
@@ -419,7 +415,7 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
             {fromHome && state.projectType && step > 1 ? (
               <div className="mb-4 flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm">
                 <p className="text-slate-600">
-                  Proyecto:{' '}
+                  {q.projectSelected}{' '}
                   <span className="font-semibold text-slate-900">{quote.projectLabel}</span>
                 </p>
                 <button
@@ -427,7 +423,7 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                   onClick={() => setStep(1)}
                   className="text-xs font-semibold text-brand hover:underline"
                 >
-                  Cambiar
+                  {q.changeProject}
                 </button>
               </div>
             ) : null}
@@ -446,10 +442,10 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs font-bold text-white">
                         1
                       </span>
-                      ¿Qué tipo de proyecto necesitas?
+                      {q.step1Question}
                     </p>
                     <div className="space-y-3">
-                      {PROJECT_TYPES.map((project) => {
+                      {catalog.projectTypes.map((project) => {
                         const Icon = PROJECT_ICONS[project.id]
                         const active = state.projectType === project.id
                         return (
@@ -469,7 +465,7 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                                 <p className="font-semibold text-slate-900">{project.label}</p>
                                 <p className="shrink-0 text-sm font-bold tabular-nums text-brand">
                                   ${project.basePrice}
-                                  {'fromPrice' in project && project.fromPrice ? '+' : ''}
+                                  {project.fromPrice ? '+' : ''}
                                 </p>
                               </div>
                               <p className="text-xs text-slate-500 sm:text-sm">{project.description}</p>
@@ -487,11 +483,11 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs font-bold text-white">
                         2
                       </span>
-                      ¿A qué se dedica tu negocio?
+                      {q.step2Question}
                     </p>
-                    <p className="mb-4 text-sm text-slate-500">No cambia el precio. Personaliza la propuesta.</p>
+                    <p className="mb-4 text-sm text-slate-500">{q.step2Hint}</p>
                     <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2">
-                      {BUSINESS_TYPES.map((business) => {
+                      {catalog.businessTypes.map((business) => {
                         const active = state.business === business.id
                         return (
                           <button
@@ -516,17 +512,15 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs font-bold text-white">
                         3
                       </span>
-                      ¿Qué funcionalidades necesitas?
+                      {q.step3Question}
                     </p>
-                    <p className="mb-3 text-sm text-slate-500">
-                      Incluye pasarela de pago (+$100). Desplázate para ver todas las opciones.
-                    </p>
+                    <p className="mb-3 text-sm text-slate-500">{q.step3Hint}</p>
                     <div
                       className="quote-features-scroll rounded-xl border border-slate-200 bg-slate-50/50 p-2"
                       style={{ height: 252, maxHeight: 252, overflowY: 'scroll', overscrollBehavior: 'contain' }}
                     >
                       <div className="flex flex-col gap-2">
-                        {FEATURES.map((feature) => {
+                        {catalog.features.map((feature) => {
                           const active = state.features.includes(feature.id)
                           return (
                             <button
@@ -567,11 +561,11 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs font-bold text-white">
                         4
                       </span>
-                      Servicios adicionales
+                      {q.step4Title}
                     </p>
 
                     <div>
-                      <p className="mb-2 text-sm font-semibold text-slate-800">¿Ya tienes dominio?</p>
+                      <p className="mb-2 text-sm font-semibold text-slate-800">{q.hasDomainQuestion}</p>
                       <div className="grid grid-cols-2 gap-2.5">
                         {(['si', 'no'] as const).map((option) => (
                           <button
@@ -582,14 +576,14 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                               state.hasDomain === option ? choiceOn : choiceOff
                             }`}
                           >
-                            {option === 'si' ? 'Sí' : 'No · +$20'}
+                            {option === 'si' ? q.yes : q.noDomainExtra}
                           </button>
                         ))}
                       </div>
                     </div>
 
                     <div>
-                      <p className="mb-2 text-sm font-semibold text-slate-800">¿Ya tienes hosting?</p>
+                      <p className="mb-2 text-sm font-semibold text-slate-800">{q.hasHostingQuestion}</p>
                       <div className="grid grid-cols-2 gap-2.5">
                         {(['si', 'no'] as const).map((option) => (
                           <button
@@ -600,17 +594,17 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                               state.hasHosting === option ? choiceOn : choiceOff
                             }`}
                           >
-                            {option === 'si' ? 'Sí' : 'No · +$60'}
+                            {option === 'si' ? q.yes : q.noHostingExtra}
                           </button>
                         ))}
                       </div>
                     </div>
 
                     <div>
-                      <p className="text-sm font-semibold text-slate-800">¿Necesitas correos corporativos?</p>
-                      <p className="mt-0.5 text-xs text-slate-500">+$15 por correo</p>
+                      <p className="text-sm font-semibold text-slate-800">{q.emailsQuestion}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">{q.emailsHint}</p>
                       <div className="mt-2 grid grid-cols-4 gap-2 sm:grid-cols-7">
-                        {EMAIL_OPTIONS.map((option) => (
+                        {catalog.emailOptions.map((option) => (
                           <button
                             key={option.value}
                             type="button"
@@ -633,11 +627,11 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs font-bold text-white">
                         5
                       </span>
-                      ¿Cuándo necesitas el proyecto?
+                      {q.step5Question}
                     </p>
-                    <p className="mb-4 text-sm text-slate-500">No modifica el precio.</p>
+                    <p className="mb-4 text-sm text-slate-500">{q.step5Hint}</p>
                     <div className="space-y-2.5">
-                      {TIMELINES.map((timeline) => {
+                      {catalog.timelines.map((timeline) => {
                         const active = state.timeline === timeline.id
                         return (
                           <button
@@ -672,47 +666,47 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs font-bold text-white">
                         6
                       </span>
-                      Tus datos
+                      {q.step6Title}
                     </p>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="sm:col-span-2">
-                        <label className={labelClass}>Nombre</label>
+                        <label className={labelClass}>{q.labelName}</label>
                         <input
                           className={fieldClass}
                           value={state.nombre}
                           onChange={(e) => update('nombre', e.target.value)}
-                          placeholder="Tu nombre completo"
+                          placeholder={q.placeholderName}
                           autoComplete="name"
                         />
                       </div>
                       <div>
-                        <label className={labelClass}>Empresa</label>
+                        <label className={labelClass}>{q.labelCompany}</label>
                         <input
                           className={fieldClass}
                           value={state.empresa}
                           onChange={(e) => update('empresa', e.target.value)}
-                          placeholder="Opcional"
+                          placeholder={q.placeholderCompany}
                           autoComplete="organization"
                         />
                       </div>
                       <div>
-                        <label className={labelClass}>WhatsApp</label>
+                        <label className={labelClass}>{q.labelWhatsapp}</label>
                         <input
                           className={fieldClass}
                           value={state.whatsapp}
                           onChange={(e) => update('whatsapp', e.target.value)}
-                          placeholder="+507 6000-0000"
+                          placeholder={q.placeholderWhatsapp}
                           autoComplete="tel"
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className={labelClass}>Correo</label>
+                        <label className={labelClass}>{q.labelEmail}</label>
                         <input
                           type="email"
                           className={fieldClass}
                           value={state.correo}
                           onChange={(e) => update('correo', e.target.value)}
-                          placeholder="tu@correo.com"
+                          placeholder={q.placeholderEmail}
                           autoComplete="email"
                         />
                       </div>
@@ -736,7 +730,7 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                     className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-brand"
                   >
                     <ArrowLeft className="h-4 w-4" />
-                    Atrás
+                    {q.back}
                   </button>
                 ) : (
                   <span />
@@ -749,7 +743,7 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                     disabled={!canContinue(step, state) || pending}
                     className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-md bg-brand px-6 py-3.5 text-base font-semibold text-white transition hover:bg-brand-light disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    Continuar
+                    {q.continue}
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 ) : (
@@ -760,13 +754,13 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                     className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-md bg-brand px-6 py-3.5 text-base font-semibold text-white transition hover:bg-brand-light disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <WalletCards className="h-4 w-4" />
-                    {sending ? 'Generando…' : 'Generar propuesta'}
+                    {sending ? q.generating : q.generateProposal}
                   </button>
                 )}
               </div>
               <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs text-slate-500">
                 <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                Precio transparente · Sin compromiso · Menos de 2 minutos
+                {q.footerNote}
               </p>
             </div>
           </div>

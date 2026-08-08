@@ -7,6 +7,7 @@ import { ArrowRight, ListChecks, Rocket, ShieldCheck, Smartphone, Users } from '
 import TechLogo from '@/components/TechLogo'
 import { SectionLabel } from '@/components/marketing/SectionLabel'
 import { SectionTitle } from '@/components/marketing/SectionTitle'
+import { useMessages } from '@/i18n/LocaleProvider'
 import { BRAND_ICON_TONES } from '@/lib/brand-icons'
 import { HOME_BENEFITS, quoteUrl } from '@/lib/marketing'
 
@@ -46,6 +47,8 @@ function BenefitIcon({
 }
 
 export function BenefitsSection() {
+  const messages = useMessages()
+  const b = messages.benefits
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -65,16 +68,13 @@ export function BenefitsSection() {
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-3xl text-center mb-10 sm:mb-14"
         >
-          <SectionLabel>Por qué trabajar conmigo</SectionLabel>
+          <SectionLabel>{b.sectionLabel}</SectionLabel>
           <SectionTitle>
-            No compras una página web.
+            {b.titleLine1}
             <br />
-            <span className="text-brand">Construyes una herramienta para crecer.</span>
+            <span className="text-brand">{b.titleAccent}</span>
           </SectionTitle>
-          <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
-            Una web profesional no solo se ve bien. Te ayuda a generar confianza, recibir consultas y convertir
-            visitantes en clientes.
-          </p>
+          <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">{b.subtitle}</p>
         </motion.div>
 
         <motion.div
@@ -83,18 +83,22 @@ export function BenefitsSection() {
           transition={{ duration: 0.5, delay: 0.08 }}
           className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5"
         >
-          {HOME_BENEFITS.map((benefit) => (
+          {HOME_BENEFITS.map((benefit, index) => {
+            const copy = b.items[index]
+            if (!copy) return null
+            return (
             <article
-              key={benefit.title}
+              key={benefit.icon}
               className="flex flex-col border-t border-brand/20 bg-white/85 px-5 py-6 sm:px-6 sm:py-7 backdrop-blur-sm"
             >
               <div className="mb-4">
                 <BenefitIcon icon={benefit.icon} tone={benefit.color} />
               </div>
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">{benefit.title}</h3>
-              <p className="mt-2 text-sm sm:text-[15px] text-slate-600 leading-relaxed">{benefit.description}</p>
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">{copy.title}</h3>
+              <p className="mt-2 text-sm sm:text-[15px] text-slate-600 leading-relaxed">{copy.description}</p>
             </article>
-          ))}
+            )
+          })}
         </motion.div>
 
         <motion.div
@@ -108,12 +112,12 @@ export function BenefitsSection() {
             className="inline-flex items-center justify-center gap-2 rounded-full bg-brand px-7 py-4 min-h-[52px] text-base font-semibold text-white shadow-[0_12px_32px_rgba(30,58,95,0.28)] transition hover:bg-brand-light active:scale-[0.98] w-full sm:w-auto"
           >
             <Rocket className="h-5 w-5 shrink-0" aria-hidden />
-            Quiero una web que genere clientes
+            {b.ctaPrimary}
             <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
           </Link>
           <p className="mt-4 inline-flex items-center gap-2 text-sm text-slate-500">
             <ShieldCheck className="h-4 w-4 shrink-0 text-brand" aria-hidden />
-            Seriedad, compromiso y resultados garantizados.
+            {b.trustNote}
           </p>
         </motion.div>
       </div>

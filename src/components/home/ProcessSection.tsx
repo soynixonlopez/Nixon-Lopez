@@ -16,8 +16,9 @@ import {
 import TechLogo from '@/components/TechLogo'
 import { SectionLabel } from '@/components/marketing/SectionLabel'
 import { SectionTitle } from '@/components/marketing/SectionTitle'
+import { useMessages } from '@/i18n/LocaleProvider'
 import { BRAND_ICON_TONES } from '@/lib/brand-icons'
-import { buildWhatsAppUrl, HOME_PROCESS, WHATSAPP_MESSAGES, quoteUrl } from '@/lib/marketing'
+import { buildWhatsAppUrl, HOME_PROCESS, quoteUrl } from '@/lib/marketing'
 
 const STEP_ICONS = {
   quote: MessageCircle,
@@ -65,6 +66,8 @@ function ProcessIllustration() {
 }
 
 export function ProcessSection() {
+  const messages = useMessages()
+  const pr = messages.process
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -78,15 +81,12 @@ export function ProcessSection() {
           className="grid items-center gap-10 lg:grid-cols-[1fr_auto] lg:gap-12"
         >
           <div className="max-w-2xl">
-            <SectionLabel align="left">Proceso simple</SectionLabel>
+            <SectionLabel align="left">{pr.sectionLabel}</SectionLabel>
             <SectionTitle>
-              De la cotización a tu web publicada,{' '}
-              <span className="text-brand">sin sorpresas</span>
+              {pr.titleBefore}
+              <span className="text-brand">{pr.titleAccent}</span>
             </SectionTitle>
-            <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
-              Sabes qué sigue en cada paso. Contrato formal, pago en dos partes y comunicación directa
-              conmigo.
-            </p>
+            <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">{pr.subtitle}</p>
           </div>
 
           <ProcessIllustration />
@@ -120,7 +120,9 @@ export function ProcessSection() {
           </div>
 
           <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:gap-5">
-            {HOME_PROCESS.map((item) => {
+            {HOME_PROCESS.map((item, index) => {
+              const copy = pr.steps[index]
+              if (!copy) return null
               const Icon = STEP_ICONS[item.icon]
               const theme = BRAND_ICON_TONES[item.color]
               return (
@@ -136,14 +138,14 @@ export function ProcessSection() {
                   <div className={`flex h-14 w-14 items-center justify-center rounded-lg ${theme.wrap}`}>
                     <Icon className="h-6 w-6" strokeWidth={1.75} aria-hidden />
                   </div>
-                  <h3 className="mt-4 text-sm font-bold text-slate-900 sm:text-base">{item.title}</h3>
+                  <h3 className="mt-4 text-sm font-bold text-slate-900 sm:text-base">{copy.title}</h3>
                   <div className={`mt-3 h-0.5 w-8 rounded-full ${theme.accent}`} aria-hidden />
                   <p className="mt-3 text-xs leading-relaxed text-slate-600 sm:text-sm">
-                    {item.description}
-                    {'highlight' in item && item.highlight ? (
+                    {copy.description}
+                    {copy.highlight ? (
                       <>
                         {' '}
-                        <span className={`font-semibold ${theme.icon}`}>{item.highlight}</span>
+                        <span className={`font-semibold ${theme.icon}`}>{copy.highlight}</span>
                       </>
                     ) : null}
                   </p>
@@ -159,12 +161,8 @@ export function ProcessSection() {
                   <MessageCircle className="h-6 w-6 text-brand" aria-hidden />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900 sm:text-xl">
-                    ¿Listo para dar el siguiente paso?
-                  </h3>
-                  <p className="mt-1 text-sm text-slate-600 sm:text-base">
-                    Cotiza tu proyecto en minutos y recibe una propuesta clara, sin compromiso.
-                  </p>
+                  <h3 className="text-lg font-bold text-slate-900 sm:text-xl">{pr.ctaTitle}</h3>
+                  <p className="mt-1 text-sm text-slate-600 sm:text-base">{pr.ctaSubtitle}</p>
                 </div>
               </div>
 
@@ -174,17 +172,17 @@ export function ProcessSection() {
                   className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand to-brand-light px-6 py-3.5 text-sm font-semibold text-white shadow-md transition hover:shadow-lg active:scale-[0.98] sm:w-auto sm:text-base"
                 >
                   <Calculator className="h-4 w-4 shrink-0" aria-hidden />
-                  Empezar mi cotización
+                  {pr.ctaQuote}
                   <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
                 </Link>
                 <a
-                  href={buildWhatsAppUrl(WHATSAPP_MESSAGES.process)}
+                  href={buildWhatsAppUrl(messages.whatsappMessages.process)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3.5 text-sm font-semibold text-slate-900 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] sm:w-auto sm:text-base"
                 >
                   <TechLogo name="WhatsApp" size={20} />
-                  Tengo una pregunta
+                  {pr.ctaWhatsapp}
                 </a>
               </div>
             </div>

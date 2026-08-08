@@ -17,34 +17,15 @@ import {
 import TechLogo from '@/components/TechLogo'
 import { SectionLabel } from '@/components/marketing/SectionLabel'
 import { SectionTitle } from '@/components/marketing/SectionTitle'
+import { useMessages } from '@/i18n/LocaleProvider'
 import { BRAND_ICON_TONES, type BrandIconTone } from '@/lib/brand-icons'
-import { buildWhatsAppUrl, WHATSAPP_MESSAGES, quoteUrl } from '@/lib/marketing'
+import { buildWhatsAppUrl, quoteUrl } from '@/lib/marketing'
 
-const AI_FEATURES = [
-  {
-    icon: Clock3,
-    tone: 'blue' as BrandIconTone,
-    title: 'Entregamos en menos tiempo',
-    description: 'sin sacrificar calidad ni atención personalizada.',
-  },
-  {
-    icon: Repeat2,
-    tone: 'orange' as BrandIconTone,
-    title: 'Automatizamos lo repetitivo',
-    description: 'para que tu proyecto avance más rápido.',
-  },
-  {
-    icon: User,
-    tone: 'purple' as BrandIconTone,
-    title: 'Tú hablas con Nixon en todo momento',
-    description: '— la IA acelera, no reemplaza.',
-  },
-  {
-    icon: TrendingUp,
-    tone: 'green' as BrandIconTone,
-    title: 'Más eficiencia para ti',
-    description: 'significa precios justos y entregas ágiles.',
-  },
+const AI_FEATURE_META = [
+  { icon: Clock3, tone: 'blue' as BrandIconTone },
+  { icon: Repeat2, tone: 'orange' as BrandIconTone },
+  { icon: User, tone: 'purple' as BrandIconTone },
+  { icon: TrendingUp, tone: 'green' as BrandIconTone },
 ] as const
 
 function AiIllustration() {
@@ -94,6 +75,8 @@ function AiIllustration() {
 }
 
 export function AiSection() {
+  const messages = useMessages()
+  const ai = messages.ai
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -116,15 +99,14 @@ export function AiSection() {
           className="grid items-center gap-10 lg:grid-cols-[1fr_auto] lg:gap-14"
         >
           <div className="max-w-2xl">
-            <SectionLabel align="left">Velocidad sin atajos</SectionLabel>
+            <SectionLabel align="left">{ai.sectionLabel}</SectionLabel>
             <SectionTitle>
-              Usamos IA para que tu proyecto esté listo antes —{' '}
-              <span className="text-brand">sin perder calidad</span>
+              {ai.titleBefore}
+              <span className="text-brand">{ai.titleAccent}</span>
             </SectionTitle>
             <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
-              La tecnología nos ayuda a trabajar más rápido. Las decisiones importantes y la relación
-              contigo siguen siendo{' '}
-              <span className="font-semibold text-neon-purple">humanas.</span>
+              {ai.subtitleBefore}
+              <span className="font-semibold text-neon-purple">{ai.subtitleHighlight}</span>
             </p>
           </div>
 
@@ -139,21 +121,21 @@ export function AiSection() {
         >
           <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_8px_40px_rgba(15,23,42,0.06)]">
             <ul className="grid divide-y divide-slate-100 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4 lg:divide-y-0">
-              {AI_FEATURES.map((feature) => {
-                const Icon = feature.icon
-                const theme = BRAND_ICON_TONES[feature.tone]
+              {AI_FEATURE_META.map((meta, index) => {
+                const copy = ai.features[index]
+                if (!copy) return null
+                const Icon = meta.icon
+                const theme = BRAND_ICON_TONES[meta.tone]
                 return (
                   <li
-                    key={feature.title}
+                    key={copy.title}
                     className="flex flex-col items-center px-5 py-8 text-center sm:px-6 sm:py-9"
                   >
                     <span className={`inline-flex h-12 w-12 items-center justify-center rounded-lg ${theme.wrap}`}>
                       <Icon className="h-6 w-6" strokeWidth={1.75} aria-hidden />
                     </span>
-                    <h3 className="mt-4 text-sm font-bold text-slate-900 sm:text-base">{feature.title}</h3>
-                    <p className="mt-2 text-xs leading-relaxed text-slate-600 sm:text-sm">
-                      {feature.description}
-                    </p>
+                    <h3 className="mt-4 text-sm font-bold text-slate-900 sm:text-base">{copy.title}</h3>
+                    <p className="mt-2 text-xs leading-relaxed text-slate-600 sm:text-sm">{copy.description}</p>
                   </li>
                 )
               })}
@@ -166,17 +148,17 @@ export function AiSection() {
               className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full bg-brand px-6 py-3.5 text-sm font-semibold text-white shadow-md transition hover:bg-brand-light active:scale-[0.98] sm:w-auto sm:text-base"
             >
               <Rocket className="h-4 w-4 shrink-0" aria-hidden />
-              Quiero empezar pronto
+              {ai.ctaPrimary}
               <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
             </Link>
             <a
-              href={buildWhatsAppUrl(WHATSAPP_MESSAGES.default)}
+              href={buildWhatsAppUrl(messages.whatsappMessages.default)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3.5 text-sm font-semibold text-slate-900 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] sm:w-auto sm:text-base"
             >
               <TechLogo name="WhatsApp" size={20} />
-              Cuéntame más
+              {ai.ctaSecondary}
             </a>
           </div>
         </motion.div>

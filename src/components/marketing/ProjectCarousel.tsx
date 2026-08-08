@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from 'react'
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { FeaturedProject } from '@/lib/case-studies'
 import { ProjectPreviewImage } from '@/components/marketing/ProjectPreviewImage'
+import { useMessages } from '@/i18n/LocaleProvider'
 
 const SWIPE_THRESHOLD = 48
 
@@ -37,6 +38,8 @@ function ProjectCard({
   onLeave,
   layout = 'desktop',
   theme = 'light',
+  viewProject,
+  projectAlt,
 }: {
   project: FeaturedProject
   isFocused: boolean
@@ -44,6 +47,8 @@ function ProjectCard({
   onLeave?: () => void
   layout?: 'desktop' | 'mobile'
   theme?: CarouselTheme
+  viewProject: string
+  projectAlt: string
 }) {
   const isDark = theme === 'dark'
   const categoryStyles = isDark ? CATEGORY_STYLES_DARK : CATEGORY_STYLES_LIGHT
@@ -68,7 +73,7 @@ function ProjectCard({
       <div className={`relative aspect-[16/11] sm:aspect-[16/10] overflow-hidden ${isDark ? 'bg-slate-900' : 'bg-slate-100'}`}>
         <ProjectPreviewImage
           src={project.image}
-          alt={`Proyecto ${project.company}`}
+          alt={`${projectAlt} ${project.company}`}
           isDark={isDark}
           sizes={isFocused ? '(max-width: 768px) 90vw, 520px' : '(max-width: 768px) 70vw, 220px'}
           className={`object-cover object-top transition-transform duration-300 ${isFocused ? 'scale-105' : 'scale-100'}`}
@@ -97,7 +102,7 @@ function ProjectCard({
             isDark ? 'text-neon-blue hover:text-neon-purple' : 'text-brand hover:gap-2'
           } ${isFocused ? 'opacity-100' : 'opacity-80'}`}
         >
-          Ver proyecto
+          {viewProject}
           <ArrowRight className="h-4 w-4" aria-hidden />
         </a>
       </div>
@@ -106,6 +111,7 @@ function ProjectCard({
 }
 
 export function ProjectCarousel({ projects, theme = 'light' }: Props) {
+  const { cases: c } = useMessages()
   const isDark = theme === 'dark'
   const [activeIndex, setActiveIndex] = useState(Math.min(1, projects.length - 1))
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
@@ -167,6 +173,8 @@ export function ProjectCarousel({ projects, theme = 'light' }: Props) {
                 onHover={() => setHoveredIndex(index)}
                 onLeave={() => setHoveredIndex(null)}
                 theme={theme}
+                viewProject={c.viewProject}
+                projectAlt={c.projectAlt}
               />
             </div>
           )
@@ -176,13 +184,20 @@ export function ProjectCarousel({ projects, theme = 'light' }: Props) {
       {/* Mobile — swipe carousel */}
       <div className="md:hidden" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <div className="overflow-hidden px-1">
-          <ProjectCard project={projects[activeIndex]} isFocused layout="mobile" theme={theme} />
+          <ProjectCard
+            project={projects[activeIndex]}
+            isFocused
+            layout="mobile"
+            theme={theme}
+            viewProject={c.viewProject}
+            projectAlt={c.projectAlt}
+          />
         </div>
       </div>
 
       {/* Navigation */}
-      <div className="mt-8 flex items-center justify-center gap-4">
-        <button type="button" onClick={goPrev} aria-label="Proyecto anterior" className={navBtnClass}>
+      <div className="mt-8 flex items-center justify-center gap-4" aria-label={c.carouselLabel}>
+        <button type="button" onClick={goPrev} aria-label={c.prevProject} className={navBtnClass}>
           <ChevronLeft className="h-5 w-5" aria-hidden />
         </button>
 
@@ -192,7 +207,7 @@ export function ProjectCarousel({ projects, theme = 'light' }: Props) {
               key={project.slug}
               type="button"
               onClick={() => goTo(index)}
-              aria-label={`Ver ${project.company}`}
+              aria-label={`${c.viewProject}: ${project.company}`}
               className={`rounded-full transition-all duration-300 ${
                 index === activeIndex ? dotActiveClass : dotInactiveClass
               }`}
@@ -200,7 +215,7 @@ export function ProjectCarousel({ projects, theme = 'light' }: Props) {
           ))}
         </div>
 
-        <button type="button" onClick={goNext} aria-label="Proyecto siguiente" className={navBtnClass}>
+        <button type="button" onClick={goNext} aria-label={c.nextProject} className={navBtnClass}>
           <ChevronRight className="h-5 w-5" aria-hidden />
         </button>
       </div>

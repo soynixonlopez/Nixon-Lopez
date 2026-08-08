@@ -15,18 +15,17 @@ import {
 } from 'lucide-react'
 import { SectionLabel } from '@/components/marketing/SectionLabel'
 import { SectionTitle } from '@/components/marketing/SectionTitle'
+import { useMessages } from '@/i18n/LocaleProvider'
 import { BRAND_ICON_TONES } from '@/lib/brand-icons'
-import {
-  QUOTE_DETAIL_OPTIONS,
-  QUOTE_FORM_OPTIONS,
-  quoteUrl,
-} from '@/lib/marketing'
+import { QUOTE_FORM_OPTIONS, quoteUrl } from '@/lib/marketing'
 
 const FORM_ICONS = { monitor: Monitor, rocket: Rocket, cart: ShoppingCart, code: Code } as const
 
 export function QuoteBannerSection() {
+  const messages = useMessages()
+  const q = messages.quoteBanner
   const router = useRouter()
-  const [selectedService, setSelectedService] = useState<string>(QUOTE_FORM_OPTIONS[0].id)
+  const [selectedService, setSelectedService] = useState<string>(q.formOptions[0]?.id ?? 'web-negocio')
   const [projectDetail, setProjectDetail] = useState('')
 
   function handleSubmit(event: React.FormEvent) {
@@ -53,15 +52,12 @@ export function QuoteBannerSection() {
 
       <div className="container-padding relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mx-auto mb-8 max-w-3xl text-center lg:mb-12">
-          <SectionLabel>Cotización transparente</SectionLabel>
+          <SectionLabel>{q.sectionLabel}</SectionLabel>
           <SectionTitle>
-            Cotiza tu proyecto{' '}
-            <span className="text-brand">en 2 minutos</span>
+            {q.titleBefore}
+            <span className="text-brand">{q.titleAccent}</span>
           </SectionTitle>
-          <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
-            Responde unas preguntas rápidas y recibe tu cotización estimada al instante. Sin llamadas, sin
-            compromiso.
-          </p>
+          <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">{q.subtitle}</p>
         </div>
 
         <div className="grid items-stretch gap-8 lg:grid-cols-2 lg:gap-10">
@@ -73,7 +69,7 @@ export function QuoteBannerSection() {
             >
               <Image
                 src="/images/cotizador.png"
-                alt="Descubre cuánto cuesta tu proyecto — cotizador online"
+                alt={q.imageAlt}
                 width={1092}
                 height={1440}
                 priority
@@ -94,8 +90,8 @@ export function QuoteBannerSection() {
                 <Calculator className="h-5 w-5" aria-hidden />
               </div>
               <div>
-                <p className="font-bold text-slate-900">Empieza aquí</p>
-                <p className="text-sm text-slate-500">Elige el tipo y abre el configurador</p>
+                <p className="font-bold text-slate-900">{q.formTitle}</p>
+                <p className="text-sm text-slate-500">{q.formSubtitle}</p>
               </div>
             </div>
 
@@ -104,9 +100,11 @@ export function QuoteBannerSection() {
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs font-bold text-white">
                   1
                 </span>
-                ¿Qué tipo de proyecto necesitas?
+                {q.step1Legend}
               </legend>
               {QUOTE_FORM_OPTIONS.map((option) => {
+                const copy = q.formOptions.find((item) => item.id === option.id)
+                if (!copy) return null
                 const Icon = FORM_ICONS[option.icon]
                 const theme = BRAND_ICON_TONES[option.color]
                 const isSelected = selectedService === option.id
@@ -131,8 +129,8 @@ export function QuoteBannerSection() {
                       <Icon className="h-5 w-5" aria-hidden />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-semibold text-slate-900">{option.title}</p>
-                      <p className="text-xs text-slate-500 sm:text-sm">{option.subtitle}</p>
+                      <p className="font-semibold text-slate-900">{copy.title}</p>
+                      <p className="text-xs text-slate-500 sm:text-sm">{copy.subtitle}</p>
                     </div>
                   </label>
                 )
@@ -144,7 +142,7 @@ export function QuoteBannerSection() {
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs font-bold text-white">
                   2
                 </span>
-                Cuéntanos más sobre tu proyecto
+                {q.step2Legend}
               </label>
               <select
                 id="quote-detail"
@@ -152,8 +150,8 @@ export function QuoteBannerSection() {
                 onChange={(event) => setProjectDetail(event.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-700 shadow-sm outline-none transition focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
               >
-                <option value="">Selecciona la opción que mejor describa tu proyecto</option>
-                {QUOTE_DETAIL_OPTIONS.map((option) => (
+                <option value="">{q.detailPlaceholder}</option>
+                {q.detailOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -165,13 +163,13 @@ export function QuoteBannerSection() {
               type="submit"
               className="mt-6 inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-md bg-brand px-6 py-4 text-base font-semibold text-white transition hover:bg-brand-light active:scale-[0.98]"
             >
-              Continuar en el cotizador
+              {q.submit}
               <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
             </button>
 
             <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs text-slate-500">
               <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden />
-              Precio transparente · Sin compromiso · Menos de 2 minutos
+              {q.footerNote}
             </p>
           </form>
         </div>

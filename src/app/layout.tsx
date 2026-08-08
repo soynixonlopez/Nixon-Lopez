@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import '../styles/globals.css'
 import { MetaPixel } from '@/components/analytics/MetaPixel'
+import { SiteProviders } from '@/components/providers/SiteProviders'
 import { SiteJsonLd } from '@/components/seo/SiteJsonLd'
 import { SITE_URL } from '@/lib/site-config'
 import { Inter } from 'next/font/google'
@@ -118,12 +119,14 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning data-scroll-behavior="smooth" className={inter.variable}>
       <body className={`${inter.className} font-sans antialiased`}>
-        <SiteJsonLd />
-        <MetaPixel />
+        <SiteProviders>
+          <SiteJsonLd />
+          <MetaPixel />
 
-        <div className="min-h-screen w-full min-w-0 max-w-full overflow-x-hidden bg-white text-slate-900">
-          {children}
-        </div>
+          <div className="min-h-screen w-full min-w-0 max-w-full overflow-x-hidden bg-white text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
+            {children}
+          </div>
+        </SiteProviders>
       </body>
     </html>
   )

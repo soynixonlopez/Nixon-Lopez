@@ -8,8 +8,9 @@ import { ArrowRight, Check, Clock, Send } from 'lucide-react'
 import TechLogo from '@/components/TechLogo'
 import { SectionLabel } from '@/components/marketing/SectionLabel'
 import { SectionTitle } from '@/components/marketing/SectionTitle'
+import { useMessages } from '@/i18n/LocaleProvider'
 import { MASTERCLASS_HERO_FLOATS } from '@/lib/case-studies'
-import { buildWhatsAppUrl, FINAL_CTA_TRUST, WHATSAPP_MESSAGES, quoteUrl } from '@/lib/marketing'
+import { buildWhatsAppUrl, quoteUrl } from '@/lib/marketing'
 
 const SHOWCASE_MOCKUPS = [
   {
@@ -44,6 +45,8 @@ function BrowserMockup({ src, className }: { src: string; className: string }) {
 }
 
 export function FinalCtaSection() {
+  const messages = useMessages()
+  const fc = messages.finalCta
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -65,38 +68,35 @@ export function FinalCtaSection() {
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
             transition={{ duration: 0.5 }}
           >
-            <SectionLabel align="left">Listo para crecer</SectionLabel>
+            <SectionLabel align="left">{fc.sectionLabel}</SectionLabel>
 
             <SectionTitle>
-              Tu negocio merece una presencia{' '}
-              <span className="text-brand">digital profesional</span>
+              {fc.titleBefore}
+              <span className="text-brand">{fc.titleAccent}</span>
             </SectionTitle>
-            <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
-              Cuéntame tu idea y encontremos la solución correcta para ayudarte a conseguir más clientes
-              online.
-            </p>
+            <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">{fc.subtitle}</p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link
                 href={quoteUrl()}
                 className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-brand px-7 py-4 text-base font-semibold text-white shadow-md transition hover:bg-brand-light active:scale-[0.98] sm:w-auto"
               >
-                Obtener cotización
+                {fc.ctaQuote}
                 <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
               </Link>
               <a
-                href={buildWhatsAppUrl(WHATSAPP_MESSAGES.final)}
+                href={buildWhatsAppUrl(messages.whatsappMessages.final)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-7 py-4 text-base font-semibold text-slate-900 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98] sm:w-auto"
               >
                 <TechLogo name="WhatsApp" size={22} />
-                Hablar por WhatsApp
+                {fc.ctaWhatsapp}
               </a>
             </div>
 
             <ul className="mt-8 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:gap-x-6 sm:gap-y-2">
-              {FINAL_CTA_TRUST.map((item) => (
+              {fc.trustChips.map((item) => (
                 <li key={item} className="inline-flex items-center gap-2 text-sm text-slate-700">
                   <Check className="h-4 w-4 shrink-0 text-neon-blue" strokeWidth={2.5} aria-hidden />
                   {item}
@@ -137,10 +137,8 @@ export function FinalCtaSection() {
                 <Send className="h-5 w-5 text-brand" aria-hidden />
               </div>
               <div>
-                <h3 className="font-bold text-slate-900 sm:text-lg">Respuesta rápida y sin rodeos</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-slate-600 sm:text-base">
-                  Cuéntame tu proyecto y te daré una propuesta clara para que tomes la mejor decisión.
-                </p>
+                <h3 className="font-bold text-slate-900 sm:text-lg">{fc.card1Title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-600 sm:text-base">{fc.card1Body}</p>
               </div>
             </div>
             <div className="flex items-start gap-4 p-6 sm:p-8">
@@ -148,10 +146,8 @@ export function FinalCtaSection() {
                 <Clock className="h-5 w-5 text-neon-purple" aria-hidden />
               </div>
               <div>
-                <h3 className="font-bold text-slate-900 sm:text-lg">Respuesta en menos de 24h</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-slate-600 sm:text-base">
-                  Normalmente respondemos en pocas horas.
-                </p>
+                <h3 className="font-bold text-slate-900 sm:text-lg">{fc.card2Title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-600 sm:text-base">{fc.card2Body}</p>
               </div>
             </div>
           </div>

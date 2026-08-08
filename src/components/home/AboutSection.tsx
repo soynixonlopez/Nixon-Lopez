@@ -6,8 +6,9 @@ import { useRef } from 'react'
 import { Check, Github, Instagram, Linkedin } from 'lucide-react'
 import { SectionLabel } from '@/components/marketing/SectionLabel'
 import { SectionTitle } from '@/components/marketing/SectionTitle'
+import { useMessages } from '@/i18n/LocaleProvider'
 import { BRAND_ICON_TONES } from '@/lib/brand-icons'
-import { ABOUT_CHECKLIST, ABOUT_SOCIAL, ABOUT_STATS, HOME_IMAGES } from '@/lib/marketing'
+import { ABOUT_SOCIAL, ABOUT_STATS, HOME_IMAGES } from '@/lib/marketing'
 
 const SOCIAL_STYLES = {
   linkedin: {
@@ -25,6 +26,8 @@ const SOCIAL_STYLES = {
 } as const
 
 export function AboutSection() {
+  const messages = useMessages()
+  const a = messages.about
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -42,36 +45,31 @@ export function AboutSection() {
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
             transition={{ duration: 0.5 }}
           >
-            <SectionLabel align="left">Sobre mí</SectionLabel>
+            <SectionLabel align="left">{a.sectionLabel}</SectionLabel>
 
             <SectionTitle>
-              Trabajo contigo directamente,{' '}
-              <span className="text-brand">no con una agencia donde nadie conoce tu proyecto</span>
+              {a.titleBefore}
+              <span className="text-brand">{a.titleAccent}</span>
             </SectionTitle>
 
-            <p className="mt-5 text-base leading-relaxed text-slate-600 sm:text-lg">
-              Soy Nixon López, desarrollador web especializado en crear páginas y soluciones digitales para negocios
-              que quieren mejorar su presencia online y conseguir más clientes.
-            </p>
-            <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
-              Mi enfoque no es solamente crear una web bonita, sino entender tu negocio y construir una solución que
-              realmente ayude a crecer.
-            </p>
+            <p className="mt-5 text-base leading-relaxed text-slate-600 sm:text-lg">{a.paragraph1}</p>
+            <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">{a.paragraph2}</p>
 
             <div className="mt-8 grid grid-cols-3 gap-3 max-w-xl">
-              {ABOUT_STATS.map((stat) => {
+              {ABOUT_STATS.map((stat, index) => {
                 const theme = BRAND_ICON_TONES[stat.color]
+                const label = a.stats[index] ?? stat.label
                 return (
-                  <div key={stat.label} className={`rounded-xl border px-3 py-3 sm:px-4 sm:py-4 ${theme.card}`}>
+                  <div key={stat.value} className={`rounded-xl border px-3 py-3 sm:px-4 sm:py-4 ${theme.card}`}>
                     <p className={`text-2xl font-bold tracking-tight sm:text-3xl ${theme.icon}`}>{stat.value}</p>
-                    <p className="mt-1 text-[11px] leading-snug text-slate-600 sm:text-xs">{stat.label}</p>
+                    <p className="mt-1 text-[11px] leading-snug text-slate-600 sm:text-xs">{label}</p>
                   </div>
                 )
               })}
             </div>
 
             <ul className="mt-8 grid max-w-xl gap-3 sm:grid-cols-2">
-              {ABOUT_CHECKLIST.map((item, index) => {
+              {a.checklist.map((item, index) => {
                 const tones = ['blue', 'green', 'purple', 'orange'] as const
                 const theme = BRAND_ICON_TONES[tones[index % tones.length]]
                 return (
@@ -96,7 +94,7 @@ export function AboutSection() {
               <div className="relative aspect-[4/5] w-full">
                 <Image
                   src={HOME_IMAGES.about}
-                  alt="Nixon López en su espacio de trabajo — desarrollo web en Panamá"
+                  alt={a.imageAlt}
                   fill
                   unoptimized
                   className="object-cover object-[center_18%]"
@@ -105,8 +103,8 @@ export function AboutSection() {
               </div>
 
               <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-brand via-brand/80 to-transparent px-5 pb-5 pt-24">
-                <p className="text-lg font-bold text-white">Nixon López</p>
-                <p className="mt-0.5 text-sm text-white/85">Desarrollo web · Panamá</p>
+                <p className="text-lg font-bold text-white">{a.name}</p>
+                <p className="mt-0.5 text-sm text-white/85">{a.role}</p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   {ABOUT_SOCIAL.map((social) => {
@@ -130,9 +128,7 @@ export function AboutSection() {
               </figcaption>
             </figure>
 
-            <p className="mt-3 text-center text-xs text-slate-500 sm:text-left">
-              Sígueme para ver proyectos, tips y actualizaciones.
-            </p>
+            <p className="mt-3 text-center text-xs text-slate-500 sm:text-left">{a.followHint}</p>
           </motion.div>
         </div>
       </div>

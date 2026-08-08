@@ -1,20 +1,27 @@
 'use client'
 
-import { STEP_LABELS, TOTAL_STEPS } from '@/lib/quote-configurator'
+import { useMemo } from 'react'
+import { useMessages } from '@/i18n/LocaleProvider'
+import { TOTAL_STEPS } from '@/lib/quote-configurator'
 
 type Props = {
   step: number
 }
 
 export function QuoteProgress({ step }: Props) {
+  const messages = useMessages()
+  const q = messages.quote
   const pct = Math.min(100, Math.max(0, (step / TOTAL_STEPS) * 100))
+  const stepLabel = q.stepLabels[step - 1] ?? ''
 
   return (
     <div className="mb-6">
       <div className="mb-2 flex items-center justify-between text-sm">
         <span className="font-semibold text-slate-900">
-          Paso {step} de {TOTAL_STEPS}
-          <span className="ml-1.5 font-normal text-slate-500">· {STEP_LABELS[step - 1]}</span>
+          {q.progressStep} {step} {q.progressOf} {TOTAL_STEPS}
+          <span className="ml-1.5 font-normal text-slate-500">
+            {q.progressLabelSeparator} {stepLabel}
+          </span>
         </span>
         <span className="tabular-nums text-slate-500">{Math.round(pct)}%</span>
       </div>

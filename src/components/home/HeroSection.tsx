@@ -1,3 +1,5 @@
+'use client'
+
 import Image from 'next/image'
 import Link from 'next/link'
 import {
@@ -12,12 +14,8 @@ import {
 } from 'lucide-react'
 import TechLogo from '@/components/TechLogo'
 import { MASTERCLASS_HERO_FLOATS } from '@/lib/case-studies'
-import {
-  HERO_TECH_STACK,
-  HERO_TRUST_BADGES,
-  HOME_IMAGES,
-  quoteUrl,
-} from '@/lib/marketing'
+import { useMessages } from '@/i18n/LocaleProvider'
+import { HERO_TECH_STACK, HERO_TRUST_BADGES, HOME_IMAGES, quoteUrl } from '@/lib/marketing'
 
 /** Misma distribución estable del hero original / masterclass */
 const FLOAT_PROJECTS = [
@@ -94,6 +92,9 @@ function HeroFloatCard({ item }: { item: (typeof FLOAT_PROJECTS)[number] }) {
 }
 
 export function HeroSection() {
+  const messages = useMessages()
+  const { hero: h } = messages
+
   return (
     <section
       id="hero"
@@ -114,22 +115,22 @@ export function HeroSection() {
           <div className="flex w-full max-w-xl flex-col justify-start -translate-y-1 sm:justify-center sm:-translate-y-8 lg:-translate-y-16 lg:max-w-none">
             <p className="mb-3 flex items-center gap-2.5 text-sm font-medium text-brand sm:mb-5">
               <span className="h-px w-5 shrink-0 bg-brand/50" aria-hidden />
-              Desarrollo web para negocios
+              {h.eyebrow}
             </p>
 
             <h1
-              className="hero-title font-extrabold tracking-tight text-slate-900"
+              className="hero-title font-extrabold tracking-tight text-slate-900 dark:text-slate-50"
               style={{ fontSize: 'clamp(2.5rem, 7.5vw, 3.35rem)', lineHeight: 1.12 }}
             >
-              Creo páginas web que convierten{' '}
-              <span className="text-brand">visitantes en clientes.</span>
+              {h.titleBefore}
+              <span className="text-brand">{h.titleAccent}</span>
             </h1>
 
-            <p className="mt-4 max-w-lg text-base leading-relaxed text-slate-600 sm:mt-4 sm:text-base md:text-lg">
-              Transformo tu presencia digital en{' '}
-              <span className="font-semibold text-neon-purple">más oportunidades</span> de negocio con páginas
-              rápidas, profesionales y listas para captar clientes por{' '}
-              <span className="font-semibold text-emerald-600">WhatsApp</span>.
+            <p className="mt-4 max-w-lg text-base leading-relaxed text-slate-600 dark:text-slate-300 sm:mt-4 sm:text-base md:text-lg">
+              {h.subtitleBeforeHighlight}
+              <span className="font-semibold text-neon-purple">{h.subtitleHighlightOpportunities}</span>
+              {h.subtitleMiddle}
+              <span className="font-semibold text-emerald-600">{h.subtitleHighlightWhatsapp}</span>.
             </p>
 
             <div className="mt-6 flex flex-col gap-3 sm:mt-7 sm:flex-row">
@@ -138,37 +139,41 @@ export function HeroSection() {
                 className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-brand px-5 py-3.5 text-base font-semibold text-white shadow-md transition hover:bg-brand-light active:scale-[0.98] sm:w-auto sm:px-6 sm:py-4"
               >
                 <Rocket className="h-5 w-5 shrink-0" aria-hidden />
-                Quiero mi página web
+                {h.ctaPrimary}
                 <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
               </Link>
               <Link
                 href="#projects"
-                className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full border-2 border-brand/20 bg-white/90 px-5 py-3.5 text-base font-semibold text-brand shadow-sm transition hover:border-brand/35 hover:bg-white active:scale-[0.98] sm:w-auto sm:px-6 sm:py-4"
+                className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full border-2 border-brand/20 bg-white/90 dark:bg-slate-900/90 px-5 py-3.5 text-base font-semibold text-brand shadow-sm transition hover:border-brand/35 hover:bg-white dark:hover:bg-slate-900 active:scale-[0.98] sm:w-auto sm:px-6 sm:py-4"
               >
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand/10">
                   <Play className="h-3.5 w-3.5 fill-brand text-brand ml-0.5" aria-hidden />
                 </span>
-                Ver proyectos reales
+                {h.ctaSecondary}
               </Link>
             </div>
 
             <div className="mt-7 rounded-2xl border border-white/80 bg-white/90 p-4 shadow-[0_8px_32px_rgba(15,23,42,0.08)] backdrop-blur-sm sm:mt-8 sm:p-5">
               <ul className="grid grid-cols-2 gap-4 sm:gap-4 md:grid-cols-2 lg:grid-cols-4 lg:gap-5">
-                {HERO_TRUST_BADGES.map((badge) => (
-                  <li key={badge.title} className="flex min-w-0 items-start gap-3 sm:gap-2.5">
+                {HERO_TRUST_BADGES.map((badge, index) => {
+                  const copy = h.trustBadges[index]
+                  if (!copy) return null
+                  return (
+                  <li key={badge.icon + String(index)} className="flex min-w-0 items-start gap-3 sm:gap-2.5">
                     <div
                       className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl sm:h-10 sm:w-10 ${TRUST_ICON_BG[badge.color]}`}
                     >
                       <TrustBadgeIcon icon={badge.icon} />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-bold leading-snug text-slate-900 sm:text-sm">{badge.title}</p>
+                      <p className="text-sm font-bold leading-snug text-slate-900 dark:text-slate-100 sm:text-sm">{copy.title}</p>
                       <p className="mt-0.5 text-xs leading-snug text-slate-500 sm:text-[11px] md:text-xs">
-                        {badge.subtitle}
+                        {copy.subtitle}
                       </p>
                     </div>
                   </li>
-                ))}
+                  )
+                })}
               </ul>
             </div>
           </div>
@@ -183,7 +188,7 @@ export function HeroSection() {
 
                 <Image
                   src={HOME_IMAGES.hero}
-                  alt="Nixon López — desarrollador web para negocios en Panamá"
+                  alt={h.imageAlt}
                   width={HOME_IMAGES.heroWidth}
                   height={HOME_IMAGES.heroHeight}
                   className="relative z-10 mb-0 block h-auto w-full max-h-[min(48vh,420px)] object-contain object-bottom drop-shadow-[0_28px_56px_rgba(15,23,42,0.12)] min-[380px]:max-h-[min(52vh,460px)] sm:max-h-[min(48vh,440px)] md:max-h-[min(52vh,500px)] lg:max-h-full"
@@ -206,7 +211,7 @@ export function HeroSection() {
                         <TrendingUp className="h-5 w-5 text-emerald-600" aria-hidden />
                       </div>
                       <p className="text-[11px] font-medium leading-snug text-slate-700 sm:text-xs">
-                        Webs que trabajan 24/7 para hacer crecer tu negocio
+                        {h.floatCard}
                       </p>
                     </div>
                   </div>
@@ -214,7 +219,7 @@ export function HeroSection() {
               </div>
 
               <div className="relative z-20 m-0 rounded-t-none rounded-b-2xl border border-t-0 border-slate-200/70 bg-white/90 px-4 py-4 shadow-sm backdrop-blur-sm sm:hidden">
-                <p className="mb-3 text-sm font-medium text-slate-600">Tecnologías modernas</p>
+                <p className="mb-3 text-sm font-medium text-slate-600">{h.techMobile}</p>
                 <ul className="grid grid-cols-3 gap-2.5">
                   {HERO_TECH_STACK.map((tech) => (
                     <li
@@ -232,7 +237,7 @@ export function HeroSection() {
                   <span className="flex h-7 w-7 items-center justify-center rounded-md bg-neon-purple/12">
                     <Repeat2 className="h-4 w-4 text-neon-purple" aria-hidden />
                   </span>
-                  <span className="text-xs font-medium text-slate-600">Automatizaciones e integraciones</span>
+                  <span className="text-xs font-medium text-slate-600">{h.automations}</span>
                 </div>
               </div>
             </div>
@@ -241,9 +246,7 @@ export function HeroSection() {
 
         <div className="relative z-20 mt-4 hidden min-h-[3.75rem] shrink-0 rounded-2xl border border-slate-200/70 bg-white/80 px-4 py-4 shadow-sm backdrop-blur-sm sm:mt-4 sm:block sm:min-h-[4.25rem] sm:px-6 sm:py-5 lg:mt-auto">
           <div className="flex h-full flex-col items-start justify-center gap-3.5 sm:gap-4 lg:flex-row lg:items-center lg:gap-8">
-            <p className="shrink-0 text-sm font-medium text-slate-600">
-              Tecnologías modernas para resultados reales
-            </p>
+            <p className="shrink-0 text-sm font-medium text-slate-600">{h.techDesktop}</p>
             <ul className="flex flex-wrap items-center gap-x-4 gap-y-2.5 sm:gap-x-5 sm:gap-y-3">
               {HERO_TECH_STACK.map((tech) => (
                 <li key={tech} className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
@@ -255,8 +258,8 @@ export function HeroSection() {
                 <span className="flex h-6 w-6 items-center justify-center rounded-md bg-neon-purple/12 sm:h-7 sm:w-7">
                   <Repeat2 className="h-3.5 w-3.5 text-neon-purple sm:h-4 sm:w-4" aria-hidden />
                 </span>
-                <span className="hidden min-[420px]:inline">Automatizaciones</span>
-                <span className="min-[420px]:hidden">Auto</span>
+                <span className="hidden min-[420px]:inline">{h.automations}</span>
+                <span className="min-[420px]:hidden">{h.automationsShort}</span>
               </li>
             </ul>
           </div>

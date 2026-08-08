@@ -20,14 +20,9 @@ import {
 import TechLogo from '@/components/TechLogo'
 import { SectionLabel } from '@/components/marketing/SectionLabel'
 import { SectionTitle } from '@/components/marketing/SectionTitle'
+import { useMessages } from '@/i18n/LocaleProvider'
 import { BRAND_ICON_TONES } from '@/lib/brand-icons'
-import {
-  buildWhatsAppUrl,
-  HOME_SERVICES,
-  SERVICES_TRUST_PILLS,
-  WHATSAPP_MESSAGES,
-  quoteUrl,
-} from '@/lib/marketing'
+import { buildWhatsAppUrl, HOME_SERVICES, SERVICES_TRUST_PILLS, quoteUrl } from '@/lib/marketing'
 
 const SERVICE_ICONS = {
   monitor: Monitor,
@@ -43,20 +38,25 @@ const PILL_ICONS = {
   headphones: Headphones,
 } as const
 
-function serviceWhatsAppMessage(serviceId: string) {
+function serviceWhatsAppMessage(
+  serviceId: string,
+  wa: ReturnType<typeof useMessages>['whatsappMessages'],
+) {
   switch (serviceId) {
     case 'landing':
-      return WHATSAPP_MESSAGES.serviceLanding
+      return wa.serviceLanding
     case 'wordpress-tienda-20':
-      return WHATSAPP_MESSAGES.serviceStore
+      return wa.serviceStore
     case 'reservas':
-      return WHATSAPP_MESSAGES.customSoftware
+      return wa.customSoftware
     default:
-      return WHATSAPP_MESSAGES.serviceWeb
+      return wa.serviceWeb
   }
 }
 
 export function ServicesPreviewSection() {
+  const messages = useMessages()
+  const s = messages.services
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -82,14 +82,12 @@ export function ServicesPreviewSection() {
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-3xl text-center mb-10 sm:mb-14"
         >
-          <SectionLabel>Servicios</SectionLabel>
+          <SectionLabel>{s.sectionLabel}</SectionLabel>
           <SectionTitle>
-            Soluciones digitales para{' '}
-            <span className="text-brand">cada etapa de tu negocio</span>
+            {s.titleBefore}
+            <span className="text-brand">{s.titleAccent}</span>
           </SectionTitle>
-          <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
-            Empieza con lo que necesitas hoy y escala cuando tu negocio crezca.
-          </p>
+          <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">{s.subtitle}</p>
         </motion.div>
 
         <motion.div
@@ -99,6 +97,8 @@ export function ServicesPreviewSection() {
           className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5"
         >
           {HOME_SERVICES.map((service) => {
+            const copy = s.items.find((item) => item.id === service.id)
+            if (!copy) return null
             const Icon = SERVICE_ICONS[service.icon]
             const isWhatsApp = 'whatsapp' in service && service.whatsapp
 
@@ -112,11 +112,11 @@ export function ServicesPreviewSection() {
                 <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg ${theme.wrap}`}>
                   <Icon className="h-6 w-6" aria-hidden />
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 leading-snug">{service.title}</h3>
-                <p className="mt-2 text-sm text-slate-600 leading-relaxed">{service.description}</p>
+                <h3 className="text-lg font-bold text-slate-900 leading-snug">{copy.title}</h3>
+                <p className="mt-2 text-sm text-slate-600 leading-relaxed">{copy.description}</p>
 
                 <ul className="mt-4 space-y-2.5 flex-1">
-                  {service.features.map((feature) => (
+                  {copy.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-2 text-sm text-slate-700">
                       <Check className={`mt-0.5 h-4 w-4 shrink-0 ${theme.icon}`} strokeWidth={2.5} aria-hidden />
                       {feature}
@@ -125,19 +125,19 @@ export function ServicesPreviewSection() {
                 </ul>
 
                 <p className="mt-5 text-sm text-slate-500">
-                  Inversión:{' '}
-                  <span className="font-bold text-slate-900">{service.priceLabel}</span>
+                  {s.investmentLabel}{' '}
+                  <span className="font-bold text-slate-900">{copy.priceLabel}</span>
                 </p>
 
                 <div className="mt-4">
                   {isWhatsApp ? (
                     <a
-                      href={buildWhatsAppUrl(serviceWhatsAppMessage(service.id))}
+                      href={buildWhatsAppUrl(serviceWhatsAppMessage(service.id, messages.whatsappMessages))}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`inline-flex w-full items-center justify-center gap-2 rounded-md px-5 py-3.5 min-h-[48px] text-sm font-semibold text-white transition active:scale-[0.98] ${theme.button}`}
                     >
-                      {service.ctaLabel}
+                      {copy.ctaLabel}
                       <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
                     </a>
                   ) : (
@@ -145,7 +145,7 @@ export function ServicesPreviewSection() {
                       href={quoteUrl(service.id)}
                       className={`inline-flex w-full items-center justify-center gap-2 rounded-md px-5 py-3.5 min-h-[48px] text-sm font-semibold text-white transition active:scale-[0.98] ${theme.button}`}
                     >
-                      {service.ctaLabel}
+                      {copy.ctaLabel}
                       <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
                     </Link>
                   )}
@@ -165,21 +165,20 @@ export function ServicesPreviewSection() {
             <div className="flex items-start gap-4 lg:max-w-xl">
               <ShieldCheck className="mt-0.5 h-6 w-6 shrink-0 text-brand" aria-hidden />
               <p className="text-sm sm:text-base text-slate-700 leading-relaxed">
-                <span className="font-bold text-slate-900">Enfoque en resultados, no en tecnología.</span> Cada
-                proyecto está pensado para ayudarte a conseguir más clientes, ahorrar tiempo y hacer crecer tu
-                negocio.
+                <span className="font-bold text-slate-900">{s.focusBold}</span> {s.focusRest}
               </p>
             </div>
             <ul className="grid grid-cols-2 sm:grid-cols-4 gap-4 lg:gap-5 flex-1">
-              {SERVICES_TRUST_PILLS.map((pill) => {
+              {SERVICES_TRUST_PILLS.map((pill, index) => {
                 const PillIcon = PILL_ICONS[pill.icon]
                 const theme = BRAND_ICON_TONES[pill.color]
+                const label = s.trustPills[index] ?? pill.label
                 return (
-                  <li key={pill.label} className="flex flex-col items-center text-center gap-2">
+                  <li key={pill.icon} className="flex flex-col items-center text-center gap-2">
                     <span className={`inline-flex h-10 w-10 items-center justify-center rounded-lg ${theme.wrap}`}>
                       <PillIcon className="h-5 w-5" aria-hidden />
                     </span>
-                    <span className="text-xs font-medium text-slate-600 leading-snug">{pill.label}</span>
+                    <span className="text-xs font-medium text-slate-600 leading-snug">{label}</span>
                   </li>
                 )
               })}
@@ -198,17 +197,17 @@ export function ServicesPreviewSection() {
             className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-brand px-6 py-4 min-h-[52px] text-base font-semibold text-white shadow-md transition hover:bg-brand-light active:scale-[0.98]"
           >
             <Calendar className="h-5 w-5 shrink-0" aria-hidden />
-            Agendar una llamada gratuita
+            {s.scheduleCall}
             <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
           </Link>
           <a
-            href={buildWhatsAppUrl(WHATSAPP_MESSAGES.default)}
+            href={buildWhatsAppUrl(messages.whatsappMessages.default)}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full border-2 border-emerald-200 bg-white px-6 py-4 min-h-[52px] text-base font-semibold text-slate-900 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50/50 active:scale-[0.98]"
           >
             <TechLogo name="WhatsApp" size={22} />
-            Hablemos por WhatsApp
+            {s.talkWhatsapp}
           </a>
         </motion.div>
       </div>

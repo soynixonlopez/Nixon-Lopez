@@ -6,10 +6,10 @@ import { ArrowRight, MessageCircle, Quote, Star } from 'lucide-react'
 import TechLogo from '@/components/TechLogo'
 import { SectionLabel } from '@/components/marketing/SectionLabel'
 import { SectionTitle } from '@/components/marketing/SectionTitle'
+import { useMessages } from '@/i18n/LocaleProvider'
 import {
   buildWhatsAppUrl,
   VERIFIED_TESTIMONIALS,
-  WHATSAPP_MESSAGES,
 } from '@/lib/marketing'
 
 const AVATAR_COLORS = {
@@ -38,6 +38,8 @@ function renderHighlightedContent(content: string, highlights: readonly string[]
 }
 
 export function TestimonialsSection() {
+  const messages = useMessages()
+  const t = messages.testimonials
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-80px' })
 
@@ -65,13 +67,11 @@ export function TestimonialsSection() {
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-3xl text-center mb-10 sm:mb-14"
         >
-          <SectionLabel>Clientes reales</SectionLabel>
+          <SectionLabel>{t.sectionLabel}</SectionLabel>
           <SectionTitle>
-            Negocios que confiaron en <span className="text-brand">mi trabajo</span>
+            {t.titleBefore} <span className="text-brand">{t.titleAccent}</span>
           </SectionTitle>
-          <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
-            Resultados y experiencias de clientes que decidieron mejorar su presencia digital.
-          </p>
+          <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">{t.subtitle}</p>
         </motion.div>
 
         <motion.div
@@ -80,7 +80,10 @@ export function TestimonialsSection() {
           transition={{ duration: 0.5, delay: 0.08 }}
           className="grid md:grid-cols-3 gap-4 sm:gap-5"
         >
-          {VERIFIED_TESTIMONIALS.map((item) => (
+          {VERIFIED_TESTIMONIALS.map((item, index) => {
+            const copy = t.items[index]
+            if (!copy) return null
+            return (
             <blockquote
               key={item.name}
               className="flex flex-col rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-[0_8px_30px_rgba(15,23,42,0.05)]"
@@ -89,7 +92,7 @@ export function TestimonialsSection() {
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 text-white shadow-sm">
                   <Quote className="h-5 w-5 fill-white/20" aria-hidden />
                 </div>
-                <div className="flex items-center gap-0.5" role="img" aria-label="5 estrellas">
+                <div className="flex items-center gap-0.5" role="img" aria-label={t.starsAria}>
                   {Array.from({ length: 5 }).map((_, index) => (
                     <Star key={index} className="h-4 w-4 fill-amber-400 text-amber-400" aria-hidden />
                   ))}
@@ -97,7 +100,7 @@ export function TestimonialsSection() {
               </div>
 
               <p className="flex-1 text-sm sm:text-[15px] text-slate-700 leading-relaxed">
-                &ldquo;{renderHighlightedContent(item.content, item.highlights)}&rdquo;
+                &ldquo;{renderHighlightedContent(copy.content, copy.highlights)}&rdquo;
               </p>
 
               <footer className="mt-5 pt-4 border-t border-slate-100 flex items-center gap-3">
@@ -107,12 +110,13 @@ export function TestimonialsSection() {
                   {item.initials}
                 </div>
                 <div>
-                  <p className="font-bold text-slate-900">{item.name}</p>
-                  <p className="text-sm text-slate-500">{item.company}</p>
+                  <p className="font-bold text-slate-900">{copy.name}</p>
+                  <p className="text-sm text-slate-500">{copy.company}</p>
                 </div>
               </footer>
             </blockquote>
-          ))}
+            )
+          })}
         </motion.div>
 
         <motion.div
@@ -123,19 +127,17 @@ export function TestimonialsSection() {
         >
           <div className="flex flex-col lg:flex-row lg:items-center gap-5 lg:gap-8">
             <div className="flex-1">
-              <p className="text-lg sm:text-xl font-bold text-slate-900">¿Listo para trabajar juntos?</p>
-              <p className="mt-1 text-sm sm:text-base text-slate-600">
-                Hablemos de tu proyecto y hagamos que suceda.
-              </p>
+              <p className="text-lg sm:text-xl font-bold text-slate-900">{t.bannerTitle}</p>
+              <p className="mt-1 text-sm sm:text-base text-slate-600">{t.bannerSubtitle}</p>
             </div>
             <a
-              href={buildWhatsAppUrl(WHATSAPP_MESSAGES.default)}
+              href={buildWhatsAppUrl(messages.whatsappMessages.default)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex w-full lg:w-auto shrink-0 items-center justify-center gap-2 rounded-md bg-brand px-6 py-4 min-h-[52px] text-base font-semibold text-white transition hover:bg-brand-light active:scale-[0.98]"
             >
               <TechLogo name="WhatsApp" size={22} light />
-              Hablemos de tu proyecto
+              {t.bannerCta}
               <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
             </a>
           </div>

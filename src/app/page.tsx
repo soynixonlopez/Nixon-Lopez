@@ -60,7 +60,7 @@ export default async function Home() {
     <>
       <Header />
       <HashScroll />
-      <main className="min-h-screen w-full min-w-0 overflow-x-hidden bg-white">
+      <main className="min-h-screen w-full min-w-0 overflow-x-hidden bg-white dark:bg-slate-950">
         <HeroSection />
         <HomeSeoContent />
         <ProblemSection />
