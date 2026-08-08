@@ -490,7 +490,7 @@ export function combineQuoteServiceSnapshots(services: QuoteServiceSnapshot[]): 
 export function extractQuoteServiceSnapshots(raw: unknown): QuoteServiceSnapshot[] {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return []
   const payload = raw as Record<string, unknown>
-  const candidates = payload.selected_services ?? payload.quoteServices
+  const candidates = payload.selected_services ?? payload.selectedServices ?? payload.quoteServices
   if (!Array.isArray(candidates)) return []
 
   const services: QuoteServiceSnapshot[] = []

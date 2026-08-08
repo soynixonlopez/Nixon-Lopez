@@ -2,10 +2,17 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { FolderPlus } from 'lucide-react'
+import { AdminConfiguratorEditor } from '@/components/admin/AdminConfiguratorEditor'
+import {
+  buildConfiguratorPayload,
+  configuratorTotals,
+  emptyConfiguratorState,
+  parseConfiguratorFromPayload,
+  parsePriceOverride,
+  type ConfiguratorState,
+} from '@/lib/admin-configurator-quote'
 import { createClient } from '@/lib/supabase/client'
-import { FolderPlus, Plus, Trash2 } from 'lucide-react'
-import { CATALOG_OTHER, buildAdminQuoteDraftsFromExisting, createAdminQuoteDraft, resolveAdminQuoteBundle, type AdminQuoteServiceDraft } from '@/lib/admin-quote-services'
-import { getQuoteAddonIfMissing, getService, QUOTE_SERVICES } from '@/lib/quote-pricing'
 
 type Quote = Record<string, unknown> & {
   id: string
@@ -41,19 +48,30 @@ function mergeRawPayload(existing: unknown, patch: Record<string, unknown>): Rec
   return { ...base, ...patch }
 }
 
+function initialConfig(quote: Quote): ConfiguratorState {
+  return parseConfiguratorFromPayload(quote.raw_payload) ?? emptyConfiguratorState()
+}
+
+function initialOverride(quote: Quote): string {
+  const fromPayload = parsePriceOverride(quote.raw_payload)
+  if (fromPayload != null) return String(fromPayload)
+  return ''
+}
+
+function initialCustomDecision(quote: Quote): string {
+  if (!quote.raw_payload || typeof quote.raw_payload !== 'object' || Array.isArray(quote.raw_payload)) {
+    return ''
+  }
+  const value = (quote.raw_payload as Record<string, unknown>).custom_decision
+  return typeof value === 'string' ? value : ''
+}
+
 export function QuoteEditorClient({ quote }: { quote: Quote }) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
-  const [pendingServiceType, setPendingServiceType] = useState('')
-  const [services, setServices] = useState<AdminQuoteServiceDraft[]>(
-    buildAdminQuoteDraftsFromExisting({
-      service_id: quote.service_id,
-      service_label: quote.service_label,
-      quantity_pages: quote.quantity_pages,
-      total_amount: quote.total_amount,
-      raw_payload: quote.raw_payload,
-    })
-  )
+  const [config, setConfig] = useState<ConfiguratorState>(() => initialConfig(quote))
+  const [priceOverride, setPriceOverride] = useState(() => initialOverride(quote))
+  const [customDecision, setCustomDecision] = useState(() => initialCustomDecision(quote))
   const [form, setForm] = useState({
     status: quote.status,
     client_first_name: quote.client_first_name,
@@ -65,37 +83,30 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
     comments: quote.comments ?? '',
   })
 
-  const bundle = useMemo(() => resolveAdminQuoteBundle(services), [services])
+  const overrideValue = priceOverride.trim() === '' ? null : Number.parseFloat(priceOverride)
+  const totals = useMemo(
+    () =>
+      configuratorTotals(
+        config,
+        overrideValue != null && Number.isFinite(overrideValue) ? overrideValue : null
+      ),
+    [config, overrideValue]
+  )
 
-  const updateService = (key: string, patch: Partial<AdminQuoteServiceDraft>) => {
-    setServices((current) => current.map((service) => (service.key === key ? { ...service, ...patch } : service)))
-  }
-
-  const addService = () => {
-    if (!pendingServiceType) return
-    setServices((current) => [...current, createAdminQuoteDraft(pendingServiceType)])
-    setPendingServiceType('')
-  }
+  const canSave =
+    Boolean(config.projectType) &&
+    (config.hasDomain === 'si' || config.hasDomain === 'no') &&
+    (config.hasHosting === 'si' || config.hasHosting === 'no')
 
   async function save() {
+    if (!canSave || !config.projectType) return
     setSaving(true)
     const supabase = createClient()
-    const first = services[0]
-    const raw_payload = mergeRawPayload(quote.raw_payload, {
-      manual: true,
-      catalog: services.every((service) => service.service_type !== CATALOG_OTHER),
-      monthly: bundle.monthly,
-      service_type: services.length === 1 ? first?.service_type || null : 'multiple',
-      has_domain: services.length === 1 ? first?.has_domain || null : null,
-      has_professional_email: services.length === 1 ? first?.has_professional_email || null : null,
-      has_hosting: services.length === 1 ? first?.has_hosting || null : null,
-      base_amount:
-        services.length === 1 && first?.base_amount.trim() !== ''
-          ? Number.parseFloat(first.base_amount)
-          : 0,
-      selected_services: bundle.services,
-      breakdown: { lines: bundle.lines },
+    const payload = buildConfiguratorPayload(config, {
+      priceOverride: totals.override,
+      customDecision,
     })
+    const raw_payload = mergeRawPayload(quote.raw_payload, payload)
 
     const { error } = await supabase
       .from('quotes')
@@ -106,13 +117,12 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
         client_email: form.client_email,
         client_phone: form.client_phone || null,
         company: form.company || null,
-        service_id: services.length === 1 ? first?.service_type || null : 'multiple',
-        service_label: bundle.serviceLabelSummary || null,
-        quantity_pages:
-          services.length === 1 && first?.quantity_pages ? Number.parseInt(first.quantity_pages, 10) : null,
-        subtotal: bundle.subtotal,
-        extras_total: bundle.extrasTotal,
-        total_amount: bundle.total,
+        service_id: config.projectType,
+        service_label: totals.quote.projectLabel,
+        quantity_pages: null,
+        subtotal: totals.base,
+        extras_total: totals.extras,
+        total_amount: totals.total,
         internal_notes: form.internal_notes || null,
         comments: form.comments || null,
         raw_payload,
@@ -141,7 +151,7 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
         client_email: form.client_email,
         client_phone: form.client_phone || null,
         status: 'pending',
-        description: bundle.serviceLabelSummary || null,
+        description: totals.quote.projectLabel || null,
       })
       .select('id')
       .single()
@@ -168,30 +178,21 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
 
   return (
     <div className="w-full max-w-3xl min-w-0 space-y-6">
-      <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Editar cotización</h1>
+      <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Editar cotización</h1>
 
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4 space-y-2 text-sm">
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Total calculado</p>
-        {bundle.mixedBilling ? (
-          <p className="text-amber-200 text-sm">
-            No combines servicios mensuales con servicios de pago único en la misma cotización.
-          </p>
-        ) : null}
+      <div className="space-y-2 rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-sm sm:p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Total</p>
         <ul className="space-y-1 text-slate-700">
-          {bundle.lines.length === 0 ? (
-            <li className="text-slate-500">Sin partidas</li>
-          ) : (
-            bundle.lines.map((line, index) => (
-              <li key={`${line.label}-${index}`} className="flex flex-wrap justify-between gap-2">
-                <span className="break-words min-w-0">{line.label}</span>
-                <span className="tabular-nums shrink-0">${line.amount.toFixed(2)}</span>
-              </li>
-            ))
-          )}
+          {totals.quote.lines.map((line) => (
+            <li key={line.id} className="flex justify-between gap-2">
+              <span>{line.label}</span>
+              <span className="tabular-nums">${line.amount.toFixed(2)}</span>
+            </li>
+          ))}
         </ul>
-        <p className="text-xs text-slate-500 pt-1 border-t border-slate-200">
-          Base ${bundle.subtotal.toFixed(2)} · Extras ${bundle.extrasTotal.toFixed(2)} ·{' '}
-          <span className="text-slate-900 font-semibold">Total ${bundle.total.toFixed(2)} USD{bundle.monthly ? '/mes' : ''}</span>
+        <p className="border-t border-slate-200 pt-2 text-slate-900">
+          Automático ${totals.quote.total.toFixed(2)} ·{' '}
+          <span className="font-semibold">Final ${totals.total.toFixed(2)} USD</span>
         </p>
       </div>
 
@@ -200,8 +201,8 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
           <span className="text-xs text-slate-400">Estado</span>
           <select
             value={form.status}
-            onChange={(e) => setForm((current) => ({ ...current, status: e.target.value }))}
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
+            onChange={(e) => setForm((c) => ({ ...c, status: e.target.value }))}
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
           >
             {statuses.map((status) => (
               <option key={status} value={status}>
@@ -214,16 +215,16 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
           <span className="text-xs text-slate-400">Nombre</span>
           <input
             value={form.client_first_name}
-            onChange={(e) => setForm((current) => ({ ...current, client_first_name: e.target.value }))}
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
+            onChange={(e) => setForm((c) => ({ ...c, client_first_name: e.target.value }))}
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
           />
         </label>
         <label>
           <span className="text-xs text-slate-400">Apellido</span>
           <input
             value={form.client_last_name}
-            onChange={(e) => setForm((current) => ({ ...current, client_last_name: e.target.value }))}
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
+            onChange={(e) => setForm((c) => ({ ...c, client_last_name: e.target.value }))}
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
           />
         </label>
         <label className="sm:col-span-2">
@@ -231,233 +232,84 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
           <input
             type="email"
             value={form.client_email}
-            onChange={(e) => setForm((current) => ({ ...current, client_email: e.target.value }))}
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
+            onChange={(e) => setForm((c) => ({ ...c, client_email: e.target.value }))}
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
           />
         </label>
         <label>
           <span className="text-xs text-slate-400">Teléfono</span>
           <input
             value={form.client_phone}
-            onChange={(e) => setForm((current) => ({ ...current, client_phone: e.target.value }))}
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
+            onChange={(e) => setForm((c) => ({ ...c, client_phone: e.target.value }))}
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
           />
         </label>
         <label>
           <span className="text-xs text-slate-400">Empresa</span>
           <input
             value={form.company}
-            onChange={(e) => setForm((current) => ({ ...current, company: e.target.value }))}
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
+            onChange={(e) => setForm((c) => ({ ...c, company: e.target.value }))}
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
           />
         </label>
 
-        <div className="sm:col-span-2 rounded-xl border border-slate-200 bg-white shadow-sm p-4 space-y-3">
-          <label className="block">
-            <span className="text-xs text-slate-400">Agregar servicio</span>
-            <div className="mt-1 flex flex-col sm:flex-row gap-3">
-              <select
-                value={pendingServiceType}
-                onChange={(e) => setPendingServiceType(e.target.value)}
-                className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
-              >
-                <option value="">Selecciona un servicio</option>
-                {QUOTE_SERVICES.map((service) => (
-                  <option key={service.id} value={service.id}>
-                    {service.label} — ${service.price}
-                    {service.monthly ? '/mes' : ''}
-                  </option>
-                ))}
-                <option value={CATALOG_OTHER}>Otro — precio manual</option>
-              </select>
-              <button
-                type="button"
-                onClick={addService}
-                className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl bg-brand text-white"
-              >
-                <Plus className="w-4 h-4" />
-                Agregar
-              </button>
-            </div>
-          </label>
+        <div className="sm:col-span-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="mb-3 text-sm font-bold text-slate-900">Configurador (precios actuales)</p>
+          <AdminConfiguratorEditor state={config} onChange={setConfig} />
         </div>
 
-        <div className="sm:col-span-2 space-y-4">
-          {services.map((service, index) => {
-            const catalog =
-              service.service_type && service.service_type !== CATALOG_OTHER ? getService(service.service_type) : undefined
-            const addOns = getQuoteAddonIfMissing(catalog)
-            const isOther = service.service_type === CATALOG_OTHER
-            const resolved = bundle.items[index]
-
-            return (
-              <div key={service.key} className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">
-                      Servicio {index + 1}: {service.service_label || 'Sin descripción'}
-                    </p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Total parcial: ${resolved.total.toFixed(2)}
-                      {resolved.snapshot.monthly ? '/mes' : ''}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setServices((current) => current.filter((item) => item.key !== service.key))}
-                    className="inline-flex items-center justify-center gap-2 min-h-[40px] px-3 py-2 rounded-lg border border-red-900/60 text-red-600 text-sm"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Quitar
-                  </button>
-                </div>
-
-                <label className="block">
-                  <span className="text-xs text-slate-400">Servicio / descripción</span>
-                  <input
-                    value={service.service_label}
-                    onChange={(e) => updateService(service.key, { service_label: e.target.value })}
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
-                  />
-                </label>
-
-                {catalog ? (
-                  <div className="rounded-lg border border-neon-blue/20 bg-brand/5 px-3 py-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-brand">Qué incluye</p>
-                    <ul className="mt-2 space-y-1 text-sm text-slate-600 list-disc pl-5">
-                      {catalog.offerPoints.map((point) => (
-                        <li key={point}>{point}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-
-                {(catalog?.needsDomainEmail || isOther) ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-xs text-slate-400">¿Tiene dominio?</span>
-                      <div className="mt-1 flex flex-wrap gap-2">
-                        {(['si', 'no'] as const).map((value) => (
-                          <button
-                            key={value}
-                            type="button"
-                            onClick={() => updateService(service.key, { has_domain: value })}
-                            className={`min-h-[44px] px-4 py-2 rounded-lg border text-sm ${
-                              service.has_domain === value
-                                ? 'border-brand/30 bg-brand/10 text-brand'
-                                : 'border-slate-200 text-slate-600'
-                            }`}
-                          >
-                            {value === 'si' ? 'Sí' : `No (+$${addOns.domainUsd})`}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-xs text-slate-400">
-                        {catalog?.wordpressDomainHosting ? '¿Tiene hosting?' : '¿Correo profesional?'}
-                      </span>
-                      <div className="mt-1 flex flex-wrap gap-2">
-                        {(['si', 'no'] as const).map((value) => (
-                          <button
-                            key={value}
-                            type="button"
-                            onClick={() => updateService(service.key, { has_professional_email: value })}
-                            className={`min-h-[44px] px-4 py-2 rounded-lg border text-sm ${
-                              service.has_professional_email === value
-                                ? 'border-brand/30 bg-brand/10 text-brand'
-                                : 'border-slate-200 text-slate-600'
-                            }`}
-                          >
-                            {value === 'si' ? 'Sí' : `No (+$${addOns.secondUsd})`}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-
-                {isOther ? (
-                  <div>
-                    <span className="text-xs text-slate-400">¿Tiene hosting? (informativo)</span>
-                    <div className="mt-1 flex flex-wrap gap-2">
-                      {(['si', 'no'] as const).map((value) => (
-                        <button
-                          key={value}
-                          type="button"
-                          onClick={() => updateService(service.key, { has_hosting: value })}
-                          className={`min-h-[44px] px-4 py-2 rounded-lg border text-sm ${
-                            service.has_hosting === value
-                              ? 'border-brand/30 bg-brand/10 text-brand'
-                              : 'border-slate-200 text-slate-600'
-                          }`}
-                        >
-                          {value === 'si' ? 'Sí' : 'No'}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {catalog?.needsPages || isOther ? (
-                    <label>
-                      <span className="text-xs text-slate-400">
-                        {catalog?.needsPages ? 'Cantidad de páginas' : 'Cantidad de páginas (opcional)'}
-                      </span>
-                      <input
-                        type="number"
-                        min={1}
-                        max={50}
-                        value={service.quantity_pages}
-                        onChange={(e) => updateService(service.key, { quantity_pages: e.target.value })}
-                        className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
-                      />
-                    </label>
-                  ) : null}
-                  <label className={catalog?.needsPages || isOther ? '' : 'sm:col-span-2'}>
-                    <span className="text-xs text-slate-400">Precio base (USD)</span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min={0}
-                      value={service.base_amount}
-                      onChange={(e) => updateService(service.key, { base_amount: e.target.value })}
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
-                    />
-                  </label>
-                </div>
-              </div>
-            )
-          })}
+        <div className="sm:col-span-2 space-y-3 rounded-xl border border-brand/20 bg-brand/[0.04] p-4">
+          <label className="block">
+            <span className="text-xs text-slate-500">
+              Precio final personalizado (vacío = automático ${totals.quote.total})
+            </span>
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              value={priceOverride}
+              onChange={(e) => setPriceOverride(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs text-slate-500">Decisión personalizada</span>
+            <textarea
+              value={customDecision}
+              onChange={(e) => setCustomDecision(e.target.value)}
+              rows={3}
+              placeholder="Descuento, alcance especial, condiciones…"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+            />
+          </label>
         </div>
 
         <label className="sm:col-span-2">
           <span className="text-xs text-slate-400">Comentarios del cliente</span>
           <textarea
             value={form.comments}
-            onChange={(e) => setForm((current) => ({ ...current, comments: e.target.value }))}
+            onChange={(e) => setForm((c) => ({ ...c, comments: e.target.value }))}
             rows={3}
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
           />
         </label>
         <label className="sm:col-span-2">
           <span className="text-xs text-slate-400">Notas internas</span>
           <textarea
             value={form.internal_notes}
-            onChange={(e) => setForm((current) => ({ ...current, internal_notes: e.target.value }))}
+            onChange={(e) => setForm((c) => ({ ...c, internal_notes: e.target.value }))}
             rows={3}
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
           />
         </label>
       </div>
 
-      <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+      <div className="flex flex-col flex-wrap gap-3 sm:flex-row">
         <button
           type="button"
           onClick={save}
-          disabled={saving || services.length === 0 || bundle.mixedBilling}
-          className="inline-flex min-h-[44px] px-5 py-2.5 rounded-xl bg-brand text-white font-medium hover:bg-brand-light disabled:opacity-50 w-full sm:w-auto items-center justify-center"
+          disabled={saving || !canSave}
+          className="inline-flex min-h-[44px] w-full items-center justify-center rounded-xl bg-brand px-5 py-2.5 font-medium text-white hover:bg-brand-light disabled:opacity-50 sm:w-auto"
         >
           Guardar
         </button>
@@ -465,10 +317,10 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
           type="button"
           onClick={convertToProject}
           disabled={saving}
-          className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50 w-full sm:w-auto"
+          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50 sm:w-auto"
         >
-          <FolderPlus className="w-4 h-4 shrink-0" />
-          Añadir a proyectos (pendiente)
+          <FolderPlus className="h-4 w-4 shrink-0" />
+          Añadir a proyectos
         </button>
       </div>
     </div>

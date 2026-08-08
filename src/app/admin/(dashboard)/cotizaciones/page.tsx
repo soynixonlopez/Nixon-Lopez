@@ -17,7 +17,8 @@ export default async function CotizacionesPage() {
       <div className="text-center sm:text-left">
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Cotizaciones</h1>
         <p className="text-slate-400 text-sm mt-2 max-w-2xl mx-auto sm:mx-0">
-          Solicitudes del sitio web y cotizaciones manuales. Usa el menú ⋮ para ver, imprimir PDF o editar.
+          Solicitudes del cotizador público y cotizaciones creadas en el panel (mismo configurador y
+          precios). Usa el menú ⋮ para ver, imprimir PDF o editar.
         </p>
       </div>
       {error && (

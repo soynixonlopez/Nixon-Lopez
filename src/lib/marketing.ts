@@ -5,11 +5,11 @@ export const BRAND_ACCENT = '#1e3a5f'
 /** Retratos del home — public/images/nixon */
 export const HOME_IMAGES = {
   hero: '/images/nixon/masterclass_hero.webp',
-  about: '/images/nixon/nixon_about.webp',
+  about: '/images/nixon/nixon_about.png',
   heroWidth: 1086,
   heroHeight: 1448,
-  aboutWidth: 960,
-  aboutHeight: 1200,
+  aboutWidth: 1092,
+  aboutHeight: 1440,
 } as const
 
 export const WHATSAPP_MESSAGES = {
@@ -207,12 +207,11 @@ export const QUOTE_FORM_OPTIONS = [
     subtitle: 'Vende tus productos por internet.',
   },
   {
-    id: 'reservas',
+    id: 'sistema',
     icon: 'code' as const,
     color: 'orange' as const,
     title: 'Sistema personalizado',
     subtitle: 'Desarrollo a medida para tu negocio.',
-    whatsapp: true,
   },
 ] as const
 
@@ -373,7 +372,7 @@ export const FOOTER_SERVICES = [
   { label: 'Página web', href: '/cotizacion?service=web-negocio' },
   { label: 'Landing page', href: '/cotizacion?service=landing' },
   { label: 'Tienda online', href: '/cotizacion?service=wordpress-tienda-20' },
-  { label: 'Sistemas personalizados', href: '/cotizacion?service=reservas' },
+  { label: 'Sistemas personalizados', href: '/cotizacion?service=sistema' },
 ] as const
 
 export const FINAL_CTA_TRUST = [
@@ -425,27 +424,5 @@ export const VERIFIED_TESTIMONIALS = [
     content:
       'Mis estudiantes acceden a los cursos sin problemas desde el celular. La plataforma es rápida y fácil de usar.',
     highlights: ['rápida y fácil de usar', 'sin problemas'],
-  },
-] as const
-
-export const TESTIMONIAL_TRUST_PILLS = [
-  {
-    icon: 'calendar' as const,
-    title: '+50 Proyectos entregados con éxito',
-  },
-  {
-    icon: 'user' as const,
-    title: 'Atención personalizada',
-    subtitle: 'Comunicación directa y constante',
-  },
-  {
-    icon: 'shield' as const,
-    title: 'Calidad garantizada',
-    subtitle: 'Soluciones modernas, seguras y escalables',
-  },
-  {
-    icon: 'rocket' as const,
-    title: 'Comprometidos con tus resultados',
-    subtitle: 'Tu crecimiento es nuestro objetivo',
   },
 ] as const

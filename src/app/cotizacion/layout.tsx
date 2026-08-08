@@ -5,21 +5,22 @@ import { SITE_URL } from '@/lib/site-config'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Cotización online | Nixon Lopez Services — sitios web y automatización',
+  title: 'Cotizador de proyectos | Nixon Lopez Services',
   description:
-    'Solicita una cotización para tu web, tienda online o automatizaciones con IA. Nixon Lopez Services — desarrollo web profesional en Panamá. Precios transparentes.',
+    'Configura tu proyecto y descubre cuánto cuesta en menos de 2 minutos. Cotización transparente para sitios web, tiendas online y sistemas a medida en Panamá.',
   keywords: [
     'cotización web Panamá',
     'presupuesto página web',
+    'cotizador web',
     'Nixon Lopez Services',
     'desarrollo web',
-    'automatización IA',
+    'tienda online Panamá',
   ],
   alternates: { canonical: `${SITE_URL}/cotizacion` },
   openGraph: {
-    title: 'Cotización online | Nixon Lopez Services',
+    title: 'Cotizador de proyectos | Nixon Lopez Services',
     description:
-      'Calcula y solicita tu presupuesto para desarrollo web, e-commerce y automatizaciones.',
+      'Configura tu proyecto y recibe una inversión estimada con precio transparente.',
     url: `${SITE_URL}/cotizacion`,
     siteName: 'Nixon Lopez Services',
     locale: 'es_ES',
@@ -28,8 +29,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Cotización online | Nixon Lopez Services',
-    description: 'Presupuesto web y automatizaciones — Nixon Lopez Services',
+    title: 'Cotizador de proyectos | Nixon Lopez Services',
+    description: 'Configura tu proyecto y recibe un precio estimado transparente.',
   },
   robots: { index: true, follow: true },
 }

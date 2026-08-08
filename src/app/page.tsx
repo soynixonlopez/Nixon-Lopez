@@ -7,6 +7,7 @@ import HashScroll from '@/components/HashScroll'
 import { HomeSeoContent } from '@/components/seo/HomeSeoContent'
 import { HeroSection } from '@/components/home/HeroSection'
 import { ProblemSection } from '@/components/home/ProblemSection'
+import { QuoteBannerSection } from '@/components/home/QuoteBannerSection'
 import { SITE_URL } from '@/lib/site-config'
 import { getHomePortfolioProjects } from '@/lib/portfolio'
 
@@ -16,9 +17,6 @@ const BenefitsSection = dynamic(() =>
 )
 const ServicesPreviewSection = dynamic(() =>
   import('@/components/home/ServicesPreviewSection').then((m) => ({ default: m.ServicesPreviewSection })),
-)
-const QuoteBannerSection = dynamic(() =>
-  import('@/components/home/QuoteBannerSection').then((m) => ({ default: m.QuoteBannerSection })),
 )
 const CaseStudiesSection = dynamic(() =>
   import('@/components/home/CaseStudiesSection').then((m) => ({ default: m.CaseStudiesSection })),

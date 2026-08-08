@@ -398,3 +398,26 @@ main > section[id]:not(#hero):not(#benefits) {
     transform: none;
   }
 }
+
+/* Cotizador: lista de funcionalidades con altura fija + scroll */
+.quote-features-scroll {
+  height: 252px !important;
+  max-height: 252px !important;
+  overflow-y: scroll !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.quote-features-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.quote-features-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.quote-features-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 999px;
+}

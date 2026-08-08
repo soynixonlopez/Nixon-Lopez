@@ -4,69 +4,39 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { CheckCircle2, Pencil, Save, Trash2, XCircle } from 'lucide-react'
+import { FileText } from 'lucide-react'
 
-type Project = {
+export type ContractProject = {
   id: string
   title: string
   description: string | null
   client_name: string
   client_email: string | null
   status: string
-  priority: string
-  due_date: string | null
-  started_at: string | null
-  completed_at: string | null
   created_at: string
+  quote_id: string | null
+  contract_id: string | null
+  contract_number: string | null
+  service_label: string | null
 }
 
-const statuses: { status: string; label: string }[] = [
-  { status: 'pending', label: 'Pendiente' },
-  { status: 'in_progress', label: 'En proceso' },
-  { status: 'completed', label: 'Completado' },
-  { status: 'on_hold', label: 'En pausa' },
-  { status: 'cancelled', label: 'Cancelado' },
-]
+const FLOW = [
+  { status: 'pending', label: 'Iniciado' },
+  { status: 'in_progress', label: 'Desarrollo' },
+  { status: 'completed', label: 'Terminado' },
+] as const
 
-export function ProjectsBoard({ projects }: { projects: Project[] }) {
+function normalizeStatus(status: string) {
+  if (status === 'in_progress') return 'in_progress'
+  if (status === 'completed') return 'completed'
+  return 'pending'
+}
+
+export function ProjectsBoard({ projects }: { projects: ContractProject[] }) {
   const router = useRouter()
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [draft, setDraft] = useState<{
-    title: string
-    description: string
-    started_at: string
-    due_date: string
-    status: string
-  }>({
-    title: '',
-    description: '',
-    started_at: '',
-    due_date: '',
-    status: 'pending',
-  })
-
-  function toDateInput(value: string | null) {
-    if (!value) return ''
-    return value.slice(0, 10)
-  }
-
-  function startEdit(p: Project) {
-    setEditingId(p.id)
-    setDraft({
-      title: p.title,
-      description: p.description ?? '',
-      started_at: toDateInput(p.started_at),
-      due_date: p.due_date ?? '',
-      status: p.status,
-    })
-  }
-
-  function isFinalized(status: string) {
-    return status === 'completed'
-  }
 
   async function setStatus(id: string, status: string) {
     setLoadingId(id)
@@ -80,35 +50,6 @@ export function ProjectsBoard({ projects }: { projects: Project[] }) {
     router.refresh()
   }
 
-  async function saveEdit(id: string) {
-    setLoadingId(id)
-    const supabase = createClient()
-    const nextStatus = draft.status
-    const updates: Record<string, unknown> = {
-      title: draft.title.trim() || 'Proyecto sin nombre',
-      description: draft.description.trim() || null,
-      due_date: draft.due_date || null,
-      started_at: draft.started_at ? new Date(`${draft.started_at}T00:00:00.000Z`).toISOString() : null,
-      status: nextStatus,
-      completed_at: isFinalized(nextStatus) ? new Date().toISOString() : null,
-    }
-    const { error } = await supabase.from('projects').update(updates).eq('id', id)
-    setLoadingId(null)
-    if (error) {
-      alert(error.message)
-      return
-    }
-    setEditingId(null)
-    router.refresh()
-  }
-
-  async function remove(id: string) {
-    if (!confirm('¿Eliminar proyecto?')) return
-    const supabase = createClient()
-    await supabase.from('projects').delete().eq('id', id)
-    router.refresh()
-  }
-
   const filtered = useMemo(() => {
     return projects.filter((p) => {
       const q = query.trim().toLowerCase()
@@ -116,199 +57,131 @@ export function ProjectsBoard({ projects }: { projects: Project[] }) {
         !q ||
         p.title.toLowerCase().includes(q) ||
         p.client_name.toLowerCase().includes(q) ||
-        (p.description ?? '').toLowerCase().includes(q)
-      const matchesStatus = statusFilter === 'all' || p.status === statusFilter
+        (p.service_label ?? '').toLowerCase().includes(q) ||
+        (p.contract_number ?? '').toLowerCase().includes(q)
+      const current = normalizeStatus(p.status)
+      const matchesStatus = statusFilter === 'all' || current === statusFilter
       return matchesQuery && matchesStatus
     })
   }, [projects, query, statusFilter])
 
-  const finalizedCount = filtered.filter((p) => p.status === 'completed').length
+  const counts = {
+    pending: projects.filter((p) => normalizeStatus(p.status) === 'pending').length,
+    in_progress: projects.filter((p) => normalizeStatus(p.status) === 'in_progress').length,
+    completed: projects.filter((p) => normalizeStatus(p.status) === 'completed').length,
+  }
 
   return (
-    <div className="space-y-4 w-full min-w-0">
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 min-w-0">
-        <div className="grid gap-3 md:grid-cols-[1fr_220px_auto] min-w-0">
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar por proyecto, cliente o servicio..."
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
-          />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
+    <div className="w-full min-w-0 space-y-4">
+      <div className="grid gap-3 sm:grid-cols-3">
+        {FLOW.map((item) => (
+          <div
+            key={item.status}
+            className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm"
           >
-            <option value="all">Todos los estados</option>
-            {statuses.map((s) => (
-              <option key={s.status} value={s.status}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-600 text-center">
-            Finalizados: {finalizedCount}
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              {item.label}
+            </p>
+            <p className="mt-1 text-2xl font-bold text-slate-900">{counts[item.status]}</p>
           </div>
-        </div>
+        ))}
       </div>
 
-      <div className="space-y-3">
-        {filtered.map((p) => {
-          const isEditing = editingId === p.id
-          return (
-            <article
-              key={p.id}
-              className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 space-y-3 min-w-0 overflow-hidden"
-            >
-              <div className="grid gap-3 lg:grid-cols-[1.2fr_1fr_180px_180px_180px_auto] lg:items-end min-w-0">
-                <label className="block">
-                  <span className="text-[11px] text-slate-500">Nombre del proyecto</span>
-                  {isEditing ? (
-                    <input
-                      value={draft.title}
-                      onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
-                      className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-slate-900 font-medium">{p.title}</p>
-                  )}
-                </label>
-                <label className="block">
-                  <span className="text-[11px] text-slate-500">Servicio</span>
-                  {isEditing ? (
-                    <input
-                      value={draft.description}
-                      onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
-                      className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-slate-600 text-sm">{p.description || 'Por definir'}</p>
-                  )}
-                </label>
-                <label className="block">
-                  <span className="text-[11px] text-slate-500">Fecha inicio</span>
-                  {isEditing ? (
-                    <input
-                      type="date"
-                      value={draft.started_at}
-                      onChange={(e) => setDraft((d) => ({ ...d, started_at: e.target.value }))}
-                      className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-slate-600 text-sm">{toDateInput(p.started_at) || 'Por colocar'}</p>
-                  )}
-                </label>
-                <label className="block">
-                  <span className="text-[11px] text-slate-500">Fecha entrega</span>
-                  {isEditing ? (
-                    <input
-                      type="date"
-                      value={draft.due_date}
-                      onChange={(e) => setDraft((d) => ({ ...d, due_date: e.target.value }))}
-                      className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm"
-                    />
-                  ) : (
-                    <p className="mt-1 text-slate-600 text-sm">{p.due_date || 'Por colocar'}</p>
-                  )}
-                </label>
-                <label className="block">
-                  <span className="text-[11px] text-slate-500">Estado</span>
-                  {isEditing ? (
-                    <select
-                      value={draft.status}
-                      onChange={(e) => setDraft((d) => ({ ...d, status: e.target.value }))}
-                      className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900 text-sm shadow-sm"
-                    >
-                      {statuses.map((s) => (
-                        <option key={s.status} value={s.status}>
-                          {s.label}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <div className="mt-1 flex items-center gap-2 text-sm">
-                      {p.status === 'completed' ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                      ) : (
-                        <XCircle className="w-4 h-4 text-slate-500" />
-                      )}
-                      <span className="text-slate-600">
-                        {statuses.find((s) => s.status === p.status)?.label ?? p.status}
-                      </span>
-                    </div>
-                  )}
-                </label>
-                <div className="flex flex-wrap gap-2 lg:justify-end">
-                  {isEditing ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => saveEdit(p.id)}
-                        disabled={loadingId === p.id}
-                        className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs"
-                      >
-                        <Save className="w-3.5 h-3.5" />
-                        Guardar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setEditingId(null)}
-                        className="px-3 py-2 rounded-lg border border-slate-200 text-slate-600 text-xs"
-                      >
-                        Cancelar
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <Link
-                        href={`/admin/proyectos/${p.id}`}
-                        className="px-3 py-2 rounded-lg bg-brand text-white text-xs"
-                      >
-                        Ver proyecto
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => startEdit(p)}
-                        className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-slate-200 text-slate-600 text-xs"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                        Editar
-                      </button>
-                      {p.status !== 'completed' && (
-                        <button
-                          type="button"
-                          onClick={() => setStatus(p.id, 'completed')}
-                          disabled={loadingId === p.id}
-                          className="px-3 py-2 rounded-lg border border-emerald-500/40 text-emerald-600 text-xs"
-                        >
-                          Finalizar
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => remove(p.id)}
-                        className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-red-900/60 text-red-600 text-xs"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        Eliminar
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-              <p className="text-xs text-slate-500">
-                Cliente: {p.client_name} {p.client_email ? `· ${p.client_email}` : ''}
-              </p>
-            </article>
-          )
-        })}
-        {filtered.length === 0 && (
-          <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-8 text-center text-sm text-slate-400">
-            No hay proyectos que coincidan con el filtro aplicado.
-          </div>
-        )}
+      <div className="grid min-w-0 gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-[1fr_220px]">
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar por cliente, contrato o servicio…"
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm"
+        >
+          <option value="all">Todos</option>
+          {FLOW.map((s) => (
+            <option key={s.status} value={s.status}>
+              {s.label}
+            </option>
+          ))}
+        </select>
       </div>
+
+      {filtered.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center">
+          <p className="text-sm font-medium text-slate-700">
+            No hay proyectos con contrato de trabajo.
+          </p>
+          <p className="mt-1 text-sm text-slate-500">
+            Crea un contrato desde Cotizaciones → Contratos y el proyecto aparecerá aquí.
+          </p>
+          <Link
+            href="/admin/contratos"
+            className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-brand hover:underline"
+          >
+            <FileText className="h-4 w-4" />
+            Ir a contratos
+          </Link>
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {filtered.map((project) => {
+            const current = normalizeStatus(project.status)
+            const busy = loadingId === project.id
+            return (
+              <li
+                key={project.id}
+                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="truncate text-base font-bold text-slate-900">{project.title}</p>
+                    <p className="mt-0.5 text-sm text-slate-600">{project.client_name}</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {project.service_label || project.description || 'Servicio'}
+                      {project.contract_number ? ` · ${project.contract_number}` : ''}
+                    </p>
+                    {project.contract_id ? (
+                      <Link
+                        href={`/admin/contratos/${project.contract_id}`}
+                        className="mt-2 inline-block text-xs font-semibold text-brand hover:underline"
+                      >
+                        Ver contrato
+                      </Link>
+                    ) : null}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 sm:justify-end">
+                    {FLOW.map((item) => {
+                      const active = current === item.status
+                      return (
+                        <button
+                          key={item.status}
+                          type="button"
+                          disabled={busy || active}
+                          onClick={() => setStatus(project.id, item.status)}
+                          className={`min-h-[40px] rounded-xl px-3.5 py-2 text-sm font-semibold transition ${
+                            active
+                              ? item.status === 'completed'
+                                ? 'bg-emerald-600 text-white'
+                                : item.status === 'in_progress'
+                                  ? 'bg-brand text-white'
+                                  : 'bg-slate-800 text-white'
+                              : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                          } disabled:opacity-60`}
+                        >
+                          {item.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      )}
     </div>
   )
 }

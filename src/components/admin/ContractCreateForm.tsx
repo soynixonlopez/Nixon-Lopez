@@ -63,11 +63,31 @@ export function ContractCreateForm({
           : null,
     }
     const { data, error } = await supabase.from('service_contracts').insert(payload).select('id').single()
-    setLoading(false)
     if (error || !data) {
+      setLoading(false)
       alert(error?.message ?? 'No se pudo crear el contrato')
       return
     }
+
+    // Proyecto de seguimiento (Iniciado) vinculado a la cotización/contrato
+    const { data: existingProject } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('quote_id', selected.id)
+      .maybeSingle()
+
+    if (!existingProject) {
+      await supabase.from('projects').insert({
+        quote_id: selected.id,
+        title: `Proyecto: ${clientName}`,
+        client_name: clientName,
+        client_email: selected.client_email || null,
+        status: 'pending',
+        description: selected.service_label || 'Servicio tecnológico',
+      })
+    }
+
+    setLoading(false)
     router.push(`/admin/contratos/${(data as { id: string }).id}`)
     router.refresh()
   }

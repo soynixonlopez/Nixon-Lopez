@@ -92,15 +92,15 @@ export function AboutSection() {
             transition={{ duration: 0.5, delay: 0.08 }}
             className="relative mx-auto w-full max-w-md lg:max-w-none"
           >
-            <figure className="relative overflow-hidden rounded-2xl border border-brand/15 bg-brand shadow-[0_28px_70px_rgba(30,58,95,0.22)]">
+            <figure className="relative overflow-hidden rounded-2xl border border-brand/15 bg-slate-100 shadow-[0_28px_70px_rgba(30,58,95,0.22)]">
               <div className="relative aspect-[4/5] w-full">
                 <Image
                   src={HOME_IMAGES.about}
                   alt="Nixon López en su espacio de trabajo — desarrollo web en Panamá"
                   fill
+                  unoptimized
                   className="object-cover object-[center_18%]"
                   sizes="(max-width: 640px) 92vw, (max-width: 1024px) 420px, 560px"
-                  quality={85}
                 />
               </div>
 

@@ -2,22 +2,12 @@
 
 import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
-import {
-  ArrowRight,
-  Calendar,
-  MessageCircle,
-  Quote,
-  Rocket,
-  Shield,
-  Star,
-  User,
-} from 'lucide-react'
+import { ArrowRight, MessageCircle, Quote, Star } from 'lucide-react'
 import TechLogo from '@/components/TechLogo'
 import { SectionLabel } from '@/components/marketing/SectionLabel'
 import { SectionTitle } from '@/components/marketing/SectionTitle'
 import {
   buildWhatsAppUrl,
-  TESTIMONIAL_TRUST_PILLS,
   VERIFIED_TESTIMONIALS,
   WHATSAPP_MESSAGES,
 } from '@/lib/marketing'
@@ -26,13 +16,6 @@ const AVATAR_COLORS = {
   purple: 'bg-purple-100 text-purple-700',
   blue: 'bg-blue-100 text-blue-700',
   green: 'bg-emerald-100 text-emerald-700',
-} as const
-
-const TRUST_ICONS = {
-  calendar: Calendar,
-  user: User,
-  shield: Shield,
-  rocket: Rocket,
 } as const
 
 function renderHighlightedContent(content: string, highlights: readonly string[]) {
@@ -136,32 +119,6 @@ export function TestimonialsSection() {
           initial={{ opacity: 0, y: 16 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
           transition={{ duration: 0.5, delay: 0.12 }}
-          className="mt-8 sm:mt-10 rounded-2xl sm:rounded-3xl border border-blue-100/70 bg-blue-50/50 px-4 py-5 sm:px-6 sm:py-6"
-        >
-          <ul className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-4 lg:divide-x lg:divide-slate-200/80">
-            {TESTIMONIAL_TRUST_PILLS.map((pill) => {
-              const Icon = TRUST_ICONS[pill.icon]
-              return (
-                <li key={pill.title} className="flex items-start gap-3 lg:px-4 first:lg:pl-0 last:lg:pr-0">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
-                    <Icon className="h-5 w-5" aria-hidden />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-900 leading-snug">{pill.title}</p>
-                    {'subtitle' in pill && pill.subtitle ? (
-                      <p className="mt-0.5 text-xs sm:text-sm text-slate-600 leading-snug">{pill.subtitle}</p>
-                    ) : null}
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-          transition={{ duration: 0.5, delay: 0.16 }}
           className="mt-8 sm:mt-10 border-y border-slate-200 bg-white px-5 py-5 sm:px-8 sm:py-6"
         >
           <div className="flex flex-col lg:flex-row lg:items-center gap-5 lg:gap-8">

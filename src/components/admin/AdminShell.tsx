@@ -17,6 +17,7 @@ import {
   GraduationCap,
   Home,
   Images,
+  PanelsTopLeft,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { adminUi } from '@/lib/admin-ui'
@@ -30,6 +31,7 @@ const nav = [
   { href: '/admin/masterclass', label: 'Masterclass', icon: GraduationCap },
   { href: '/admin/contratos', label: 'Contratos', icon: FileText },
   { href: '/admin/proyectos', label: 'Proyectos', icon: FolderKanban },
+  { href: '/admin/landings', label: 'Landings', icon: PanelsTopLeft },
   { href: '/admin/portafolio', label: 'Portafolio web', icon: Images },
   { href: '/admin/facturas', label: 'Facturas', icon: Receipt },
 ]
