@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { parseClientExtraFromPayload } from '@/lib/admin-configurator-quote'
 import { extractQuoteServiceSnapshots } from '@/lib/quote-pricing'
 
 type QuoteOpt = {
@@ -31,6 +32,14 @@ export function ContractCreateForm({
   const [clientAddress, setClientAddress] = useState('')
   const [city, setCity] = useState('Panama')
   const [customNotes, setCustomNotes] = useState('')
+
+  useEffect(() => {
+    if (!selected?.raw_payload) return
+    const extra = parseClientExtraFromPayload(selected.raw_payload)
+    if (extra.client_ruc) setClientTaxId(extra.client_ruc)
+    if (extra.client_address) setClientAddress(extra.client_address)
+    if (extra.client_city) setCity(extra.client_city)
+  }, [selected])
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()

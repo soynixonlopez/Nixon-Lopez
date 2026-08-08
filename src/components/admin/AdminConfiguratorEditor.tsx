@@ -31,6 +31,7 @@ type Props = {
 
 export function AdminConfiguratorEditor({ state, onChange }: Props) {
   const quote = calculateQuote(state)
+  const selectedProject = PROJECT_TYPES.find((p) => p.id === state.projectType) ?? null
 
   function patch<K extends keyof ConfiguratorState>(key: K, value: ConfiguratorState[K]) {
     onChange({ ...state, [key]: value })
@@ -38,7 +39,7 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-brand/15 bg-brand/[0.04] px-4 py-3 flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 rounded-2xl border border-brand/15 bg-brand/[0.04] px-4 py-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Total estimado</p>
           <p className="text-sm text-slate-700">{quote.projectLabel}</p>
@@ -60,19 +61,39 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
                 type="button"
                 onClick={() => patch('projectType', project.id as ProjectTypeId)}
                 className={`rounded-xl border px-3 py-3 text-left transition ${
-                  active ? 'border-brand/35 bg-brand/[0.06] ring-1 ring-brand/20' : 'border-slate-200 hover:bg-slate-50'
+                  active
+                    ? 'border-brand/35 bg-brand/[0.06] ring-1 ring-brand/20'
+                    : 'border-slate-200 hover:bg-slate-50'
                 }`}
               >
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="text-sm font-semibold text-slate-900">{project.label}</span>
-                  <span className="text-sm font-bold text-brand">
+                  <span className="shrink-0 text-sm font-bold text-brand">
                     {'fromPrice' in project && project.fromPrice ? 'desde ' : ''}${project.basePrice}
                   </span>
                 </div>
+                <p className="mt-1 text-xs leading-relaxed text-slate-500">{project.description}</p>
               </button>
             )
           })}
         </div>
+
+        {selectedProject ? (
+          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand">
+              Qué incluye · {selectedProject.label}
+            </p>
+            <p className="mt-1 text-sm text-slate-600">{selectedProject.description}</p>
+            <ul className="mt-3 space-y-1.5">
+              {selectedProject.includes.map((item) => (
+                <li key={item} className="flex items-start gap-2 text-sm text-slate-700">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" strokeWidth={2.5} />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </section>
 
       <section>
@@ -96,7 +117,10 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
                 >
                   {active ? <Check className="h-3 w-3" /> : null}
                 </span>
-                <span className="min-w-0 flex-1 text-sm font-medium text-slate-900">{feature.label}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium text-slate-900">{feature.label}</span>
+                  <span className="block text-xs text-slate-500">{feature.description}</span>
+                </span>
                 <span className="text-sm font-semibold text-brand">
                   {feature.price === 0 ? '+$0' : `+$${feature.price}`}
                 </span>
@@ -116,7 +140,9 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
                 type="button"
                 onClick={() => patch('hasDomain', option)}
                 className={`rounded-xl border px-3 py-2.5 text-sm font-semibold ${
-                  state.hasDomain === option ? 'border-brand/35 bg-brand/[0.06] text-brand' : 'border-slate-200'
+                  state.hasDomain === option
+                    ? 'border-brand/35 bg-brand/[0.06] text-brand'
+                    : 'border-slate-200'
                 }`}
               >
                 {option === 'si' ? 'Sí' : 'No · +$20'}
@@ -133,7 +159,9 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
                 type="button"
                 onClick={() => patch('hasHosting', option)}
                 className={`rounded-xl border px-3 py-2.5 text-sm font-semibold ${
-                  state.hasHosting === option ? 'border-brand/35 bg-brand/[0.06] text-brand' : 'border-slate-200'
+                  state.hasHosting === option
+                    ? 'border-brand/35 bg-brand/[0.06] text-brand'
+                    : 'border-slate-200'
                 }`}
               >
                 {option === 'si' ? 'Sí' : 'No · +$60'}
@@ -152,7 +180,9 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
               type="button"
               onClick={() => patch('emailCount', option.value)}
               className={`min-w-[2.75rem] rounded-full border px-3 py-2 text-sm font-semibold ${
-                state.emailCount === option.value ? 'border-brand bg-brand text-white' : 'border-slate-200'
+                state.emailCount === option.value
+                  ? 'border-brand bg-brand text-white'
+                  : 'border-slate-200'
               }`}
             >
               {option.label}
@@ -171,7 +201,9 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
                 type="button"
                 onClick={() => patch('business', business.id)}
                 className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${
-                  state.business === business.id ? 'border-brand bg-brand text-white' : 'border-slate-200'
+                  state.business === business.id
+                    ? 'border-brand bg-brand text-white'
+                    : 'border-slate-200'
                 }`}
               >
                 {business.label}
@@ -188,7 +220,9 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
                 type="button"
                 onClick={() => patch('timeline', timeline.id)}
                 className={`flex w-full rounded-xl border px-3 py-2 text-left text-sm font-semibold ${
-                  state.timeline === timeline.id ? 'border-brand/35 bg-brand/[0.06] text-brand' : 'border-slate-200'
+                  state.timeline === timeline.id
+                    ? 'border-brand/35 bg-brand/[0.06] text-brand'
+                    : 'border-slate-200'
                 }`}
               >
                 {timeline.label}

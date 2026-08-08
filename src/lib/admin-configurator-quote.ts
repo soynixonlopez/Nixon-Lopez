@@ -33,6 +33,40 @@ export function emptyConfiguratorState(): ConfiguratorState {
   return { ...INITIAL_CONFIGURATOR_STATE, features: ['whatsapp'] }
 }
 
+export function parseClientExtraFromPayload(raw: unknown): {
+  client_ruc: string
+  client_city: string
+  client_address: string
+} {
+  const empty = { client_ruc: '', client_city: '', client_address: '' }
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return empty
+  const payload = raw as Record<string, unknown>
+  const client =
+    payload.client && typeof payload.client === 'object' && !Array.isArray(payload.client)
+      ? (payload.client as Record<string, unknown>)
+      : {}
+
+  const ruc =
+    (typeof payload.client_ruc === 'string' && payload.client_ruc) ||
+    (typeof payload.client_tax_id === 'string' && payload.client_tax_id) ||
+    (typeof client.ruc === 'string' && client.ruc) ||
+    (typeof client.tax_id === 'string' && client.tax_id) ||
+    ''
+  const city =
+    (typeof payload.client_city === 'string' && payload.client_city) ||
+    (typeof payload.city === 'string' && payload.city) ||
+    (typeof client.ciudad === 'string' && client.ciudad) ||
+    (typeof client.city === 'string' && client.city) ||
+    ''
+  const address =
+    (typeof payload.client_address === 'string' && payload.client_address) ||
+    (typeof client.direccion === 'string' && client.direccion) ||
+    (typeof client.address === 'string' && client.address) ||
+    ''
+
+  return { client_ruc: ruc, client_city: city, client_address: address }
+}
+
 export function parsePriceOverride(raw: unknown): number | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
   const value = (raw as Record<string, unknown>).price_override
@@ -176,10 +210,14 @@ export function buildConfiguratorPayload(
         total,
         monthly: false,
         quantityPages: null,
-        offerPoints: quote.lines
-          .filter((line) => !line.id.startsWith('project-'))
-          .map((line) => line.label)
-          .slice(0, 8),
+        offerPoints: [
+          ...(project?.includes ?? []),
+          ...quote.lines
+            .filter((line) => !line.id.startsWith('project-'))
+            .map((line) => line.label),
+        ].slice(0, 10),
+        description: project?.description ?? '',
+        includes: project?.includes ?? [],
         lines,
         hasDomain: state.hasDomain,
         hasProfessionalEmail: state.emailCount > 0 ? 'no' : 'si',

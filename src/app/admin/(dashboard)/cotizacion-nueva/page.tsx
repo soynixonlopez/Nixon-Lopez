@@ -8,6 +8,7 @@ import {
   buildConfiguratorPayload,
   configuratorTotals,
   emptyConfiguratorState,
+  PROJECT_TYPES,
   type ConfiguratorState,
 } from '@/lib/admin-configurator-quote'
 import { createClient } from '@/lib/supabase/client'
@@ -25,6 +26,9 @@ export default function NuevaCotizacionPage() {
     client_email: '',
     client_phone: '',
     company: '',
+    client_ruc: '',
+    client_city: '',
+    client_address: '',
     comments: '',
     internal_notes: '',
     status: 'new',
@@ -90,12 +94,23 @@ export default function NuevaCotizacionPage() {
         internal_notes: form.internal_notes || null,
         raw_payload: {
           ...payload,
+          client_ruc: form.client_ruc.trim() || null,
+          client_tax_id: form.client_ruc.trim() || null,
+          client_city: form.client_city.trim() || null,
+          city: form.client_city.trim() || null,
+          client_address: form.client_address.trim() || null,
           client: {
             nombre: form.client_first_name,
             apellido: form.client_last_name,
             correo: form.client_email,
             whatsapp: form.client_phone,
             empresa: form.company,
+            ruc: form.client_ruc.trim() || null,
+            tax_id: form.client_ruc.trim() || null,
+            ciudad: form.client_city.trim() || null,
+            city: form.client_city.trim() || null,
+            direccion: form.client_address.trim() || null,
+            address: form.client_address.trim() || null,
           },
         },
       })
@@ -199,6 +214,32 @@ export default function NuevaCotizacionPage() {
                     className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
                   />
                 </label>
+                <label>
+                  <span className="text-xs text-slate-400">RUC / cédula</span>
+                  <input
+                    value={form.client_ruc}
+                    onChange={(e) => setForm((c) => ({ ...c, client_ruc: e.target.value }))}
+                    placeholder="Ej. 8-888-888 o RUC"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
+                  />
+                </label>
+                <label>
+                  <span className="text-xs text-slate-400">Lugar / ciudad</span>
+                  <input
+                    value={form.client_city}
+                    onChange={(e) => setForm((c) => ({ ...c, client_city: e.target.value }))}
+                    placeholder="Ej. Panamá, Chiriquí…"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
+                  />
+                </label>
+                <label className="sm:col-span-2">
+                  <span className="text-xs text-slate-400">Dirección (opcional)</span>
+                  <input
+                    value={form.client_address}
+                    onChange={(e) => setForm((c) => ({ ...c, client_address: e.target.value }))}
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
+                  />
+                </label>
               </div>
             </div>
           ) : null}
@@ -289,8 +330,26 @@ export default function NuevaCotizacionPage() {
                   <span className="text-slate-400">Correo:</span> {form.client_email}
                 </p>
                 <p>
+                  <span className="text-slate-400">RUC / cédula:</span>{' '}
+                  {form.client_ruc.trim() || '—'}
+                </p>
+                <p>
+                  <span className="text-slate-400">Lugar:</span>{' '}
+                  {form.client_city.trim() || '—'}
+                  {form.client_address.trim() ? ` · ${form.client_address.trim()}` : ''}
+                </p>
+                <p>
                   <span className="text-slate-400">Proyecto:</span> {totals.quote.projectLabel}
                 </p>
+                {config.projectType ? (
+                  <ul className="list-disc space-y-1 border-t border-slate-200 pt-3 pl-5 text-slate-600">
+                    {(PROJECT_TYPES.find((p) => p.id === config.projectType)?.includes ?? []).map(
+                      (item) => (
+                        <li key={item}>{item}</li>
+                      )
+                    )}
+                  </ul>
+                ) : null}
                 <ul className="space-y-1 border-t border-slate-200 pt-3">
                   {totals.quote.lines.map((line) => (
                     <li key={line.id} className="flex justify-between gap-2">

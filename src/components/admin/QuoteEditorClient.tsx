@@ -8,6 +8,7 @@ import {
   buildConfiguratorPayload,
   configuratorTotals,
   emptyConfiguratorState,
+  parseClientExtraFromPayload,
   parseConfiguratorFromPayload,
   parsePriceOverride,
   type ConfiguratorState,
@@ -72,6 +73,7 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
   const [config, setConfig] = useState<ConfiguratorState>(() => initialConfig(quote))
   const [priceOverride, setPriceOverride] = useState(() => initialOverride(quote))
   const [customDecision, setCustomDecision] = useState(() => initialCustomDecision(quote))
+  const clientExtra = parseClientExtraFromPayload(quote.raw_payload)
   const [form, setForm] = useState({
     status: quote.status,
     client_first_name: quote.client_first_name,
@@ -79,6 +81,9 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
     client_email: quote.client_email,
     client_phone: quote.client_phone ?? '',
     company: quote.company ?? '',
+    client_ruc: clientExtra.client_ruc,
+    client_city: clientExtra.client_city,
+    client_address: clientExtra.client_address,
     internal_notes: quote.internal_notes ?? '',
     comments: quote.comments ?? '',
   })
@@ -106,7 +111,27 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
       priceOverride: totals.override,
       customDecision,
     })
-    const raw_payload = mergeRawPayload(quote.raw_payload, payload)
+    const raw_payload = mergeRawPayload(quote.raw_payload, {
+      ...payload,
+      client_ruc: form.client_ruc.trim() || null,
+      client_tax_id: form.client_ruc.trim() || null,
+      client_city: form.client_city.trim() || null,
+      city: form.client_city.trim() || null,
+      client_address: form.client_address.trim() || null,
+      client: {
+        nombre: form.client_first_name,
+        apellido: form.client_last_name,
+        correo: form.client_email,
+        whatsapp: form.client_phone,
+        empresa: form.company,
+        ruc: form.client_ruc.trim() || null,
+        tax_id: form.client_ruc.trim() || null,
+        ciudad: form.client_city.trim() || null,
+        city: form.client_city.trim() || null,
+        direccion: form.client_address.trim() || null,
+        address: form.client_address.trim() || null,
+      },
+    })
 
     const { error } = await supabase
       .from('quotes')
@@ -249,6 +274,30 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
           <input
             value={form.company}
             onChange={(e) => setForm((c) => ({ ...c, company: e.target.value }))}
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+          />
+        </label>
+        <label>
+          <span className="text-xs text-slate-400">RUC / cédula</span>
+          <input
+            value={form.client_ruc}
+            onChange={(e) => setForm((c) => ({ ...c, client_ruc: e.target.value }))}
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+          />
+        </label>
+        <label>
+          <span className="text-xs text-slate-400">Lugar / ciudad</span>
+          <input
+            value={form.client_city}
+            onChange={(e) => setForm((c) => ({ ...c, client_city: e.target.value }))}
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+          />
+        </label>
+        <label className="sm:col-span-2">
+          <span className="text-xs text-slate-400">Dirección (opcional)</span>
+          <input
+            value={form.client_address}
+            onChange={(e) => setForm((c) => ({ ...c, client_address: e.target.value }))}
             className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
           />
         </label>
