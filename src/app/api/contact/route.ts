@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { readJsonBody } from '@/lib/api-guards'
 import { sendContactEmail } from '@/lib/mailer'
 import {
   checkRateLimit,
@@ -23,34 +24,48 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { nombre, apellido, correo, tipoServicio, descripcion } = await request.json()
+    const parsed = await readJsonBody<{
+      nombre?: unknown
+      apellido?: unknown
+      correo?: unknown
+      tipoServicio?: unknown
+      descripcion?: unknown
+    }>(request)
+    if (!parsed.ok) return parsed.response
+    const { nombre, apellido, correo, tipoServicio, descripcion } = parsed.body
 
-    if (!nombre || !apellido || !correo || !tipoServicio || !descripcion) {
+    const nombreStr = typeof nombre === 'string' ? nombre.trim() : ''
+    const apellidoStr = typeof apellido === 'string' ? apellido.trim() : ''
+    const correoStr = typeof correo === 'string' ? correo.trim() : ''
+    const tipoStr = typeof tipoServicio === 'string' ? tipoServicio.trim() : ''
+    const descripcionStr = typeof descripcion === 'string' ? descripcion.trim() : ''
+
+    if (!nombreStr || !apellidoStr || !correoStr || !tipoStr || !descripcionStr) {
       return NextResponse.json({ error: 'Todos los campos son requeridos.' }, { status: 400 })
     }
 
     const MAX = 8000
     if (
-      String(nombre).length > 200 ||
-      String(apellido).length > 200 ||
-      String(tipoServicio).length > 200 ||
-      String(descripcion).length > MAX
+      nombreStr.length > 200 ||
+      apellidoStr.length > 200 ||
+      tipoStr.length > 200 ||
+      descripcionStr.length > MAX
     ) {
       return NextResponse.json({ error: 'Uno o más campos exceden la longitud permitida.' }, { status: 400 })
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(correo)) {
+    if (!emailRegex.test(correoStr)) {
       return NextResponse.json({ error: 'Correo inválido.' }, { status: 400 })
     }
 
-    const n = escapeHtml(String(nombre))
-    const a = escapeHtml(String(apellido))
-    const c = escapeHtml(String(correo))
-    const t = escapeHtml(String(tipoServicio))
-    const d = escapeHtml(String(descripcion))
+    const n = escapeHtml(nombreStr)
+    const a = escapeHtml(apellidoStr)
+    const c = escapeHtml(correoStr)
+    const t = escapeHtml(tipoStr)
+    const d = escapeHtml(descripcionStr)
 
-    const subject = `Nuevo contacto web - ${nombre} ${apellido}`
+    const subject = `Nuevo contacto web - ${nombreStr} ${apellidoStr}`
     const html = `
       <div style="font-family: Arial, sans-serif; padding: 20px; color: #111827;">
         <h2 style="margin-bottom: 12px;">Nuevo mensaje de contacto</h2>
@@ -66,7 +81,7 @@ export async function POST(request: NextRequest) {
     await sendContactEmail({
       subject,
       html,
-      replyTo: correo,
+      replyTo: correoStr,
     })
 
     return NextResponse.json({ ok: true }, { status: 200 })

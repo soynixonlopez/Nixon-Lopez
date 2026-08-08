@@ -101,20 +101,25 @@ export function HeroSection() {
       className="hero-section relative isolate flex min-h-[100dvh] flex-col overflow-x-clip pb-0"
     >
       <div
-        className="pointer-events-none absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        className="pointer-events-none absolute inset-0 z-0 bg-cover bg-center bg-no-repeat dark:hidden"
         style={{ backgroundImage: "url('/images/hero_background.webp')" }}
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-r from-white/70 via-white/40 to-white/10"
+        className="pointer-events-none absolute inset-0 z-0 hidden bg-cover bg-center bg-no-repeat dark:block"
+        style={{ backgroundImage: "url('/images/hero_background_dark.webp')" }}
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-r from-white/70 via-white/40 to-white/10 dark:from-slate-950/75 dark:via-slate-950/45 dark:to-slate-950/15"
         aria-hidden
       />
 
       <div className="container-padding relative z-10 mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-4 pb-5 sm:px-6 sm:pb-5 lg:pb-6">
         <div className="grid min-h-0 flex-1 gap-5 sm:gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch lg:gap-8 xl:gap-10">
           <div className="flex w-full max-w-xl flex-col justify-start -translate-y-1 sm:justify-center sm:-translate-y-8 lg:-translate-y-16 lg:max-w-none">
-            <p className="mb-3 flex items-center gap-2.5 text-sm font-medium text-brand sm:mb-5">
-              <span className="h-px w-5 shrink-0 bg-brand/50" aria-hidden />
+            <p className="mb-3 flex items-center gap-2.5 text-sm font-medium brand-accent-solid sm:mb-5">
+              <span className="h-px w-5 shrink-0 bg-neon-blue/60" aria-hidden />
               {h.eyebrow}
             </p>
 
@@ -123,14 +128,14 @@ export function HeroSection() {
               style={{ fontSize: 'clamp(2.5rem, 7.5vw, 3.35rem)', lineHeight: 1.12 }}
             >
               {h.titleBefore}
-              <span className="text-brand">{h.titleAccent}</span>
+              <span className="brand-accent">{h.titleAccent}</span>
             </h1>
 
             <p className="mt-4 max-w-lg text-base leading-relaxed text-slate-600 dark:text-slate-300 sm:mt-4 sm:text-base md:text-lg">
               {h.subtitleBeforeHighlight}
-              <span className="font-semibold text-neon-purple">{h.subtitleHighlightOpportunities}</span>
+              <span className="font-semibold brand-accent">{h.subtitleHighlightOpportunities}</span>
               {h.subtitleMiddle}
-              <span className="font-semibold text-emerald-600">{h.subtitleHighlightWhatsapp}</span>.
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400">{h.subtitleHighlightWhatsapp}</span>.
             </p>
 
             <div className="mt-6 flex flex-col gap-3 sm:mt-7 sm:flex-row">

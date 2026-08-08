@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
-import Image from 'next/image'
+import { BrandLogo } from '@/components/BrandLogo'
 import { CtaButtons } from '@/components/marketing/CtaButtons'
 import { SiteControls } from '@/components/SiteControls'
 import { useMessages } from '@/i18n/LocaleProvider'
@@ -60,14 +60,11 @@ const Header = () => {
     >
       <div className="container-padding max-w-6xl mx-auto px-3 sm:px-4">
         <div className="flex items-center justify-between h-14 md:h-16 min-h-[56px] gap-3">
-          <Link href="/" className="flex items-center shrink-0 min-w-0 max-w-[11rem]">
-            <Image
-              src="/images/logoweb.png"
+          <Link href="/" className="flex items-center shrink-0 min-w-0 max-w-[12.5rem]">
+            <BrandLogo
               alt="Nixon Lopez Services"
-              className="h-7 w-auto object-contain object-left dark:brightness-0 dark:invert"
-              width={1306}
-              height={199}
-              sizes="180px"
+              className="h-7 w-auto sm:h-8"
+              sizes="200px"
               priority
             />
           </Link>

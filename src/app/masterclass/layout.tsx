@@ -33,9 +33,9 @@ export const metadata: Metadata = {
     locale: 'es_ES',
     images: [
       {
-        url: '/images/logoweb.png',
+        url: '/images/logooficial.png',
         width: 1306,
-        height: 199,
+        height: 280,
         alt: 'Masterclass — Nixon López',
       },
     ],

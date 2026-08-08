@@ -69,7 +69,7 @@ export function TestimonialsSection() {
         >
           <SectionLabel>{t.sectionLabel}</SectionLabel>
           <SectionTitle>
-            {t.titleBefore} <span className="text-brand">{t.titleAccent}</span>
+            {t.titleBefore} <span className="brand-accent">{t.titleAccent}</span>
           </SectionTitle>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">{t.subtitle}</p>
         </motion.div>

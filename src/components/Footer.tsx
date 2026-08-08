@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
+import { BrandLogo } from '@/components/BrandLogo'
 import TechLogo from './TechLogo'
 import { useMessages } from '@/i18n/LocaleProvider'
 import { buildWhatsAppUrl, CONTACT_EMAIL } from '@/lib/marketing'
@@ -32,14 +32,7 @@ const Footer = () => {
       <div className="container-padding max-w-6xl mx-auto py-14 sm:py-16 px-4 sm:px-6">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
           <div className="sm:col-span-2 lg:col-span-1">
-            <Image
-              src="/images/logoweb.png"
-              alt="Nixon Lopez"
-              className="h-8 w-auto object-contain object-left dark:brightness-0 dark:invert"
-              width={1306}
-              height={199}
-              sizes="200px"
-            />
+            <BrandLogo alt="Nixon Lopez" className="h-8 w-auto" sizes="220px" />
             <p className="mt-4 text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-xs">
               {messages.footer.tagline}
             </p>

@@ -18,17 +18,21 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
+      // Next inyecta scripts inline; Meta Pixel requiere connect.facebook.net
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net",
       "style-src 'self' 'unsafe-inline'",
+      // https: permite pixel/CDN; remotePatterns de next/image sigue acotado
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.facebook.com https://connect.facebook.net https://res.cloudinary.com https://image.thum.io",
       "frame-src 'self' https://www.facebook.com",
+      "worker-src 'self' blob:",
       "media-src 'self'",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self' https://wa.me https://api.whatsapp.com https://www.facebook.com",
       "frame-ancestors 'self'",
+      "manifest-src 'self'",
       'upgrade-insecure-requests',
     ].join('; '),
   },
@@ -71,14 +75,6 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'images.unsplash.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'via.placeholder.com',
-      },
-      {
-        protocol: 'https',
         hostname: 'res.cloudinary.com',
       },
       {
@@ -99,6 +95,9 @@ const nextConfig = {
   serverExternalPackages: ['sharp'],
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
+    serverActions: {
+      bodySizeLimit: '1mb',
+    },
   },
 }
 

@@ -102,11 +102,11 @@ export function AiSection() {
             <SectionLabel align="left">{ai.sectionLabel}</SectionLabel>
             <SectionTitle>
               {ai.titleBefore}
-              <span className="text-brand">{ai.titleAccent}</span>
+              <span className="brand-accent">{ai.titleAccent}</span>
             </SectionTitle>
             <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
               {ai.subtitleBefore}
-              <span className="font-semibold text-neon-purple">{ai.subtitleHighlight}</span>
+              <span className="font-semibold brand-accent">{ai.subtitleHighlight}</span>
             </p>
           </div>
 

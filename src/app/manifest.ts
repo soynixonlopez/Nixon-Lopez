@@ -9,22 +9,22 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: '/',
     display: 'standalone',
     background_color: '#0f172a',
-    theme_color: '#00D4FF',
+    theme_color: '#00C2FF',
     icons: [
       {
-        src: '/images/faviconweb-32.png',
-        sizes: '32x32',
-        type: 'image/png',
-        purpose: 'any',
-      },
-      {
-        src: '/images/favicon-192.png',
+        src: '/images/favicon.png',
         sizes: '192x192',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/images/favicon-apple.png',
+        src: '/images/favicon.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/images/favicon.png',
         sizes: '180x180',
         type: 'image/png',
         purpose: 'maskable',

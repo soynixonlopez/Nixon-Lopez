@@ -223,13 +223,13 @@ export function ProblemSection() {
           <SectionLabel>{p.sectionLabel}</SectionLabel>
           <SectionTitle>
             {p.titleBefore}
-            <span className="text-brand">{p.titleAccent}</span>
+            <span className="brand-accent">{p.titleAccent}</span>
           </SectionTitle>
           <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">{p.subtitle}</p>
         </div>
 
         <div
-          className="relative mx-auto w-full max-w-xl"
+          className="relative mx-auto w-full max-w-3xl"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => {
             if (!draggingRef.current) setPaused(false)

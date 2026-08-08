@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { readJsonBody } from '@/lib/api-guards'
 import { sendEmail } from '@/lib/mailer'
 import {
   checkRateLimit,
@@ -23,8 +24,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { email } = await request.json()
-    const raw = typeof email === 'string' ? email.trim() : ''
+    const parsed = await readJsonBody<{ email?: unknown }>(request, 8 * 1024)
+    if (!parsed.ok) return parsed.response
+    const raw = typeof parsed.body.email === 'string' ? parsed.body.email.trim() : ''
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!raw || !emailRegex.test(raw) || raw.length > 254) {

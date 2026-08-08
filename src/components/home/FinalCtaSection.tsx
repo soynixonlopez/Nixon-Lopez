@@ -72,7 +72,7 @@ export function FinalCtaSection() {
 
             <SectionTitle>
               {fc.titleBefore}
-              <span className="text-brand">{fc.titleAccent}</span>
+              <span className="brand-accent">{fc.titleAccent}</span>
             </SectionTitle>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">{fc.subtitle}</p>
 

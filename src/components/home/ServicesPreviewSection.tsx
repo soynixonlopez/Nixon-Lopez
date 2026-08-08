@@ -85,7 +85,7 @@ export function ServicesPreviewSection() {
           <SectionLabel>{s.sectionLabel}</SectionLabel>
           <SectionTitle>
             {s.titleBefore}
-            <span className="text-brand">{s.titleAccent}</span>
+            <span className="brand-accent">{s.titleAccent}</span>
           </SectionTitle>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">{s.subtitle}</p>
         </motion.div>

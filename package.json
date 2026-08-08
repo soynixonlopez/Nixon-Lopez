@@ -16,32 +16,38 @@
     "optimize-email-banner": "node scripts/optimize-email-banner.mjs",
     "generate-email-icons": "node scripts/generate-email-icons.mjs",
     "optimize-home-images": "node scripts/optimize-home-images.mjs",
+    "optimize-site-assets": "node scripts/optimize-site-assets.mjs",
     "lighthouse:mobile-batch": "node scripts/lighthouse-mobile-batch.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
-    "@supabase/supabase-js": "^2.49.1",
+    "@supabase/supabase-js": "^2.112.2",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.542.0",
-    "next": "^16.1.1",
+    "next": "^16.3.0",
     "next-themes": "^0.4.6",
-    "nodemailer": "^8.0.3",
+    "nodemailer": "^9.0.5",
     "pdf-lib": "^1.17.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "resend": "^6.7.0",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.3",
     "tailwind-merge": "^3.3.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "ws": "^8.21.0"
+    }
   },
   "devDependencies": {
     "@types/node": "^22.10.7",
-    "@types/nodemailer": "^7.0.11",
+    "@types/nodemailer": "^8.0.1",
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
     "autoprefixer": "^10.4.17",
     "eslint": "^9.39.2",
-    "eslint-config-next": "^16.1.1",
+    "eslint-config-next": "^16.3.0",
     "postcss": "^8.4.35",
     "simple-icons": "^16.15.0",
     "tailwindcss": "^3.4.1",

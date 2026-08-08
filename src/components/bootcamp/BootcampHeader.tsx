@@ -1,5 +1,5 @@
-import Image from 'next/image'
 import Link from 'next/link'
+import { BrandLogo } from '@/components/BrandLogo'
 import { BOOTCAMP_HOTMART_URL, BOOTCAMP_PRICING } from '@/lib/bootcamp'
 import { bootcampCtaCompact } from '@/lib/bootcamp-ui'
 
@@ -15,14 +15,7 @@ export default function BootcampHeader() {
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#050810]/85 backdrop-blur-xl shadow-lg shadow-black/20">
       <div className="container flex h-16 items-center justify-between gap-4 sm:h-[4.5rem]">
         <Link href="/bootcamp" className="relative flex shrink-0 items-center">
-          <Image
-            src="/images/logoweb.png"
-            alt="Nixon López"
-            width={160}
-            height={32}
-            className="h-7 w-auto brightness-0 invert sm:h-8"
-            priority
-          />
+          <BrandLogo alt="Nixon López" className="h-7 w-auto sm:h-8" sizes="180px" priority />
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex" aria-label="Secciones">

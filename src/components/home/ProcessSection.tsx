@@ -84,7 +84,7 @@ export function ProcessSection() {
             <SectionLabel align="left">{pr.sectionLabel}</SectionLabel>
             <SectionTitle>
               {pr.titleBefore}
-              <span className="text-brand">{pr.titleAccent}</span>
+              <span className="brand-accent">{pr.titleAccent}</span>
             </SectionTitle>
             <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">{pr.subtitle}</p>
           </div>

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { readJsonBody } from '@/lib/api-guards'
 import { sendContactEmail, sendEmail } from '@/lib/mailer'
 import { buildMasterclassConfirmationContent } from '@/lib/masterclass-confirmation-email'
 import { isJsonRequest, parseMasterclassRegisterBody } from '@/lib/masterclass-register'
@@ -31,8 +32,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json()
-    const parsed = parseMasterclassRegisterBody(body)
+    const raw = await readJsonBody<Record<string, unknown>>(request, 32 * 1024)
+    if (!raw.ok) return raw.response
+    const parsed = parseMasterclassRegisterBody(raw.body)
     if (!parsed.ok) {
       return NextResponse.json({ error: parsed.error }, { status: parsed.status })
     }

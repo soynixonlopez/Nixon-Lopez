@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { readJsonBody } from '@/lib/api-guards'
 import { sendContactEmail, sendEmailWithAttachments } from '@/lib/mailer'
 import { createServiceRoleClient } from '@/lib/supabase/service'
 import {
@@ -49,7 +50,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = (await request.json()) as Record<string, unknown>
+    const parsed = await readJsonBody<Record<string, unknown>>(request, 256 * 1024)
+    if (!parsed.ok) return parsed.response
+    const body = parsed.body
     const nombre = String(body.nombre ?? '')
     const apellido = String(body.apellido ?? '')
     const correo = String(body.correo ?? '').trim()

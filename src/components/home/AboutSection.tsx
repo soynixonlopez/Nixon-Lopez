@@ -49,7 +49,7 @@ export function AboutSection() {
 
             <SectionTitle>
               {a.titleBefore}
-              <span className="text-brand">{a.titleAccent}</span>
+              <span className="brand-accent">{a.titleAccent}</span>
             </SectionTitle>
 
             <p className="mt-5 text-base leading-relaxed text-slate-600 sm:text-lg">{a.paragraph1}</p>

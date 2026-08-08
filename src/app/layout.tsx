@@ -58,11 +58,12 @@ export const metadata: Metadata = {
   category: 'technology',
   icons: {
     icon: [
-      { url: '/images/faviconweb-32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/images/favicon-apple.png', sizes: '180x180', type: 'image/png' },
+      { url: '/images/favicon.png', sizes: 'any', type: 'image/png' },
+      { url: '/images/favicon.png', sizes: '32x32', type: 'image/png' },
+      { url: '/images/favicon.png', sizes: '192x192', type: 'image/png' },
     ],
-    apple: [{ url: '/images/favicon-apple.png', sizes: '180x180', type: 'image/png' }],
-    shortcut: '/images/faviconweb-32.png',
+    apple: [{ url: '/images/favicon.png', sizes: '180x180', type: 'image/png' }],
+    shortcut: '/images/favicon.png',
   },
   openGraph: {
     title: defaultTitle,
@@ -71,9 +72,9 @@ export const metadata: Metadata = {
     siteName: 'Nixon Lopez Services',
     images: [
       {
-        url: '/images/logoweb.png',
+        url: '/images/logooficial.png',
         width: 1306,
-        height: 199,
+        height: 280,
         alt: 'Nixon López — logo',
       },
     ],
@@ -85,7 +86,7 @@ export const metadata: Metadata = {
     title: defaultTitle,
     description: defaultDescription,
     creator: '@soynixonlopez',
-    images: ['/images/logoweb.png'],
+    images: ['/images/logooficial.png'],
   },
   robots: {
     index: true,

@@ -42,7 +42,7 @@ export function CaseStudiesSection({ projects }: { projects: FeaturedProject[] }
           <SectionLabel>{c.sectionLabel}</SectionLabel>
           <SectionTitle>
             {c.titleBefore}
-            <span className="text-brand">{c.titleAccent}</span>
+            <span className="brand-accent">{c.titleAccent}</span>
           </SectionTitle>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">{c.subtitle}</p>
         </motion.div>

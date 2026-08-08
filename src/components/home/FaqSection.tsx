@@ -35,7 +35,7 @@ export function FaqSection() {
           <SectionLabel>{f.sectionLabel}</SectionLabel>
           <SectionTitle>
             {f.titleBefore}
-            <span className="text-brand">{f.titleAccent}</span>
+            <span className="brand-accent">{f.titleAccent}</span>
           </SectionTitle>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">{f.subtitle}</p>
         </motion.div>

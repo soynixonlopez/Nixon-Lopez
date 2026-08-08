@@ -243,7 +243,7 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
       ...quote.includedZeroPriceFeatures,
       ...quote.lines.filter((line) => !line.id.startsWith('project-')).map((line) => line.label),
     ]
-    const logoUrl = `${window.location.origin}/images/logoweb.png`
+    const logoUrl = `${window.location.origin}/images/logooficial.png`
     const clientLabel = [state.nombre.trim(), state.empresa.trim()].filter(Boolean).join(' — ')
     const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/><title>Cotizacion ${clientLabel || quote.projectLabel}</title>
       <style>

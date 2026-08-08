@@ -55,11 +55,16 @@ export function BenefitsSection() {
   return (
     <section id="benefits" ref={ref} className="relative isolate overflow-hidden py-16 sm:py-24">
       <div
-        className="pointer-events-none absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        className="pointer-events-none absolute inset-0 z-0 bg-cover bg-center bg-no-repeat dark:hidden"
         style={{ backgroundImage: "url('/images/eleccion_background.webp')" }}
         aria-hidden
       />
-      <div className="pointer-events-none absolute inset-0 z-0 bg-white/30" aria-hidden />
+      <div
+        className="pointer-events-none absolute inset-0 z-0 hidden bg-cover bg-center bg-no-repeat dark:block"
+        style={{ backgroundImage: "url('/images/eleccion_background_dark.webp')" }}
+        aria-hidden
+      />
+      <div className="pointer-events-none absolute inset-0 z-0 bg-white/30 dark:bg-slate-950/45" aria-hidden />
 
       <div className="container-padding relative z-10 max-w-6xl mx-auto px-4 sm:px-6">
         <motion.div
@@ -72,7 +77,7 @@ export function BenefitsSection() {
           <SectionTitle>
             {b.titleLine1}
             <br />
-            <span className="text-brand">{b.titleAccent}</span>
+            <span className="brand-accent">{b.titleAccent}</span>
           </SectionTitle>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">{b.subtitle}</p>
         </motion.div>

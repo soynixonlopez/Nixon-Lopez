@@ -55,7 +55,7 @@ export function QuoteBannerSection() {
           <SectionLabel>{q.sectionLabel}</SectionLabel>
           <SectionTitle>
             {q.titleBefore}
-            <span className="text-brand">{q.titleAccent}</span>
+            <span className="brand-accent">{q.titleAccent}</span>
           </SectionTitle>
           <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">{q.subtitle}</p>
         </div>
@@ -68,14 +68,13 @@ export function QuoteBannerSection() {
               className="group relative block h-full overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.08)] transition hover:shadow-[0_16px_48px_rgba(15,23,42,0.12)] sm:rounded-3xl"
             >
               <Image
-                src="/images/cotizador.png"
+                src="/images/cotizador.webp"
                 alt={q.imageAlt}
-                width={1092}
-                height={1440}
-                priority
-                unoptimized
+                width={1080}
+                height={1424}
+                quality={75}
                 className="h-full min-h-[320px] w-full object-cover object-center transition duration-500 group-hover:scale-[1.02] sm:min-h-[420px]"
-                sizes="(max-width: 1024px) 100vw, 540px"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 540px"
               />
             </Link>
           </div>

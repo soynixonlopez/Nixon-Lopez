@@ -12,12 +12,12 @@ export function SectionLabel({ children, align = 'center', className }: Props) {
   return (
     <p
       className={clsx(
-        'mb-4 flex items-center gap-2.5 text-sm font-medium text-brand',
+        'mb-4 flex items-center gap-2.5 text-sm font-medium brand-accent-solid',
         align === 'center' ? 'justify-center' : 'justify-start',
         className,
       )}
     >
-      <span className="h-px w-5 shrink-0 bg-brand/50" aria-hidden />
+      <span className="h-px w-5 shrink-0 bg-neon-blue/55" aria-hidden />
       <span>{children}</span>
     </p>
   )

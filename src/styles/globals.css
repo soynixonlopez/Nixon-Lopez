@@ -108,6 +108,29 @@ html {
   background-clip: text;
 }
 
+/* Acentos de marca (cyan → magenta) — más vivos en dark */
+.brand-accent {
+  background-image: linear-gradient(135deg, #00a8ff 0%, #7c3aed 52%, #c026ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+html.dark .brand-accent {
+  background-image: linear-gradient(135deg, #22d3ee 0%, #a78bfa 48%, #e879f9 100%);
+  filter: drop-shadow(0 0 18px rgba(34, 211, 238, 0.28));
+}
+
+.brand-accent-solid {
+  color: #2563eb;
+}
+
+html.dark .brand-accent-solid {
+  color: #22d3ee;
+  text-shadow: 0 0 22px rgba(34, 211, 238, 0.35);
+}
+
 /* Efectos de glow */
 .glow-effect {
   box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
