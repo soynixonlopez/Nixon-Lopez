@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { SITE_URL } from '@/lib/site-config'
+import { buildPageMetadata } from '@/lib/seo'
 import Link from 'next/link'
 import {
   Cookie,
@@ -14,13 +15,12 @@ import {
   Info,
 } from 'lucide-react'
 
-export const metadata: Metadata = {
-  title: 'Política de Cookies',
+export const metadata: Metadata = buildPageMetadata({
+  title: 'Política de cookies',
   description:
-    'Política de Cookies de Nixon Lopez Services (Nixon López). Información sobre cookies, tecnologías similares, finalidad, terceros y cómo gestionarlas.',
-  alternates: { canonical: `${SITE_URL}/politica-de-cookies` },
-  robots: { index: true, follow: true },
-}
+    'Política de cookies de Nixon Lopez Services (Nixon López). Información sobre cookies, tecnologías similares, finalidad, terceros y cómo gestionarlas.',
+  path: '/politica-de-cookies',
+})
 
 const LAST_UPDATED = '23 de abril de 2026'
 const CONTACT_EMAIL = 'info@nixonlopez.com'

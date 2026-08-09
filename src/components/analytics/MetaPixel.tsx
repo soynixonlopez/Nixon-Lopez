@@ -1,21 +1,33 @@
 'use client'
 
 import Script from 'next/script'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 
+declare global {
+  interface Window {
+    fbq?: (...args: unknown[]) => void
+    _fbq?: unknown
+  }
+}
+
+const PIXEL_ID =
+  process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim() || '3255546571298614'
+
 /**
- * Meta (Facebook) Pixel — solo rutas públicas (no /admin).
- * Carga diferida (idle / interacción) para no competir con LCP/TBT.
+ * Meta (Facebook) Pixel — rutas públicas (no /admin).
+ * Idle corto para no pegarle al LCP + PageView en navegación SPA.
  */
 export function MetaPixel() {
   const pathname = usePathname()
   const [ready, setReady] = useState(false)
-  const pixelId =
-    process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim() || '3255546571298614'
+  const lastTracked = useRef<string | null>(null)
 
   useEffect(() => {
-    if (pathname?.startsWith('/admin')) return
+    if (pathname?.startsWith('/admin')) {
+      setReady(false)
+      return
+    }
 
     let done = false
     let idleId: number | undefined
@@ -36,27 +48,76 @@ export function MetaPixel() {
       if (timeoutId != null) clearTimeout(timeoutId)
     }
 
-    const events: Array<keyof WindowEventMap> = ['scroll', 'pointerdown', 'keydown', 'touchstart']
-    events.forEach((event) => window.addEventListener(event, enable, { once: true, passive: true }))
+    const events: Array<keyof WindowEventMap> = [
+      'scroll',
+      'pointerdown',
+      'keydown',
+      'touchstart',
+    ]
+    events.forEach((event) =>
+      window.addEventListener(event, enable, { once: true, passive: true }),
+    )
 
     if (typeof window.requestIdleCallback === 'function') {
-      idleId = window.requestIdleCallback(enable, { timeout: 4500 })
+      idleId = window.requestIdleCallback(enable, { timeout: 1800 })
     } else {
-      timeoutId = setTimeout(enable, 3500)
+      timeoutId = setTimeout(enable, 1200)
     }
 
     return cleanup
   }, [pathname])
 
-  if (pathname?.startsWith('/admin') || !ready) return null
+  // PageViews adicionales al cambiar de ruta (el primer PageView lo dispara el script)
+  useEffect(() => {
+    if (!ready || pathname?.startsWith('/admin') || !pathname) return
 
-  const idJson = JSON.stringify(pixelId)
+    if (lastTracked.current === null) {
+      lastTracked.current = pathname
+      return
+    }
+    if (lastTracked.current === pathname) return
+
+    const track = () => {
+      if (typeof window.fbq !== 'function') return false
+      lastTracked.current = pathname
+      window.fbq('track', 'PageView')
+      return true
+    }
+
+    if (track()) return
+
+    const intervalId = window.setInterval(() => {
+      if (track()) window.clearInterval(intervalId)
+    }, 250)
+    const timeoutId = window.setTimeout(() => window.clearInterval(intervalId), 6000)
+
+    return () => {
+      window.clearInterval(intervalId)
+      window.clearTimeout(timeoutId)
+    }
+  }, [ready, pathname])
+
+  const noscript = (
+    <noscript>
+      <img
+        height={1}
+        width={1}
+        style={{ display: 'none' }}
+        src={`https://www.facebook.com/tr?id=${encodeURIComponent(PIXEL_ID)}&ev=PageView&noscript=1`}
+        alt=""
+      />
+    </noscript>
+  )
+
+  if (pathname?.startsWith('/admin') || !ready) return noscript
+
+  const idJson = JSON.stringify(PIXEL_ID)
 
   return (
     <>
       <Script
         id="meta-pixel"
-        strategy="lazyOnload"
+        strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `
 !function(f,b,e,v,n,t,s)
@@ -72,15 +133,7 @@ fbq('track', 'PageView');
           `.trim(),
         }}
       />
-      <noscript>
-        <img
-          height={1}
-          width={1}
-          className="hidden"
-          src={`https://www.facebook.com/tr?id=${encodeURIComponent(pixelId)}&ev=PageView&noscript=1`}
-          alt=""
-        />
-      </noscript>
+      {noscript}
     </>
   )
 }

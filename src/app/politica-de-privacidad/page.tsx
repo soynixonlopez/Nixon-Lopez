@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { SITE_URL } from '@/lib/site-config'
+import { buildPageMetadata } from '@/lib/seo'
 import Link from 'next/link'
 import {
   Shield,
@@ -15,13 +16,12 @@ import {
   ArrowRight,
 } from 'lucide-react'
 
-export const metadata: Metadata = {
-  title: 'Política de Privacidad',
+export const metadata: Metadata = buildPageMetadata({
+  title: 'Política de privacidad',
   description:
-    'Política de Privacidad de Nixon Lopez Services (Nixon López). Información sobre tratamiento de datos, finalidades, bases legales, derechos y contacto.',
-  alternates: { canonical: `${SITE_URL}/politica-de-privacidad` },
-  robots: { index: true, follow: true },
-}
+    'Política de privacidad de Nixon Lopez Services (Nixon López). Información sobre tratamiento de datos, finalidades, bases legales, derechos y contacto.',
+  path: '/politica-de-privacidad',
+})
 
 const LAST_UPDATED = '23 de abril de 2026'
 const CONTACT_EMAIL = 'info@nixonlopez.com'

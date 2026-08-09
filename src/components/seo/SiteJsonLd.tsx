@@ -1,76 +1,69 @@
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
-import { HOME_FAQ, HOME_IMAGES } from '@/lib/marketing'
-import { SITE_NAME, SITE_NAME_FULL, SITE_URL } from '@/lib/site-config'
+import { HOME_IMAGES } from '@/lib/marketing'
+import { WHATSAPP_E164 } from '@/lib/site-contact'
+import {
+  SITE_NAME,
+  SITE_NAME_FULL,
+  SITE_SAME_AS,
+  SITE_URL,
+} from '@/lib/site-config'
 
 const orgId = `${SITE_URL}/#organization`
+const personId = `${SITE_URL}/#person`
 const siteId = `${SITE_URL}/#website`
-const localBusinessId = `${SITE_URL}/#localbusiness`
+const serviceId = `${SITE_URL}/#service`
 
+const personName = 'Nixon López'
+const personLegalName = INVOICE_BRANDING.signatoryLegalName
+const logoUrl = `${SITE_URL}/images/logooficial.png`
+const imageUrl = `${SITE_URL}${HOME_IMAGES.og}`
+const telephone = `+${WHATSAPP_E164}`
+
+/**
+ * Schema global (todas las páginas públicas).
+ * FAQPage vive solo en HomeFaqJsonLd (home con FAQ visible).
+ */
 const graph = {
   '@context': 'https://schema.org',
   '@graph': [
     {
+      '@type': 'Person',
+      '@id': personId,
+      name: personName,
+      alternateName: [personLegalName, 'Nixon Lopez'],
+      url: SITE_URL,
+      image: imageUrl,
+      jobTitle: 'Desarrollador web',
+      description:
+        'Desarrollador web en Panamá especializado en sitios profesionales, e-commerce y automatización con IA.',
+      worksFor: { '@id': orgId },
+      sameAs: [...SITE_SAME_AS],
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: 'Panama City',
+        addressRegion: 'Panamá',
+        addressCountry: 'PA',
+      },
+    },
+    {
       '@type': 'Organization',
       '@id': orgId,
       name: SITE_NAME,
-      alternateName: ['Nixon López', 'Nixon Lopez', 'Nixon López — desarrollo web'],
+      alternateName: [personName, 'Nixon Lopez'],
       url: SITE_URL,
-      logo: `${SITE_URL}/images/logooficial.png`,
-      image: `${SITE_URL}${HOME_IMAGES.og}`,
+      logo: logoUrl,
+      image: imageUrl,
       description: SITE_NAME_FULL,
       email: INVOICE_BRANDING.email,
+      founder: { '@id': personId },
+      sameAs: [...SITE_SAME_AS],
       address: {
         '@type': 'PostalAddress',
-        streetAddress: 'Calle 50, Edificio Mirador 50',
+        streetAddress: `${INVOICE_BRANDING.addressLine1}, ${INVOICE_BRANDING.addressLine2}`,
         addressLocality: 'Panama City',
         addressRegion: 'Panamá',
         addressCountry: 'PA',
       },
-      founder: {
-        '@type': 'Person',
-        name: INVOICE_BRANDING.signatoryLegalName,
-        alternateName: 'Nixon López',
-        jobTitle: 'Desarrollador web',
-        url: SITE_URL,
-      },
-      sameAs: [
-        'https://www.instagram.com/nixondev.ai/',
-        'https://github.com/soynixonlopez',
-        'https://facebook.com/soynixonlopez',
-        'https://tiktok.com/@soynixonlopez',
-        'https://www.youtube.com/@soynixonlopez',
-      ],
-    },
-    {
-      '@type': 'LocalBusiness',
-      '@id': localBusinessId,
-      name: SITE_NAME,
-      description: SITE_NAME_FULL,
-      url: SITE_URL,
-      image: `${SITE_URL}${HOME_IMAGES.og}`,
-      telephone: '+507-6825-2312',
-      email: INVOICE_BRANDING.email,
-      priceRange: '$$',
-      address: {
-        '@type': 'PostalAddress',
-        streetAddress: 'Calle 50, Edificio Mirador 50',
-        addressLocality: 'Panama City',
-        addressRegion: 'Panamá',
-        addressCountry: 'PA',
-      },
-      areaServed: {
-        '@type': 'Country',
-        name: 'Panamá',
-      },
-      knowsAbout: [
-        'Desarrollo web',
-        'E-commerce',
-        'SEO',
-        'Automatización con inteligencia artificial',
-        'Apps móviles',
-        'Meta Ads',
-        'Google Ads',
-      ],
     },
     {
       '@type': 'WebSite',
@@ -78,44 +71,32 @@ const graph = {
       name: SITE_NAME,
       url: SITE_URL,
       description: SITE_NAME_FULL,
-      publisher: { '@id': orgId },
       inLanguage: 'es-PA',
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: {
-          '@type': 'EntryPoint',
-          urlTemplate: `${SITE_URL}/cotizacion`,
-        },
-        'query-input': 'required name=search_term_string',
-      },
+      publisher: { '@id': orgId },
+      author: { '@id': personId },
     },
     {
       '@type': 'ProfessionalService',
-      '@id': `${SITE_URL}/#service`,
+      '@id': serviceId,
       name: SITE_NAME,
       url: SITE_URL,
-      provider: { '@id': orgId },
-      areaServed: 'Panamá',
+      image: imageUrl,
+      description: SITE_NAME_FULL,
+      telephone,
+      email: INVOICE_BRANDING.email,
+      provider: { '@id': personId },
+      areaServed: {
+        '@type': 'Country',
+        name: 'Panamá',
+      },
       serviceType: [
         'Desarrollo web',
         'Diseño de sitios web',
         'Tiendas online',
         'Optimización SEO',
         'Automatización con IA',
-        'Desarrollo de apps móviles',
       ],
-    },
-    {
-      '@type': 'FAQPage',
-      '@id': `${SITE_URL}/#faq`,
-      mainEntity: HOME_FAQ.map((item) => ({
-        '@type': 'Question',
-        name: item.question,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: item.answer,
-        },
-      })),
+      sameAs: [...SITE_SAME_AS],
     },
   ],
 }

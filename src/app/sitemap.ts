@@ -1,11 +1,12 @@
-import { MetadataRoute } from 'next'
+import type { MetadataRoute } from 'next'
+import { getPublishedLandingsForSitemap } from '@/lib/landing-pages'
 import { SITE_URL } from '@/lib/site-config'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = SITE_URL
   const now = new Date()
 
-  return [
+  const staticEntries: MetadataRoute.Sitemap = [
     {
       url: base,
       lastModified: now,
@@ -49,4 +50,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.2,
     },
   ]
+
+  const landings = await getPublishedLandingsForSitemap()
+  const landingEntries: MetadataRoute.Sitemap = landings.map((landing) => ({
+    url: `${base}/l/${landing.slug}`,
+    lastModified: landing.updated_at ? new Date(landing.updated_at) : now,
+    changeFrequency: 'weekly',
+    priority: 0.7,
+  }))
+
+  return [...staticEntries, ...landingEntries]
 }

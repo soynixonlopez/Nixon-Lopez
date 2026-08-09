@@ -8,7 +8,8 @@ import { HomeSeoContent } from '@/components/seo/HomeSeoContent'
 import { HeroSection } from '@/components/home/HeroSection'
 import { ProblemSection } from '@/components/home/ProblemSection'
 import { QuoteBannerSection } from '@/components/home/QuoteBannerSection'
-import { SITE_URL } from '@/lib/site-config'
+import { HomeFaqJsonLd } from '@/components/seo/HomeFaqJsonLd'
+import { buildPageMetadata } from '@/lib/seo'
 import { getHomePortfolioProjects } from '@/lib/portfolio'
 
 /** Secciones bajo el fold: HTML en SSR, JS diferido por chunk */
@@ -42,25 +43,20 @@ const FinalCtaSection = dynamic(() =>
 
 export const revalidate = 120
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Nixon Lopez Services | Páginas web que consiguen más clientes en Panamá',
   description:
     'Desarrollo web en Panamá: páginas profesionales, tiendas online, SEO y automatización con IA. Cotización en minutos. Atención directa con Nixon López.',
-  alternates: { canonical: SITE_URL },
-  openGraph: {
-    title: 'Páginas web profesionales en Panamá | Nixon Lopez Services',
-    description:
-      'Consigue más clientes con una web profesional. Cotización automática, proyectos reales y soporte directo en Panamá.',
-    url: SITE_URL,
-    type: 'website',
-  },
-}
+  path: '/',
+  absoluteTitle: true,
+})
 
 export default async function Home() {
   const featuredProjects = await getHomePortfolioProjects()
 
   return (
     <>
+      <HomeFaqJsonLd />
       <Header />
       <HashScroll />
       <main className="min-h-screen w-full min-w-0 overflow-x-hidden bg-white dark:bg-slate-950">

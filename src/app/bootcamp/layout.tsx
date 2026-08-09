@@ -1,42 +1,26 @@
 import type { Metadata } from 'next'
 import { BOOTCAMP_META, BOOTCAMP_PRICING, BOOTCAMP_HOTMART_URL } from '@/lib/bootcamp'
+import { buildPageMetadata } from '@/lib/seo'
 import { SITE_URL } from '@/lib/site-config'
 
 const { title, description, keywords } = BOOTCAMP_META
 
 export const metadata: Metadata = {
-  title,
-  description,
-  keywords: [...keywords],
-  alternates: {
-    canonical: `${SITE_URL}/bootcamp`,
-  },
+  ...buildPageMetadata({
+    title,
+    description,
+    path: '/bootcamp',
+    keywords: [...keywords],
+    image: {
+      url: '/images/nixon/masterclass_hero.webp',
+      width: 1086,
+      height: 1448,
+      alt: 'Bootcamp de desarrollo web con IA — Nixon López',
+    },
+  }),
   other: {
     'format-detection': 'telephone=no',
   },
-  openGraph: {
-    title: `${title} | Nixon Lopez Services`,
-    description,
-    url: `${SITE_URL}/bootcamp`,
-    type: 'website',
-    locale: 'es_ES',
-    siteName: 'Nixon Lopez Services',
-    images: [
-      {
-        url: '/images/nixon/masterclass_hero.webp',
-        width: 1086,
-        height: 1448,
-        alt: 'Bootcamp de desarrollo web con IA — Nixon López',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title,
-    description,
-    images: ['/images/nixon/masterclass_hero.webp'],
-  },
-  robots: { index: true, follow: true },
 }
 
 function BootcampCourseJsonLd() {

@@ -213,6 +213,40 @@ export function resolveCheckoutUrl(payment: LandingPayment): string | null {
   return null
 }
 
+/** Landings públicas para sitemap (anon o service role). */
+export async function getPublishedLandingsForSitemap(): Promise<
+  Array<{ slug: string; updated_at: string | null }>
+> {
+  try {
+    const { createClient } = await import('@supabase/supabase-js')
+    const { createServiceRoleClient } = await import('@/lib/supabase/service')
+    const service = createServiceRoleClient()
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const supabase =
+      service ||
+      (url && anon
+        ? createClient(url, anon, {
+            auth: { persistSession: false, autoRefreshToken: false },
+          })
+        : null)
+    if (!supabase) return []
+
+    const { data, error } = await supabase
+      .from('landing_pages')
+      .select('slug, updated_at')
+      .eq('is_published', true)
+      .order('updated_at', { ascending: false })
+
+    if (error || !data?.length) return []
+    return data
+      .filter((row): row is { slug: string; updated_at: string | null } => typeof row.slug === 'string' && row.slug.length > 0)
+      .map((row) => ({ slug: row.slug, updated_at: row.updated_at ?? null }))
+  } catch {
+    return []
+  }
+}
+
 function str(value: unknown, fallback: string) {
   return typeof value === 'string' ? value : fallback
 }

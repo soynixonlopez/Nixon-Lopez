@@ -1,51 +1,36 @@
 import type { Metadata } from 'next'
 import { SITE_URL } from '@/lib/site-config'
 import { MASTERCLASS_EVENT } from '@/lib/masterclass'
+import { buildPageMetadata } from '@/lib/seo'
 
-const title = 'Masterclass Gratuita: Crea páginas web con IA'
+const title = 'Masterclass gratuita: crea páginas web con IA'
 const description =
-  'Aprende a crear páginas web profesionales con Inteligencia Artificial. Masterclass gratuita en vivo — sábado 1 de agosto, 10:00 AM. Reserva tu cupo gratis.'
+  'Aprende a crear páginas web profesionales con inteligencia artificial. Masterclass gratuita en vivo con Nixon López. Reserva tu cupo gratis.'
 
 export const metadata: Metadata = {
-  title,
-  description,
-  keywords: [
-    'masterclass desarrollo web',
-    'crear páginas web con IA',
-    'inteligencia artificial',
-    'Next.js',
-    'React',
-    'curso gratuito',
-    'Nixon López',
-    'desarrollo web Panamá',
-  ],
-  alternates: {
-    canonical: `${SITE_URL}/masterclass`,
-  },
+  ...buildPageMetadata({
+    title,
+    description,
+    path: '/masterclass',
+    keywords: [
+      'masterclass desarrollo web',
+      'crear páginas web con IA',
+      'inteligencia artificial',
+      'Next.js',
+      'curso gratuito',
+      'Nixon López',
+      'desarrollo web Panamá',
+    ],
+    image: {
+      url: '/images/nixon/masterclass_hero.webp',
+      width: 1086,
+      height: 1448,
+      alt: 'Masterclass de desarrollo web con IA — Nixon López',
+    },
+  }),
   other: {
     'format-detection': 'telephone=no',
   },
-  openGraph: {
-    title: `${title} | Nixon Lopez Services`,
-    description,
-    url: `${SITE_URL}/masterclass`,
-    type: 'website',
-    locale: 'es_ES',
-    images: [
-      {
-        url: '/images/logooficial.png',
-        width: 1306,
-        height: 280,
-        alt: 'Masterclass — Nixon López',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title,
-    description,
-  },
-  robots: { index: true, follow: true },
 }
 
 function MasterclassEventJsonLd() {

@@ -20,7 +20,7 @@ export const INVOICE_BRANDING = {
   email: 'info@nixonlopez.com',
   /** Deja vacío para ocultar en el PDF/vista */
   phone: '',
-  website: 'https://www.nixonlopez.com',
+  website: 'https://www.nixonlopez.com', // canónico www (alineado con SITE_URL)
   /** Color principal (encabezados, barra total) — slate-800 / azul corporativo */
   accentHex: '#1e3a5f',
   /** Texto legal corto (pie de documento) */

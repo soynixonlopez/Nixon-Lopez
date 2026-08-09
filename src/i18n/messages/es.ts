@@ -622,7 +622,7 @@ export const es: Messages = {
     whatsappQuoteWhatsapp: 'WhatsApp:',
   },
   projectsPage: {
-    metaTitle: 'Más proyectos realizados | Nixon Lopez Services',
+    metaTitle: 'Más proyectos realizados',
     metaDescription:
       'Portafolio extendido de Nixon López: tiendas online, webs corporativas, marketing digital y más proyectos entregados en Panamá.',
     backToCases: 'Volver a casos de éxito',

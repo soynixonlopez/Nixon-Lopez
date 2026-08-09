@@ -4,8 +4,8 @@ import '../styles/globals.css'
 import { MetaPixel } from '@/components/analytics/MetaPixel'
 import { SiteProviders } from '@/components/providers/SiteProviders'
 import { SiteJsonLd } from '@/components/seo/SiteJsonLd'
-import { SITE_URL } from '@/lib/site-config'
-import { HOME_IMAGES } from '@/lib/marketing'
+import { DEFAULT_OG_IMAGE } from '@/lib/seo'
+import { SITE_NAME, SITE_URL } from '@/lib/site-config'
 import type { Locale } from '@/i18n/types'
 import { Inter } from 'next/font/google'
 
@@ -22,45 +22,40 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  viewportFit: 'cover', /* permite safe-area-inset en dispositivos con notch */
+  viewportFit: 'cover',
 }
 
 const defaultTitle =
-  'Nixon Lopez Services | Desarrollo web, IA y automatización — Nixon López | Panamá'
+  'Nixon Lopez Services | Desarrollo web y frontend en Panamá — Nixon López'
 
 const defaultDescription =
-  'Nixon Lopez Services: desarrollo web profesional, ChatBots, e-commerce y automatizaciones con inteligencia artificial en Panamá. Nixon López — más de 5 años creando soluciones digitales para negocios. Cotización online.'
+  'Nixon López (Nixon Lopez Services): desarrollo web profesional, e-commerce y automatizaciones con IA en Panamá. Cotización online y atención directa.'
 
 const googleVerification = process.env.GOOGLE_SITE_VERIFICATION
 const bingVerification = process.env.BING_SITE_VERIFICATION
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  applicationName: SITE_NAME,
   title: {
     default: defaultTitle,
-    template: `%s | Nixon Lopez Services`,
+    template: `%s | ${SITE_NAME}`,
   },
   description: defaultDescription,
   keywords: [
-    'Nixon Lopez Services',
-    'desarrollo web Panamá',
-    'páginas web Panamá',
-    'crear página web Panamá',
-    'diseño web Panamá',
-    'tienda online Panamá',
-    'SEO Panamá',
-    'inteligencia artificial Panamá',
-    'chatbots WhatsApp',
-    'automatización negocios',
+    'Nixon Lopez',
     'Nixon López',
-    'nixonlopez.com',
-    'e-commerce Panamá',
-    'sitio web profesional',
-    'desarrollador web Panamá',
+    'desarrollo web Panamá',
+    'frontend developer Panamá',
+    'React developer',
+    'Next.js developer',
+    'TypeScript developer',
+    'páginas web Panamá',
+    'tienda online Panamá',
   ],
   authors: [{ name: 'Nixon López', url: SITE_URL }],
   creator: 'Nixon López',
-  publisher: 'Nixon Lopez Services',
+  publisher: SITE_NAME,
   category: 'technology',
   icons: {
     icon: [
@@ -75,15 +70,8 @@ export const metadata: Metadata = {
     title: defaultTitle,
     description: defaultDescription,
     url: SITE_URL,
-    siteName: 'Nixon Lopez Services',
-    images: [
-      {
-        url: HOME_IMAGES.og,
-        width: HOME_IMAGES.heroWidth,
-        height: HOME_IMAGES.heroHeight,
-        alt: 'Nixon López — desarrollo web e IA en Panamá',
-      },
-    ],
+    siteName: SITE_NAME,
+    images: [DEFAULT_OG_IMAGE],
     locale: 'es_PA',
     type: 'website',
   },
@@ -92,7 +80,7 @@ export const metadata: Metadata = {
     title: defaultTitle,
     description: defaultDescription,
     creator: '@soynixonlopez',
-    images: [HOME_IMAGES.og],
+    images: [DEFAULT_OG_IMAGE.url],
   },
   robots: {
     index: true,
@@ -105,9 +93,7 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  alternates: {
-    canonical: SITE_URL,
-  },
+  // Sin canonical global: cada página indexable define el suyo
   ...(googleVerification || bingVerification
     ? {
         verification: {
@@ -128,7 +114,7 @@ export default async function RootLayout({
   const initialLocale: Locale = rawLocale === 'en' ? 'en' : 'es'
 
   return (
-    <html lang={initialLocale} suppressHydrationWarning data-scroll-behavior="smooth" className={inter.variable}>
+    <html lang={initialLocale === 'en' ? 'en' : 'es'} suppressHydrationWarning data-scroll-behavior="smooth" className={inter.variable}>
       <body className={`${inter.className} font-sans antialiased`} suppressHydrationWarning>
         <SiteProviders initialLocale={initialLocale}>
           <SiteJsonLd />
