@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import { BlogPostCard } from '@/components/blog/BlogPostCard'
+import { BlogIndexClient } from '@/components/blog/BlogIndexClient'
+import { SectionLabel } from '@/components/marketing/SectionLabel'
 import { getPublishedBlogPosts } from '@/lib/blog'
+import { getPublishedCategories } from '@/lib/blog-related'
 import { buildPageMetadata } from '@/lib/seo'
 
 export const revalidate = 120
@@ -10,25 +12,35 @@ export const revalidate = 120
 export const metadata: Metadata = buildPageMetadata({
   title: 'Blog de desarrollo web y SEO en Panamá',
   description:
-    'Artículos de Nixon López sobre desarrollo web, SEO, tecnología y negocios digitales en Panamá.',
+    'Ideas, estrategias y experiencias sobre desarrollo web, tecnología y negocios digitales en Panamá.',
   path: '/blog',
 })
 
 export default async function BlogIndexPage() {
   const posts = await getPublishedBlogPosts()
+  const categories = getPublishedCategories(posts)
 
   return (
     <>
       <Header />
       <main className="min-h-screen bg-white pt-[calc(4.5rem+env(safe-area-inset-top,0px))] dark:bg-slate-950">
-        <section className="border-b border-slate-100 dark:border-slate-800">
-          <div className="container-padding mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">Blog</p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
-              Ideas para hacer crecer tu negocio online
+        <section className="relative isolate overflow-hidden border-b border-slate-100 dark:border-slate-800">
+          <div
+            className="pointer-events-none absolute inset-0 opacity-40 dark:opacity-20"
+            style={{
+              backgroundImage: 'radial-gradient(circle, #94a3b8 1px, transparent 1px)',
+              backgroundSize: '18px 18px',
+            }}
+            aria-hidden
+          />
+          <div className="container-padding relative mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+            <SectionLabel align="left">Recursos</SectionLabel>
+            <h1 className="mt-2 max-w-3xl text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15] dark:text-white">
+              Ideas para hacer crecer tu presencia digital
             </h1>
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-600 dark:text-slate-400">
-              Guías prácticas de desarrollo web, SEO y tecnología aplicadas a negocios en Panamá.
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg dark:text-slate-400">
+              Consejos, estrategias y experiencias sobre desarrollo web, tecnología y negocios
+              digitales.
             </p>
           </div>
         </section>
@@ -39,11 +51,7 @@ export default async function BlogIndexPage() {
               Pronto publicaremos los primeros artículos.
             </p>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {posts.map((post) => (
-                <BlogPostCard key={post.id} post={post} />
-              ))}
-            </div>
+            <BlogIndexClient posts={posts} categories={categories} />
           )}
         </section>
       </main>

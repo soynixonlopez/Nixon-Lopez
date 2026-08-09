@@ -22,7 +22,14 @@ function toInt(value: string | undefined, fallback: number) {
   return Number.isFinite(n) && n > 0 ? Math.round(n) : fallback
 }
 
-/** Renderiza HTML sanitizado; imágenes → next/image. */
+function hasClass(attribs: Record<string, string> | undefined, name: string) {
+  return (attribs?.class || '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .includes(name)
+}
+
+/** Renderiza HTML sanitizado; imágenes → next/image; callouts/tablas editoriales. */
 export function BlogContent({ html, className = '' }: Props) {
   const clean = sanitizeBlogHtml(html)
 
@@ -41,15 +48,15 @@ export function BlogContent({ html, className = '' }: Props) {
         return (
           <figure className="my-8">
             <span
-              className="relative mx-auto block w-full max-w-3xl overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-900"
+              className="relative mx-auto block w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-900"
               style={{ aspectRatio: `${width} / ${height}` }}
             >
               <Image
                 src={src}
                 alt={alt}
                 fill
-                className="object-contain"
-                sizes="(max-width: 768px) 100vw, 768px"
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 720px"
               />
             </span>
             {alt && alt !== 'Imagen del artículo' ? (
@@ -68,12 +75,95 @@ export function BlogContent({ html, className = '' }: Props) {
           <a
             href={href}
             className="font-medium text-brand underline-offset-2 hover:underline"
-            {...(isExternal
-              ? { target: '_blank', rel: 'noopener noreferrer' }
-              : {})}
+            {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
           >
             {domToReact(domNode.children as DOMNode[], options)}
           </a>
+        )
+      }
+
+      if (
+        (domNode.name === 'aside' || domNode.name === 'div') &&
+        hasClass(domNode.attribs, 'blog-callout')
+      ) {
+        return (
+          <aside className="my-8 rounded-xl border border-brand/20 bg-gradient-to-br from-brand/[0.06] to-transparent px-5 py-5 sm:px-6">
+            <div className="blog-callout-inner text-[0.95rem] leading-relaxed text-slate-700 dark:text-slate-300 [&_p]:my-2 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0 [&_strong]:font-semibold [&_strong]:text-slate-900 dark:[&_strong]:text-white">
+              {domToReact(domNode.children as DOMNode[], options)}
+            </div>
+          </aside>
+        )
+      }
+
+      if (
+        (domNode.name === 'aside' || domNode.name === 'div') &&
+        hasClass(domNode.attribs, 'blog-cta')
+      ) {
+        return (
+          <aside className="my-10 rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-6 sm:px-7 dark:border-slate-800 dark:bg-slate-900/40">
+            <div className="[&_a]:inline-flex [&_a]:min-h-[44px] [&_a]:items-center [&_a]:rounded-xl [&_a]:bg-brand [&_a]:px-5 [&_a]:py-2 [&_a]:font-semibold [&_a]:text-white [&_a]:no-underline [&_p]:my-2 [&_p:first-child]:mt-0">
+              {domToReact(domNode.children as DOMNode[], options)}
+            </div>
+          </aside>
+        )
+      }
+
+      if (domNode.name === 'table') {
+        return (
+          <div className="my-8 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+            <table className="min-w-full border-collapse text-left text-sm">
+              {domToReact(domNode.children as DOMNode[], options)}
+            </table>
+          </div>
+        )
+      }
+
+      if (domNode.name === 'thead') {
+        return (
+          <thead className="bg-slate-50 dark:bg-slate-900">
+            {domToReact(domNode.children as DOMNode[], options)}
+          </thead>
+        )
+      }
+
+      if (domNode.name === 'th') {
+        return (
+          <th
+            scope={domNode.attribs.scope || 'col'}
+            className="border-b border-slate-200 px-3 py-3 font-semibold text-slate-900 dark:border-slate-700 dark:text-white"
+          >
+            {domToReact(domNode.children as DOMNode[], options)}
+          </th>
+        )
+      }
+
+      if (domNode.name === 'td') {
+        return (
+          <td className="border-b border-slate-100 px-3 py-3 align-top text-slate-600 dark:border-slate-800 dark:text-slate-300">
+            {domToReact(domNode.children as DOMNode[], options)}
+          </td>
+        )
+      }
+
+      if (domNode.name === 'h2' && domNode.attribs.id) {
+        return (
+          <h2
+            id={domNode.attribs.id}
+            className="mt-12 scroll-mt-28 text-[1.65rem] font-bold tracking-tight text-slate-900 first:mt-0 dark:text-white"
+          >
+            {domToReact(domNode.children as DOMNode[], options)}
+          </h2>
+        )
+      }
+
+      if (domNode.name === 'h3' && domNode.attribs.id) {
+        return (
+          <h3
+            id={domNode.attribs.id}
+            className="mt-8 scroll-mt-28 text-xl font-semibold tracking-tight text-slate-900 dark:text-white"
+          >
+            {domToReact(domNode.children as DOMNode[], options)}
+          </h3>
         )
       }
 
@@ -83,7 +173,7 @@ export function BlogContent({ html, className = '' }: Props) {
 
   return (
     <div
-      className={`blog-prose prose prose-slate max-w-none dark:prose-invert prose-headings:scroll-mt-28 prose-headings:font-semibold prose-h2:mt-10 prose-h2:text-2xl prose-h3:mt-8 prose-h3:text-xl prose-p:leading-relaxed prose-li:my-1 prose-blockquote:border-brand/40 prose-blockquote:text-slate-600 dark:prose-blockquote:text-slate-300 prose-table:text-sm prose-th:bg-slate-50 prose-th:px-3 prose-th:py-2 prose-td:px-3 prose-td:py-2 dark:prose-th:bg-slate-900 ${className}`}
+      className={`blog-prose prose prose-slate max-w-none dark:prose-invert prose-p:text-[1.05rem] prose-p:leading-[1.8] prose-li:my-1.5 prose-li:leading-relaxed prose-blockquote:border-brand/40 prose-blockquote:text-slate-600 dark:prose-blockquote:text-slate-300 ${className}`}
     >
       {parse(clean, options)}
     </div>

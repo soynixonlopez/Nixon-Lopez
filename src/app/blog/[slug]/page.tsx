@@ -1,19 +1,32 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
-import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import { BlogAuthorCard } from '@/components/blog/BlogAuthorCard'
+import { BlogBreadcrumbs } from '@/components/blog/BlogBreadcrumbs'
 import { BlogContent } from '@/components/blog/BlogContent'
+import { BlogCtaBox } from '@/components/blog/BlogCtaBox'
 import { BlogPostJsonLd } from '@/components/blog/BlogPostJsonLd'
+import { BlogPrevNext } from '@/components/blog/BlogPrevNext'
+import { BlogRelatedPosts } from '@/components/blog/BlogRelatedPosts'
+import { BlogSidebar } from '@/components/blog/BlogSidebar'
+import { BlogToc } from '@/components/blog/BlogToc'
 import {
   blogPostPath,
   formatBlogDate,
   getPublishedBlogPostBySlug,
+  getPublishedBlogPosts,
   isSameCalendarDay,
 } from '@/lib/blog'
+import {
+  getAdjacentBlogPosts,
+  getPublishedCategories,
+  getRelatedBlogPosts,
+} from '@/lib/blog-related'
+import { estimateReadingMinutes, formatReadingTime } from '@/lib/blog-reading'
+import { enrichBlogHeadings, shouldShowToc } from '@/lib/blog-toc'
 import { buildPageMetadata, DEFAULT_OG_IMAGE } from '@/lib/seo'
-import { quoteUrl } from '@/lib/marketing'
 import { SITE_NAME } from '@/lib/site-config'
 
 export const revalidate = 120
@@ -67,6 +80,13 @@ export default async function BlogPostPage({ params }: Props) {
   }
   if (!post) notFound()
 
+  const allPosts = await getPublishedBlogPosts()
+  const related = getRelatedBlogPosts(post, allPosts, 3)
+  const { previous, next } = getAdjacentBlogPosts(post, allPosts)
+  const categories = getPublishedCategories(allPosts)
+  const { html: contentHtml, toc } = enrichBlogHeadings(post.content)
+  const showToc = shouldShowToc(toc)
+  const minutes = estimateReadingMinutes(post.content)
   const showUpdated =
     Boolean(post.published_at) &&
     Boolean(post.updated_at) &&
@@ -77,94 +97,112 @@ export default async function BlogPostPage({ params }: Props) {
       <BlogPostJsonLd post={post} />
       <Header />
       <main className="min-h-screen bg-white pt-[calc(4.5rem+env(safe-area-inset-top,0px))] dark:bg-slate-950">
-        <article className="container-padding mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
-          <nav aria-label="Miga de pan" className="mb-6 text-sm text-slate-500">
-            <ol className="flex flex-wrap items-center gap-1.5">
-              <li>
-                <Link href="/" className="hover:text-brand">
-                  Inicio
-                </Link>
-              </li>
-              <li aria-hidden="true">/</li>
-              <li>
-                <Link href="/blog" className="hover:text-brand">
-                  Blog
-                </Link>
-              </li>
-              <li aria-hidden="true">/</li>
-              <li className="line-clamp-1 text-slate-700 dark:text-slate-300" aria-current="page">
-                {post.title}
-              </li>
-            </ol>
-          </nav>
+        <div className="container-padding mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+          <BlogBreadcrumbs
+            items={[
+              { label: 'Inicio', href: '/' },
+              { label: 'Blog', href: '/blog' },
+              { label: post.category, href: '/blog' },
+              { label: post.title },
+            ]}
+          />
 
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">{post.category}</p>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
-            {post.title}
-          </h1>
-
-          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
-            <span>{post.author_name}</span>
-            <span aria-hidden>·</span>
-            <time dateTime={post.published_at || post.created_at}>
-              {formatBlogDate(post.published_at || post.created_at)}
-            </time>
-            {showUpdated ? (
-              <>
-                <span aria-hidden>·</span>
-                <time dateTime={post.updated_at}>
-                  Actualizado {formatBlogDate(post.updated_at)}
-                </time>
-              </>
+          <header className="mx-auto mt-8 max-w-[720px] lg:mx-0 lg:max-w-[720px]">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">
+              {post.category}
+            </p>
+            <h1 className="mt-3 text-[2rem] font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.65rem] lg:leading-[1.15] dark:text-white">
+              {post.title}
+            </h1>
+            {post.excerpt ? (
+              <p className="mt-5 text-lg leading-relaxed text-slate-600 dark:text-slate-400">
+                {post.excerpt}
+              </p>
             ) : null}
-          </div>
+
+            <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
+              <span className="font-medium text-slate-700 dark:text-slate-300">
+                {post.author_name}
+              </span>
+              <span aria-hidden>·</span>
+              <time dateTime={post.published_at || post.created_at}>
+                Publicado {formatBlogDate(post.published_at || post.created_at)}
+              </time>
+              {showUpdated ? (
+                <>
+                  <span aria-hidden>·</span>
+                  <time dateTime={post.updated_at}>
+                    Actualizado {formatBlogDate(post.updated_at)}
+                  </time>
+                </>
+              ) : null}
+              <span aria-hidden>·</span>
+              <span>{formatReadingTime(minutes)}</span>
+            </div>
+          </header>
 
           {post.featured_image_url ? (
-            <div className="relative mt-8 aspect-[16/9] overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-900">
+            <div className="relative mx-auto mt-8 aspect-[16/9] max-w-[720px] overflow-hidden rounded-2xl bg-slate-100 lg:mx-0 dark:bg-slate-900">
               <Image
                 src={post.featured_image_url}
                 alt={post.featured_image_alt || post.title}
                 fill
                 priority
                 className="object-cover"
-                sizes="(max-width: 768px) 100vw, 768px"
+                sizes="(max-width: 768px) 100vw, 720px"
               />
             </div>
           ) : null}
 
-          <div className="mt-10">
-            <BlogContent html={post.content} />
-          </div>
-
-          {post.tags.length > 0 ? (
-            <ul className="mt-10 flex flex-wrap gap-2">
-              {post.tags.map((tag) => (
-                <li
-                  key={tag}
-                  className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 dark:border-slate-700 dark:text-slate-300"
-                >
-                  {tag}
-                </li>
-              ))}
-            </ul>
+          {showToc ? (
+            <div className="mx-auto mt-8 max-w-[720px] lg:hidden">
+              <BlogToc items={toc} collapsible />
+            </div>
           ) : null}
 
-          <aside className="mt-14 rounded-2xl border border-brand/15 bg-gradient-to-br from-brand/[0.06] to-transparent px-6 py-8 sm:px-8">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-              ¿Tienes un proyecto en mente?
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-              Cuéntame qué quieres construir y te ayudo a definir la solución adecuada para tu
-              negocio.
-            </p>
-            <Link
-              href={quoteUrl()}
-              className="mt-5 inline-flex min-h-[48px] items-center justify-center rounded-xl bg-brand px-6 text-sm font-semibold text-white transition hover:bg-brand-light"
-            >
-              Solicitar cotización
-            </Link>
-          </aside>
-        </article>
+          <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,720px)_300px] lg:items-start lg:justify-between lg:gap-12">
+            <article className="min-w-0 max-w-[720px]">
+              <BlogContent html={contentHtml} />
+
+              {post.tags.length > 0 ? (
+                <ul className="mt-10 flex flex-wrap gap-2">
+                  {post.tags.map((tag) => (
+                    <li
+                      key={tag}
+                      className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 dark:border-slate-700 dark:text-slate-300"
+                    >
+                      {tag}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+
+              <div className="mt-12">
+                <BlogCtaBox
+                  secondaryHref="/proyectos"
+                  secondaryLabel="Ver proyectos"
+                />
+              </div>
+
+              <div className="mt-10">
+                <BlogAuthorCard name={post.author_name} />
+              </div>
+
+              <BlogPrevNext previous={previous} next={next} />
+              <BlogRelatedPosts posts={related} />
+            </article>
+
+            <div className="min-w-0">
+              <BlogSidebar
+                recentPosts={allPosts}
+                categories={categories}
+                currentSlug={post.slug}
+                toc={showToc ? toc : undefined}
+                showSearch={false}
+              />
+            </div>
+          </div>
+        </div>
       </main>
       <Footer />
     </>

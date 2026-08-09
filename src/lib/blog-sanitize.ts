@@ -1,6 +1,8 @@
 import sanitizeHtml from 'sanitize-html'
 import { isAllowedBlogImageSrc } from '@/lib/blog-security'
 
+const CALLOUT_CLASSES = ['blog-callout', 'blog-cta', 'blog-checklist']
+
 /** Sanitiza HTML del artículo: sin scripts/iframes/H1 ni src arbitrarios. */
 export function sanitizeBlogHtml(dirty: string): string {
   return sanitizeHtml(dirty || '', {
@@ -28,6 +30,8 @@ export function sanitizeBlogHtml(dirty: string): string {
       'tr',
       'th',
       'td',
+      'aside',
+      'div',
     ],
     allowedAttributes: {
       a: ['href', 'name', 'target', 'rel'],
@@ -35,6 +39,15 @@ export function sanitizeBlogHtml(dirty: string): string {
       table: ['class'],
       th: ['scope'],
       td: ['colspan', 'rowspan'],
+      h2: ['id'],
+      h3: ['id'],
+      aside: ['class'],
+      div: ['class'],
+    },
+    allowedClasses: {
+      aside: CALLOUT_CLASSES,
+      div: CALLOUT_CLASSES,
+      table: ['blog-table'],
     },
     allowedSchemes: ['http', 'https', 'mailto'],
     allowedSchemesByTag: {

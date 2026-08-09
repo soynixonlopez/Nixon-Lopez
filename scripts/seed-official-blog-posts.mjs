@@ -79,6 +79,8 @@ function sanitizeBlogHtml(dirty) {
       'tr',
       'th',
       'td',
+      'aside',
+      'div',
     ],
     allowedAttributes: {
       a: ['href', 'name', 'target', 'rel'],
@@ -86,6 +88,15 @@ function sanitizeBlogHtml(dirty) {
       table: ['class'],
       th: ['scope'],
       td: ['colspan', 'rowspan'],
+      h2: ['id'],
+      h3: ['id'],
+      aside: ['class'],
+      div: ['class'],
+    },
+    allowedClasses: {
+      aside: ['blog-callout', 'blog-cta', 'blog-checklist'],
+      div: ['blog-callout', 'blog-cta', 'blog-checklist'],
+      table: ['blog-table'],
     },
     allowedSchemes: ['http', 'https', 'mailto'],
     allowedSchemesByTag: {
@@ -205,15 +216,44 @@ async function main() {
 
   const report = []
 
+  const contentOnly = process.argv.includes('--content-only')
+
   for (const meta of ARTICLES_META) {
     console.log(`\n→ ${meta.slug}`)
-    const featured = await uploadImage(sb, url, meta.slug, 'featured', meta.images.featured)
-    const inline1 = await uploadImage(sb, url, meta.slug, 'inline1', meta.images.inline1)
-    const inline2 = await uploadImage(sb, url, meta.slug, 'inline2', meta.images.inline2)
+
+    const { data: existing } = await sb
+      .from('blog_posts')
+      .select('id, featured_image_url, featured_image_path, content')
+      .eq('slug', meta.slug)
+      .maybeSingle()
+
+    let featuredUrl
+    let featuredPath
+    let inline1Url
+    let inline2Url
+
+    if (contentOnly && existing?.featured_image_url && existing?.content) {
+      const imgs = [...existing.content.matchAll(/src="(https:\/\/[^"]+\/storage\/v1\/object\/public\/blog\/[^"]+)"/g)].map(
+        (m) => m[1],
+      )
+      featuredUrl = existing.featured_image_url
+      featuredPath = existing.featured_image_path
+      inline1Url = imgs[0] || featuredUrl
+      inline2Url = imgs[1] || imgs[0] || featuredUrl
+      console.log('  reusing existing images (--content-only)')
+    } else {
+      const featured = await uploadImage(sb, url, meta.slug, 'featured', meta.images.featured)
+      const inline1 = await uploadImage(sb, url, meta.slug, 'inline1', meta.images.inline1)
+      const inline2 = await uploadImage(sb, url, meta.slug, 'inline2', meta.images.inline2)
+      featuredUrl = featured.url
+      featuredPath = featured.path
+      inline1Url = inline1.url
+      inline2Url = inline2.url
+    }
 
     const rawHtml = buildContent(meta, {
-      inline1: inline1.url,
-      inline2: inline2.url,
+      inline1: inline1Url,
+      inline2: inline2Url,
     })
     const content = sanitizeBlogHtml(rawHtml)
     const words = countWords(content)
@@ -225,8 +265,8 @@ async function main() {
       previous_slugs: [],
       excerpt: meta.excerpt,
       content,
-      featured_image_url: featured.url,
-      featured_image_path: featured.path,
+      featured_image_url: featuredUrl,
+      featured_image_path: featuredPath,
       featured_image_alt: meta.featured_alt,
       status: 'published',
       published_at: meta.published_at,
@@ -236,12 +276,6 @@ async function main() {
       seo_title: meta.seo_title,
       seo_description: meta.seo_description,
     }
-
-    const { data: existing } = await sb
-      .from('blog_posts')
-      .select('id')
-      .eq('slug', meta.slug)
-      .maybeSingle()
 
     let id
     if (existing?.id) {
@@ -274,8 +308,8 @@ async function main() {
       url: `https://www.nixonlopez.com/blog/${meta.slug}`,
       seo_title: meta.seo_title,
       seo_description: meta.seo_description,
-      featured_image_url: featured.url,
-      featured_image_path: featured.path,
+      featured_image_url: featuredUrl,
+      featured_image_path: featuredPath,
       imageOrigins: meta.imageOrigins,
     })
   }
