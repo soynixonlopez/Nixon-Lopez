@@ -7,7 +7,7 @@ export function TrustStrip() {
   const { trustStrip } = messages
 
   return (
-    <section aria-label={trustStrip.ariaLabel} className="border-y border-slate-200 bg-slate-50 py-4 sm:py-5">
+    <section aria-label={trustStrip.ariaLabel} className="border-y border-slate-200 bg-slate-50 py-4 sm:py-5 dark:border-slate-800 dark:bg-slate-950">
       <div className="container-padding max-w-6xl mx-auto px-4 sm:px-6">
         <ul className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:gap-x-8">
           {trustStrip.labels.map((label) => (

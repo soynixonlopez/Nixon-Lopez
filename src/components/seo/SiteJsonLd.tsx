@@ -1,5 +1,5 @@
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
-import { HOME_FAQ } from '@/lib/marketing'
+import { HOME_FAQ, HOME_IMAGES } from '@/lib/marketing'
 import { SITE_NAME, SITE_NAME_FULL, SITE_URL } from '@/lib/site-config'
 
 const orgId = `${SITE_URL}/#organization`
@@ -16,7 +16,7 @@ const graph = {
       alternateName: ['Nixon López', 'Nixon Lopez', 'Nixon López — desarrollo web'],
       url: SITE_URL,
       logo: `${SITE_URL}/images/logooficial.png`,
-      image: `${SITE_URL}/images/logooficial.png`,
+      image: `${SITE_URL}${HOME_IMAGES.og}`,
       description: SITE_NAME_FULL,
       email: INVOICE_BRANDING.email,
       address: {
@@ -47,7 +47,7 @@ const graph = {
       name: SITE_NAME,
       description: SITE_NAME_FULL,
       url: SITE_URL,
-      image: `${SITE_URL}/images/logooficial.png`,
+      image: `${SITE_URL}${HOME_IMAGES.og}`,
       telephone: '+507-6825-2312',
       email: INVOICE_BRANDING.email,
       priceRange: '$$',

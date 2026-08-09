@@ -72,7 +72,7 @@ export function ProcessSection() {
   const isInView = useInView(ref, { once: true, margin: '-80px' })
 
   return (
-    <section id="process" ref={ref} className="bg-slate-50 py-16 sm:py-20 lg:py-24">
+    <section id="process" ref={ref} className="bg-slate-50 py-16 sm:py-20 lg:py-24 dark:bg-slate-950">
       <div className="container-padding mx-auto max-w-6xl px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 24 }}

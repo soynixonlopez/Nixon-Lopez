@@ -15,7 +15,7 @@ export function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0)
 
   return (
-    <section id="faq" ref={ref} className="relative isolate overflow-hidden bg-white py-16 sm:py-24">
+    <section id="faq" ref={ref} className="relative isolate overflow-hidden bg-white py-16 sm:py-24 dark:bg-slate-950">
       <div
         className="pointer-events-none absolute top-10 right-6 sm:right-10 h-24 w-24 opacity-25"
         aria-hidden
@@ -37,7 +37,7 @@ export function FaqSection() {
             {f.titleBefore}
             <span className="brand-accent">{f.titleAccent}</span>
           </SectionTitle>
-          <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">{f.subtitle}</p>
+          <p className="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed">{f.subtitle}</p>
         </motion.div>
 
         <motion.div

@@ -10,7 +10,7 @@ type Props = {
 export function SectionTitle({ children, className }: Props) {
   return (
     <h2
-      className={clsx('section-title tracking-tight text-slate-900', className)}
+      className={clsx('section-title tracking-tight text-slate-900 dark:text-slate-50', className)}
       style={{
         fontSize: 'clamp(2.2rem, 6.8vw, 3rem)',
         lineHeight: 1.15,

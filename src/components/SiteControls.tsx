@@ -1,50 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useTheme } from 'next-themes'
 import { Moon, Sun } from 'lucide-react'
+import { useTheme } from '@/components/providers/ThemeProvider'
 import { useI18n } from '@/i18n/LocaleProvider'
 import type { Locale } from '@/i18n/types'
 
 type Props = {
   className?: string
   compact?: boolean
-}
-
-/** Glifo propio: puente ES↔EN (no el icono genérico de traducción) */
-function LocaleBridgeIcon({ className = 'h-4 w-4' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
-      <path
-        d="M4.5 8.5c2.8-3.2 7.2-3.2 10 0"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-      />
-      <path
-        d="M9.5 15.5c2.8 3.2 7.2 3.2 10 0"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-      />
-      <circle cx="7" cy="9.2" r="1.35" fill="currentColor" />
-      <circle cx="17" cy="14.8" r="1.35" fill="currentColor" />
-      <path
-        d="M11 7.2v9.6"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeDasharray="0.2 2.4"
-        opacity="0.55"
-      />
-      <path
-        d="M10.1 11.2h3.8"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
 }
 
 export function SiteControls({ className = '', compact = false }: Props) {
@@ -57,44 +21,53 @@ export function SiteControls({ className = '', compact = false }: Props) {
   }, [])
 
   const isDark = mounted && (resolvedTheme ?? theme) === 'dark'
-  const nextLocale: Locale = locale === 'es' ? 'en' : 'es'
+
+  const setLang = (next: Locale) => {
+    if (next !== locale) setLocale(next)
+  }
+
+  const langBtn =
+    'inline-flex items-center bg-transparent p-0 text-[12px] font-semibold tracking-wide transition-colors sm:text-[13px]'
+  const idle = 'text-slate-400 hover:text-slate-800 dark:text-slate-500 dark:hover:text-slate-200'
+  const active =
+    'text-slate-900 underline decoration-brand decoration-2 underline-offset-[5px] dark:text-white dark:decoration-cyan-400'
 
   return (
-    <div className={`flex items-center gap-1 ${className}`}>
+    <nav
+      aria-label={`${messages.common.language}, ${messages.common.theme}`}
+      className={`inline-flex items-center gap-2.5 ${className}`}
+    >
       <button
         type="button"
-        onClick={() => setLocale(nextLocale)}
-        className={`inline-flex items-center justify-center gap-1.5 rounded-lg border border-transparent text-slate-600 transition hover:border-slate-200 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:border-slate-700 dark:hover:bg-slate-800 dark:hover:text-white ${
-          compact ? 'h-9 px-2' : 'h-10 px-2.5'
-        }`}
-        aria-label={`${messages.common.language}: ${nextLocale.toUpperCase()}`}
-        title={`${messages.common.language}: ${nextLocale.toUpperCase()}`}
+        onClick={() => setLang('es')}
+        aria-pressed={locale === 'es'}
+        className={`${langBtn} ${locale === 'es' ? active : idle}`}
       >
-        <LocaleBridgeIcon className={compact ? 'h-4 w-4' : 'h-[18px] w-[18px]'} />
-        <span className="flex items-center gap-1 text-[11px] font-bold tracking-[0.12em]">
-          <span className={locale === 'es' ? 'brand-accent-solid' : 'opacity-35'}>ES</span>
-          <span className="opacity-30" aria-hidden>
-            /
-          </span>
-          <span className={locale === 'en' ? 'brand-accent-solid' : 'opacity-35'}>EN</span>
-        </span>
+        ES
       </button>
-
+      <button
+        type="button"
+        onClick={() => setLang('en')}
+        aria-pressed={locale === 'en'}
+        className={`${langBtn} ${locale === 'en' ? active : idle}`}
+      >
+        EN
+      </button>
       <button
         type="button"
         onClick={() => setTheme(isDark ? 'light' : 'dark')}
-        className={`inline-flex items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white ${
-          compact ? 'h-9 w-9' : 'h-10 w-10'
-        }`}
         aria-label={isDark ? messages.common.lightMode : messages.common.darkMode}
         title={isDark ? messages.common.lightMode : messages.common.darkMode}
+        className={`inline-flex items-center justify-center bg-transparent p-0 text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white ${
+          compact ? 'h-8 w-8' : 'h-9 w-9'
+        }`}
       >
         {mounted ? (
-          isDark ? <Sun className="h-4 w-4" aria-hidden /> : <Moon className="h-4 w-4" aria-hidden />
+          isDark ? <Sun className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden /> : <Moon className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
         ) : (
-          <Moon className="h-4 w-4 opacity-0" aria-hidden />
+          <Moon className="h-[18px] w-[18px] opacity-0" aria-hidden />
         )}
       </button>
-    </div>
+    </nav>
   )
 }

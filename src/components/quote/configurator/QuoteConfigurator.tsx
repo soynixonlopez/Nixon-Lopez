@@ -378,7 +378,7 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
           {/* Izquierda — la altura la marca el formulario; la imagen se recorta para llenar */}
           <div className="relative order-1 min-h-[240px] overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:min-h-[280px] sm:rounded-3xl lg:order-none lg:min-h-0">
             <Image
-              src="/images/cotizador.png"
+              src="/images/cotizador.webp"
               alt={q.pageImageAlt}
               fill
               priority

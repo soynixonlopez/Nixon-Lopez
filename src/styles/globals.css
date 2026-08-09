@@ -27,28 +27,41 @@ html.dark body {
   color: #e2e8f0;
 }
 
-/* Remapeo suave de superficies claras del sitio público en modo oscuro */
+/*
+ * Dark mode: fondos claros (incl. opacidades) + textos.
+ * Sin esto, text-slate-* se aclara pero bg-slate-50/90 queda claro → texto ilegible.
+ */
 html.dark .bg-white {
   background-color: #0f172a !important;
 }
-html.dark .bg-white\/95 {
-  background-color: rgb(15 23 42 / 0.95) !important;
-}
-html.dark .bg-white\/90 {
+html.dark .bg-white\/95,
+html.dark .bg-white\/90,
+html.dark .bg-white\/85,
+html.dark .bg-white\/80,
+html.dark .bg-white\/70,
+html.dark .bg-white\/60,
+html.dark .bg-white\/50,
+html.dark .bg-white\/40,
+html.dark .bg-white\/30 {
   background-color: rgb(15 23 42 / 0.92) !important;
 }
-html.dark .bg-white\/80 {
-  background-color: rgb(15 23 42 / 0.88) !important;
-}
-html.dark .bg-white\/70 {
-  background-color: rgb(15 23 42 / 0.78) !important;
-}
 html.dark .bg-slate-50,
-html.dark .bg-slate-100 {
+html.dark .bg-slate-100,
+html.dark .bg-slate-50\/90,
+html.dark .bg-slate-50\/80,
+html.dark .bg-slate-50\/50,
+html.dark .bg-slate-50\/40 {
+  background-color: #020617 !important;
+}
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-50\/80:hover,
+html.dark .hover\:bg-slate-50\/50:hover,
+html.dark .hover\:bg-slate-100:hover,
+html.dark .hover\:bg-white:hover {
   background-color: #1e293b !important;
 }
 html.dark .text-slate-900 {
-  color: #f1f5f9 !important;
+  color: #f8fafc !important;
 }
 html.dark .text-slate-800,
 html.dark .text-slate-700 {
@@ -66,10 +79,6 @@ html.dark .border-slate-200\/80,
 html.dark .border-slate-100 {
   border-color: rgb(51 65 85 / 0.9) !important;
 }
-html.dark .hover\:bg-slate-50:hover,
-html.dark .hover\:bg-slate-100:hover {
-  background-color: #1e293b !important;
-}
 html.dark .from-white\/70 {
   --tw-gradient-from: rgb(2 6 23 / 0.78) var(--tw-gradient-from-position) !important;
 }
@@ -78,6 +87,14 @@ html.dark .via-white\/40 {
 }
 html.dark .to-white\/10 {
   --tw-gradient-to: rgb(2 6 23 / 0.15) var(--tw-gradient-to-position) !important;
+}
+html.dark .from-blue-200\/40,
+html.dark .via-indigo-200\/25,
+html.dark .to-purple-200\/20 {
+  opacity: 0.35;
+}
+html.dark .section-title {
+  color: #f8fafc !important;
 }
 
 /* Evitar scroll horizontal: html + body (100vw y elementos posicionados suelen desbordar solo en body) */

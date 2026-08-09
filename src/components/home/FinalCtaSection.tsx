@@ -51,7 +51,7 @@ export function FinalCtaSection() {
   const isInView = useInView(ref, { once: true, margin: '-80px' })
 
   return (
-    <section id="contact" ref={ref} className="relative overflow-hidden bg-slate-50 py-16 sm:py-20 lg:py-24">
+    <section id="contact" ref={ref} className="relative overflow-hidden bg-slate-50 py-16 sm:py-20 lg:py-24 dark:bg-slate-950">
       <div
         className="pointer-events-none absolute right-0 top-0 h-96 w-96 rounded-full bg-gradient-to-bl from-neon-purple/10 to-transparent blur-3xl"
         aria-hidden

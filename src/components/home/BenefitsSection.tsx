@@ -79,7 +79,7 @@ export function BenefitsSection() {
             <br />
             <span className="brand-accent">{b.titleAccent}</span>
           </SectionTitle>
-          <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">{b.subtitle}</p>
+          <p className="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed">{b.subtitle}</p>
         </motion.div>
 
         <motion.div
@@ -94,13 +94,13 @@ export function BenefitsSection() {
             return (
             <article
               key={benefit.icon}
-              className="flex flex-col border-t border-brand/20 bg-white/85 px-5 py-6 sm:px-6 sm:py-7 backdrop-blur-sm"
+              className="flex flex-col border-t border-brand/20 bg-white/85 px-5 py-6 backdrop-blur-sm dark:border-cyan-400/20 dark:bg-slate-900/85 sm:px-6 sm:py-7"
             >
               <div className="mb-4">
                 <BenefitIcon icon={benefit.icon} tone={benefit.color} />
               </div>
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">{copy.title}</h3>
-              <p className="mt-2 text-sm sm:text-[15px] text-slate-600 leading-relaxed">{copy.description}</p>
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug dark:text-slate-50">{copy.title}</h3>
+              <p className="mt-2 text-sm sm:text-[15px] text-slate-600 leading-relaxed dark:text-slate-300">{copy.description}</p>
             </article>
             )
           })}

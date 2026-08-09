@@ -1,9 +1,12 @@
 import type { Metadata, Viewport } from 'next'
+import { cookies } from 'next/headers'
 import '../styles/globals.css'
 import { MetaPixel } from '@/components/analytics/MetaPixel'
 import { SiteProviders } from '@/components/providers/SiteProviders'
 import { SiteJsonLd } from '@/components/seo/SiteJsonLd'
 import { SITE_URL } from '@/lib/site-config'
+import { HOME_IMAGES } from '@/lib/marketing'
+import type { Locale } from '@/i18n/types'
 import { Inter } from 'next/font/google'
 
 const inter = Inter({
@@ -42,15 +45,18 @@ export const metadata: Metadata = {
     'Nixon Lopez Services',
     'desarrollo web Panamá',
     'páginas web Panamá',
-    'inteligencia artificial',
-    'chatbots',
+    'crear página web Panamá',
+    'diseño web Panamá',
+    'tienda online Panamá',
+    'SEO Panamá',
+    'inteligencia artificial Panamá',
+    'chatbots WhatsApp',
     'automatización negocios',
     'Nixon López',
-    'nixoncodes.ai',
-    'e-commerce',
+    'nixonlopez.com',
+    'e-commerce Panamá',
     'sitio web profesional',
-    'desarrollador web',
-    'IT services Panamá',
+    'desarrollador web Panamá',
   ],
   authors: [{ name: 'Nixon López', url: SITE_URL }],
   creator: 'Nixon López',
@@ -72,13 +78,13 @@ export const metadata: Metadata = {
     siteName: 'Nixon Lopez Services',
     images: [
       {
-        url: '/images/logooficial.png',
-        width: 1306,
-        height: 280,
-        alt: 'Nixon López — logo',
+        url: HOME_IMAGES.og,
+        width: HOME_IMAGES.heroWidth,
+        height: HOME_IMAGES.heroHeight,
+        alt: 'Nixon López — desarrollo web e IA en Panamá',
       },
     ],
-    locale: 'es_ES',
+    locale: 'es_PA',
     type: 'website',
   },
   twitter: {
@@ -86,7 +92,7 @@ export const metadata: Metadata = {
     title: defaultTitle,
     description: defaultDescription,
     creator: '@soynixonlopez',
-    images: ['/images/logooficial.png'],
+    images: [HOME_IMAGES.og],
   },
   robots: {
     index: true,
@@ -112,15 +118,19 @@ export const metadata: Metadata = {
     : {}),
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const cookieStore = await cookies()
+  const rawLocale = cookieStore.get('nl-locale')?.value
+  const initialLocale: Locale = rawLocale === 'en' ? 'en' : 'es'
+
   return (
-    <html lang="es" suppressHydrationWarning data-scroll-behavior="smooth" className={inter.variable}>
-      <body className={`${inter.className} font-sans antialiased`}>
-        <SiteProviders>
+    <html lang={initialLocale} suppressHydrationWarning data-scroll-behavior="smooth" className={inter.variable}>
+      <body className={`${inter.className} font-sans antialiased`} suppressHydrationWarning>
+        <SiteProviders initialLocale={initialLocale}>
           <SiteJsonLd />
           <MetaPixel />
 

@@ -5,7 +5,9 @@ export const BRAND_ACCENT = '#1e3a5f'
 /** Retratos del home — public/images/nixon */
 export const HOME_IMAGES = {
   hero: '/images/nixon/masterclass_hero.webp',
-  about: '/images/nixon/nixon_about.png',
+  about: '/images/nixon/nixon_about.webp',
+  /** Imagen social / Open Graph (mejor CTR que el logo horizontal) */
+  og: '/images/nixon/masterclass_hero.webp',
   heroWidth: 1086,
   heroHeight: 1448,
   aboutWidth: 1092,

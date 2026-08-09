@@ -18,7 +18,7 @@ export function CaseStudiesSection({ projects }: { projects: FeaturedProject[] }
   const isInView = useInView(ref, { once: true, margin: '-80px' })
 
   return (
-    <section id="projects" ref={ref} className="relative isolate overflow-hidden bg-slate-50/50 py-16 sm:py-24">
+    <section id="projects" ref={ref} className="relative isolate overflow-hidden bg-slate-50/50 py-16 sm:py-24 dark:bg-slate-950">
       <div
         className="pointer-events-none absolute top-10 left-6 sm:left-10 h-24 w-24 opacity-30"
         aria-hidden
@@ -44,7 +44,7 @@ export function CaseStudiesSection({ projects }: { projects: FeaturedProject[] }
             {c.titleBefore}
             <span className="brand-accent">{c.titleAccent}</span>
           </SectionTitle>
-          <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">{c.subtitle}</p>
+          <p className="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed">{c.subtitle}</p>
         </motion.div>
 
         <motion.div

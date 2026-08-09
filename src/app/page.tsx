@@ -45,9 +45,12 @@ export const revalidate = 120
 export const metadata: Metadata = {
   title: 'Nixon Lopez Services | Páginas web que consiguen más clientes en Panamá',
   description:
-    'Estudio digital en Panamá: páginas web profesionales, tiendas online y software a medida. Cotización automática en minutos. Más clientes, más ventas.',
+    'Desarrollo web en Panamá: páginas profesionales, tiendas online, SEO y automatización con IA. Cotización en minutos. Atención directa con Nixon López.',
   alternates: { canonical: SITE_URL },
   openGraph: {
+    title: 'Páginas web profesionales en Panamá | Nixon Lopez Services',
+    description:
+      'Consigue más clientes con una web profesional. Cotización automática, proyectos reales y soporte directo en Panamá.',
     url: SITE_URL,
     type: 'website',
   },

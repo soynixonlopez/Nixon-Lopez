@@ -15,7 +15,7 @@ export default function BootcampHeader() {
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#050810]/85 backdrop-blur-xl shadow-lg shadow-black/20">
       <div className="container flex h-16 items-center justify-between gap-4 sm:h-[4.5rem]">
         <Link href="/bootcamp" className="relative flex shrink-0 items-center">
-          <BrandLogo alt="Nixon López" className="h-7 w-auto sm:h-8" sizes="180px" priority />
+          <BrandLogo alt="Nixon López" className="h-9 w-auto sm:h-10" sizes="260px" priority />
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex" aria-label="Secciones">

@@ -61,7 +61,7 @@ export function ServicesPreviewSection() {
   const isInView = useInView(ref, { once: true, margin: '-80px' })
 
   return (
-    <section id="services" ref={ref} className="relative isolate overflow-hidden bg-slate-50/80 py-16 sm:py-24">
+    <section id="services" ref={ref} className="relative isolate overflow-hidden bg-slate-50/80 py-16 sm:py-24 dark:bg-slate-950">
       <div
         className="pointer-events-none absolute top-10 left-6 sm:left-10 h-24 w-24 opacity-35"
         aria-hidden
@@ -87,7 +87,7 @@ export function ServicesPreviewSection() {
             {s.titleBefore}
             <span className="brand-accent">{s.titleAccent}</span>
           </SectionTitle>
-          <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">{s.subtitle}</p>
+          <p className="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed">{s.subtitle}</p>
         </motion.div>
 
         <motion.div
@@ -112,8 +112,8 @@ export function ServicesPreviewSection() {
                 <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg ${theme.wrap}`}>
                   <Icon className="h-6 w-6" aria-hidden />
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 leading-snug">{copy.title}</h3>
-                <p className="mt-2 text-sm text-slate-600 leading-relaxed">{copy.description}</p>
+                <h3 className="text-lg font-bold text-slate-900 leading-snug dark:text-slate-50">{copy.title}</h3>
+                <p className="mt-2 text-sm text-slate-600 leading-relaxed dark:text-slate-300">{copy.description}</p>
 
                 <ul className="mt-4 space-y-2.5 flex-1">
                   {copy.features.map((feature) => (

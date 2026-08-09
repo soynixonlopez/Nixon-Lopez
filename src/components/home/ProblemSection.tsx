@@ -199,7 +199,7 @@ export function ProblemSection() {
   const trackOffsetPx = slideWidth > 0 ? -trackIndex * slideWidth + dragOffset : 0
 
   return (
-    <section id="problem" className="relative isolate overflow-hidden bg-slate-50/90 py-16 sm:py-24">
+    <section id="problem" className="relative isolate overflow-hidden bg-slate-50/90 py-16 sm:py-24 dark:bg-slate-950">
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.35]"
         aria-hidden
@@ -225,7 +225,7 @@ export function ProblemSection() {
             {p.titleBefore}
             <span className="brand-accent">{p.titleAccent}</span>
           </SectionTitle>
-          <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">{p.subtitle}</p>
+          <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-300 sm:text-lg">{p.subtitle}</p>
         </div>
 
         <div

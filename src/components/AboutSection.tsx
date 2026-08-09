@@ -174,7 +174,7 @@ const AboutSection = () => {
                 transition={{ duration: 0.3 }}
               >
                 <Image
-                  src="/images/aboutNixon.png"
+                  src="/images/nixon/nixon_about.webp"
                   alt="Nixon López - Desarrollador Web Profesional"
                   width={800}
                   height={1000}

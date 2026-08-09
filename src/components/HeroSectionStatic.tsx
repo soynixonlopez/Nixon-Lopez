@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import TechLogo from './TechLogo'
-import nixonProfileWebp from '../../public/images/nixonprofile.webp'
+import { HOME_IMAGES } from '@/lib/marketing'
 
 const WHATSAPP_HREF =
   'https://wa.me/50768252312?text=' +
@@ -9,6 +9,7 @@ const WHATSAPP_HREF =
 
 const HERO_IMG_SIZES = '(max-width: 768px) 92vw, 50vw'
 
+/** Legacy hero (no usado por el home actual). Mantiene build sano si se reutiliza. */
 export default function HeroSectionStatic() {
   return (
     <section
@@ -21,7 +22,7 @@ export default function HeroSectionStatic() {
 
       <div className="relative z-10 container-padding h-full pt-[calc(3.5rem+env(safe-area-inset-top,0px))] sm:pt-[calc(4rem+env(safe-area-inset-top,0px))] md:pt-20 pb-0">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center md:items-stretch h-full w-full min-w-0">
-          <div className="min-w-0 text-center md:text-left flex flex-col justify-center h-full max-md:motion-safe:animate-soft-rise">
+          <div className="min-w-0 text-center md:text-left flex flex-col justify-center h-full">
             <div className="mb-6">
               <span className="text-blue-400 font-mono text-2xl tracking-wider">
                 ¿Tu Negocio Necesita Más Clientes?
@@ -65,23 +66,17 @@ export default function HeroSectionStatic() {
             </div>
           </div>
 
-          <div className="flex min-w-0 justify-center md:justify-end h-full relative overflow-hidden max-md:motion-safe:animate-soft-rise max-md:motion-safe:[animation-delay:120ms]">
+          <div className="flex min-w-0 justify-center md:justify-end h-full relative overflow-hidden">
             <div className="relative w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl xl:max-w-3xl h-[500px] sm:h-[600px] md:h-full overflow-hidden">
-              <picture className="block h-full w-full">
-                <source srcSet="/images/nixonprofile.avif" type="image/avif" sizes={HERO_IMG_SIZES} />
-                <Image
-                  src={nixonProfileWebp}
-                  alt="Páginas Web Profesionales para Negocios de Servicios"
-                  width={nixonProfileWebp.width}
-                  height={nixonProfileWebp.height}
-                  className="h-full w-full object-contain object-bottom"
-                  priority
-                  quality={75}
-                  sizes={HERO_IMG_SIZES}
-                  placeholder="blur"
-                  fetchPriority="high"
-                />
-              </picture>
+              <Image
+                src={HOME_IMAGES.hero}
+                alt="Páginas Web Profesionales para Negocios de Servicios"
+                width={HOME_IMAGES.heroWidth}
+                height={HOME_IMAGES.heroHeight}
+                className="h-full w-full object-contain object-bottom"
+                priority
+                sizes={HERO_IMG_SIZES}
+              />
             </div>
           </div>
         </div>
@@ -89,4 +84,3 @@ export default function HeroSectionStatic() {
     </section>
   )
 }
-

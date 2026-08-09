@@ -59,14 +59,9 @@ const Header = () => {
       }`}
     >
       <div className="container-padding max-w-6xl mx-auto px-3 sm:px-4">
-        <div className="flex items-center justify-between h-14 md:h-16 min-h-[56px] gap-3">
-          <Link href="/" className="flex items-center shrink-0 min-w-0 max-w-[12.5rem]">
-            <BrandLogo
-              alt="Nixon Lopez Services"
-              className="h-7 w-auto sm:h-8"
-              sizes="200px"
-              priority
-            />
+        <div className="flex items-center justify-between h-16 md:h-[4.5rem] min-h-[64px] gap-3">
+          <Link href="/" className="flex items-center shrink-0 min-w-0 max-w-[14rem] sm:max-w-[18rem] md:max-w-none">
+            <BrandLogo alt="Nixon Lopez Services" sizes="48px" priority />
           </Link>
 
           <nav className="hidden lg:flex items-center gap-8">

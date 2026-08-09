@@ -96,7 +96,6 @@ export function AboutSection() {
                   src={HOME_IMAGES.about}
                   alt={a.imageAlt}
                   fill
-                  unoptimized
                   className="object-cover object-[center_18%]"
                   sizes="(max-width: 640px) 92vw, (max-width: 1024px) 420px, 560px"
                 />

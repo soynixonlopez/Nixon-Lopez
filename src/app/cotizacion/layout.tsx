@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { HOME_IMAGES } from '@/lib/marketing'
 import { SITE_URL } from '@/lib/site-config'
 
 /** Evita HTML estático en caché desalineado con el cliente (p. ej. tras cambios en Header). */
@@ -23,14 +24,22 @@ export const metadata: Metadata = {
       'Configura tu proyecto y recibe una inversión estimada con precio transparente.',
     url: `${SITE_URL}/cotizacion`,
     siteName: 'Nixon Lopez Services',
-    locale: 'es_ES',
+    locale: 'es_PA',
     type: 'website',
-    images: [{ url: '/images/logooficial.png', alt: 'Nixon López — logo' }],
+    images: [
+      {
+        url: HOME_IMAGES.og,
+        width: HOME_IMAGES.heroWidth,
+        height: HOME_IMAGES.heroHeight,
+        alt: 'Cotizador de proyectos — Nixon Lopez Services',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Cotizador de proyectos | Nixon Lopez Services',
     description: 'Configura tu proyecto y recibe un precio estimado transparente.',
+    images: [HOME_IMAGES.og],
   },
   robots: { index: true, follow: true },
 }
