@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { BlogTocItem } from '@/lib/blog-toc'
+import { blogSurface } from '@/components/blog/blog-ui'
 
 type Props = {
   items: BlogTocItem[]
@@ -14,14 +15,11 @@ export function BlogToc({ items, collapsible = false }: Props) {
   if (!items.length) return null
 
   return (
-    <nav
-      aria-label="En este artículo"
-      className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950"
-    >
+    <nav aria-label="En este artículo" className={`${blogSurface} p-5`}>
       {collapsible ? (
         <button
           type="button"
-          className="flex w-full items-center justify-between text-left text-xs font-semibold uppercase tracking-[0.12em] text-slate-500"
+          className="flex w-full items-center justify-between text-left text-xs font-bold uppercase tracking-[0.14em] text-brand"
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
         >
@@ -31,13 +29,13 @@ export function BlogToc({ items, collapsible = false }: Props) {
           </span>
         </button>
       ) : (
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+        <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand">
           En este artículo
         </p>
       )}
 
       {open ? (
-        <ol className="mt-3 space-y-2">
+        <ol className="mt-4 space-y-2.5">
           {items.map((item) => (
             <li key={item.id} className={item.level === 3 ? 'pl-3' : undefined}>
               <a

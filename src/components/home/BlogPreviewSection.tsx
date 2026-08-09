@@ -15,7 +15,7 @@ export async function BlogPreviewSection() {
   return (
     <section
       id="recursos"
-      className="relative isolate overflow-hidden bg-slate-50 py-16 sm:py-24 dark:bg-slate-900/40"
+      className="relative isolate overflow-hidden bg-[#F5F7FB] py-16 sm:py-24 dark:bg-slate-900/40"
     >
       <div
         className="pointer-events-none absolute inset-0 opacity-40 dark:opacity-20"

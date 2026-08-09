@@ -173,7 +173,7 @@ export function BlogContent({ html, className = '' }: Props) {
 
   return (
     <div
-      className={`blog-prose prose prose-slate max-w-none dark:prose-invert prose-p:text-[1.05rem] prose-p:leading-[1.8] prose-li:my-1.5 prose-li:leading-relaxed prose-blockquote:border-brand/40 prose-blockquote:text-slate-600 dark:prose-blockquote:text-slate-300 ${className}`}
+      className={`blog-prose prose prose-slate max-w-none dark:prose-invert prose-p:text-[1.05rem] prose-p:leading-[1.8] prose-li:my-1.5 prose-li:leading-relaxed prose-ul:marker:text-brand prose-ol:marker:text-brand prose-blockquote:border-brand/40 prose-blockquote:text-slate-600 dark:prose-blockquote:text-slate-300 ${className}`}
     >
       {parse(clean, options)}
     </div>

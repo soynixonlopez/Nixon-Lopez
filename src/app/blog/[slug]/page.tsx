@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
+import Link from 'next/link'
+import { ChevronLeft, Clock } from 'lucide-react'
 import { notFound, permanentRedirect } from 'next/navigation'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -12,6 +14,7 @@ import { BlogPrevNext } from '@/components/blog/BlogPrevNext'
 import { BlogRelatedPosts } from '@/components/blog/BlogRelatedPosts'
 import { BlogSidebar } from '@/components/blog/BlogSidebar'
 import { BlogToc } from '@/components/blog/BlogToc'
+import { blogChip, blogPageBg, blogSurface } from '@/components/blog/blog-ui'
 import {
   blogPostPath,
   formatBlogDate,
@@ -84,6 +87,10 @@ export default async function BlogPostPage({ params }: Props) {
   const related = getRelatedBlogPosts(post, allPosts, 3)
   const { previous, next } = getAdjacentBlogPosts(post, allPosts)
   const categories = getPublishedCategories(allPosts)
+  const categoryCounts = allPosts.reduce<Record<string, number>>((acc, item) => {
+    acc[item.category] = (acc[item.category] || 0) + 1
+    return acc
+  }, {})
   const { html: contentHtml, toc } = enrichBlogHeadings(post.content)
   const showToc = shouldShowToc(toc)
   const minutes = estimateReadingMinutes(post.content)
@@ -96,109 +103,129 @@ export default async function BlogPostPage({ params }: Props) {
     <>
       <BlogPostJsonLd post={post} />
       <Header />
-      <main className="min-h-screen bg-white pt-[calc(4.5rem+env(safe-area-inset-top,0px))] dark:bg-slate-950">
-        <div className="container-padding mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
-          <BlogBreadcrumbs
-            items={[
-              { label: 'Inicio', href: '/' },
-              { label: 'Blog', href: '/blog' },
-              { label: post.category, href: '/blog' },
-              { label: post.title },
-            ]}
-          />
-
-          <header className="mx-auto mt-8 max-w-[720px] lg:mx-0 lg:max-w-[720px]">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">
-              {post.category}
-            </p>
-            <h1 className="mt-3 text-[2rem] font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.65rem] lg:leading-[1.15] dark:text-white">
-              {post.title}
-            </h1>
-            {post.excerpt ? (
-              <p className="mt-5 text-lg leading-relaxed text-slate-600 dark:text-slate-400">
-                {post.excerpt}
-              </p>
-            ) : null}
-
-            <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
-              <span className="font-medium text-slate-700 dark:text-slate-300">
-                {post.author_name}
-              </span>
-              <span aria-hidden>·</span>
-              <time dateTime={post.published_at || post.created_at}>
-                Publicado {formatBlogDate(post.published_at || post.created_at)}
-              </time>
-              {showUpdated ? (
-                <>
-                  <span aria-hidden>·</span>
-                  <time dateTime={post.updated_at}>
-                    Actualizado {formatBlogDate(post.updated_at)}
-                  </time>
-                </>
-              ) : null}
-              <span aria-hidden>·</span>
-              <span>{formatReadingTime(minutes)}</span>
-            </div>
-          </header>
-
-          {post.featured_image_url ? (
-            <div className="relative mx-auto mt-8 aspect-[16/9] max-w-[720px] overflow-hidden rounded-2xl bg-slate-100 lg:mx-0 dark:bg-slate-900">
-              <Image
-                src={post.featured_image_url}
-                alt={post.featured_image_alt || post.title}
-                fill
-                priority
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 720px"
+      <main className={blogPageBg}>
+        <div className="container-padding mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+          {/* Hero editorial: texto + imagen */}
+          <section className="grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12">
+            <div>
+              <BlogBreadcrumbs
+                items={[
+                  { label: 'Inicio', href: '/' },
+                  { label: 'Recursos', href: '/blog' },
+                  { label: post.title },
+                ]}
               />
+
+              <p className={`${blogChip} mt-6`}>{post.category}</p>
+              <h1 className="mt-4 text-[2rem] font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.5rem] lg:leading-[1.15] dark:text-white">
+                {post.title}
+              </h1>
+              {post.excerpt ? (
+                <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg dark:text-slate-400">
+                  {post.excerpt}
+                </p>
+              ) : null}
+
+              <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-500">
+                <time dateTime={post.published_at || post.created_at}>
+                  {formatBlogDate(post.published_at || post.created_at)}
+                </time>
+                <span aria-hidden>·</span>
+                <span>por {post.author_name}</span>
+                <span aria-hidden>·</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" aria-hidden />
+                  {formatReadingTime(minutes)}
+                </span>
+                {showUpdated ? (
+                  <>
+                    <span aria-hidden>·</span>
+                    <time dateTime={post.updated_at}>
+                      Actualizado {formatBlogDate(post.updated_at)}
+                    </time>
+                  </>
+                ) : null}
+              </div>
+
+              <Link
+                href="/blog"
+                className="mt-7 inline-flex min-h-[42px] items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-brand/30 hover:text-brand dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+              >
+                <ChevronLeft className="h-4 w-4" aria-hidden />
+                Volver al centro de recursos
+              </Link>
             </div>
-          ) : null}
+
+            {post.featured_image_url ? (
+              <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] bg-slate-100 shadow-[0_16px_50px_rgba(15,23,42,0.12)] dark:bg-slate-900">
+                <Image
+                  src={post.featured_image_url}
+                  alt={post.featured_image_alt || post.title}
+                  fill
+                  priority
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 480px"
+                />
+              </div>
+            ) : null}
+          </section>
 
           {showToc ? (
-            <div className="mx-auto mt-8 max-w-[720px] lg:hidden">
+            <div className="mt-8 lg:hidden">
               <BlogToc items={toc} collapsible />
             </div>
           ) : null}
 
-          <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,720px)_300px] lg:items-start lg:justify-between lg:gap-12">
-            <article className="min-w-0 max-w-[720px]">
-              <BlogContent html={contentHtml} />
+          {/* Contenido + sidebar */}
+          <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start lg:gap-10">
+            <article className={`${blogSurface} px-5 py-8 sm:px-8 sm:py-10 lg:px-10`}>
+              <div className="mx-auto max-w-[680px]">
+                <BlogContent html={contentHtml} />
 
-              {post.tags.length > 0 ? (
-                <ul className="mt-10 flex flex-wrap gap-2">
-                  {post.tags.map((tag) => (
-                    <li
-                      key={tag}
-                      className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 dark:border-slate-700 dark:text-slate-300"
-                    >
-                      {tag}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
+                {post.tags.length > 0 ? (
+                  <div className="mt-12 border-t border-slate-100 pt-8 dark:border-slate-800">
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
+                      Etiquetas
+                    </p>
+                    <ul className="mt-3 flex flex-wrap gap-2">
+                      {post.tags.map((tag) => (
+                        <li
+                          key={tag}
+                          className="rounded-full bg-brand/10 px-3 py-1.5 text-xs font-semibold text-brand"
+                        >
+                          {tag}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
 
-              <div className="mt-12">
-                <BlogCtaBox
-                  secondaryHref="/proyectos"
-                  secondaryLabel="Ver proyectos"
-                />
+                <BlogRelatedPosts posts={related} />
+
+                <div className="mt-10">
+                  <BlogCtaBox
+                    secondaryHref="/proyectos"
+                    secondaryLabel="Ver proyectos"
+                  />
+                </div>
+
+                <div className="mt-8">
+                  <BlogAuthorCard name={post.author_name} />
+                </div>
+
+                <BlogPrevNext previous={previous} next={next} />
               </div>
-
-              <div className="mt-10">
-                <BlogAuthorCard name={post.author_name} />
-              </div>
-
-              <BlogPrevNext previous={previous} next={next} />
-              <BlogRelatedPosts posts={related} />
             </article>
 
             <div className="min-w-0">
               <BlogSidebar
+                mode="article"
                 recentPosts={allPosts}
                 categories={categories}
+                categoryCounts={categoryCounts}
+                totalCount={allPosts.length}
                 currentSlug={post.slug}
                 toc={showToc ? toc : undefined}
-                showSearch={false}
               />
             </div>
           </div>

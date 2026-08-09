@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { quoteUrl } from '@/lib/marketing'
+import { blogSurface } from '@/components/blog/blog-ui'
 
 type Props = {
   title?: string
@@ -15,23 +16,17 @@ export function BlogCtaBox({
   title = '¿Tienes un proyecto en mente?',
   description = 'Cuéntame qué quieres construir y te ayudo a definir la solución adecuada.',
   primaryHref = quoteUrl(),
-  primaryLabel = 'Solicitar cotización',
+  primaryLabel = 'Solicitar cotización →',
   secondaryHref,
   secondaryLabel,
   compact = false,
 }: Props) {
   return (
-    <aside
-      className={
-        compact
-          ? 'rounded-xl border border-brand/15 bg-gradient-to-br from-brand/[0.05] to-transparent p-5'
-          : 'rounded-2xl border border-brand/15 bg-gradient-to-br from-brand/[0.06] to-transparent px-6 py-8 sm:px-8'
-      }
-    >
+    <aside className={`${blogSurface} ${compact ? 'p-5' : 'px-6 py-8 sm:px-8'}`}>
       <p
         className={
           compact
-            ? 'text-base font-semibold text-slate-900 dark:text-white'
+            ? 'text-base font-bold text-slate-900 dark:text-white'
             : 'text-xl font-bold text-slate-900 dark:text-white'
         }
       >
@@ -47,7 +42,7 @@ export function BlogCtaBox({
       <div className={`mt-4 flex flex-wrap gap-3 ${compact ? '' : 'mt-5'}`}>
         <Link
           href={primaryHref}
-          className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-brand px-5 text-sm font-semibold text-white transition hover:bg-brand-light"
+          className="inline-flex min-h-[44px] w-full items-center justify-center rounded-xl bg-brand px-5 text-sm font-semibold text-white transition hover:bg-brand-light sm:w-auto"
         >
           {primaryLabel}
         </Link>

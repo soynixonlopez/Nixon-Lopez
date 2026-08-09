@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { blogPostPath, type BlogPostRow } from '@/lib/blog'
+import { blogSurface } from '@/components/blog/blog-ui'
 
 type Props = {
   previous: BlogPostRow | null
@@ -12,14 +13,14 @@ export function BlogPrevNext({ previous, next }: Props) {
   return (
     <nav
       aria-label="Navegación entre artículos"
-      className="mt-12 grid gap-4 border-t border-slate-200 pt-8 sm:grid-cols-2 dark:border-slate-800"
+      className="mt-10 grid gap-3 border-t border-slate-100 pt-8 sm:grid-cols-2 dark:border-slate-800"
     >
       {previous ? (
         <Link
           href={blogPostPath(previous.slug)}
-          className="group rounded-xl border border-slate-200 p-4 transition hover:border-brand/30 dark:border-slate-800"
+          className={`group ${blogSurface} p-4 transition hover:border-brand/25`}
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
             ← Artículo anterior
           </p>
           <p className="mt-2 text-sm font-semibold text-slate-900 group-hover:text-brand dark:text-white">
@@ -32,9 +33,9 @@ export function BlogPrevNext({ previous, next }: Props) {
       {next ? (
         <Link
           href={blogPostPath(next.slug)}
-          className="group rounded-xl border border-slate-200 p-4 text-right transition hover:border-brand/30 sm:justify-self-end dark:border-slate-800"
+          className={`group ${blogSurface} p-4 text-right transition hover:border-brand/25`}
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
             Artículo siguiente →
           </p>
           <p className="mt-2 text-sm font-semibold text-slate-900 group-hover:text-brand dark:text-white">
