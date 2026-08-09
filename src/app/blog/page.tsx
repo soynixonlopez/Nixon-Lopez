@@ -2,10 +2,10 @@ import type { Metadata } from 'next'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { BlogIndexClient } from '@/components/blog/BlogIndexClient'
+import { SectionLabel } from '@/components/marketing/SectionLabel'
 import { getPublishedBlogPosts } from '@/lib/blog'
 import { getPublishedCategories } from '@/lib/blog-related'
 import { buildPageMetadata } from '@/lib/seo'
-import { blogPageBg } from '@/components/blog/blog-ui'
 
 export const revalidate = 120
 
@@ -23,21 +23,31 @@ export default async function BlogIndexPage() {
   return (
     <>
       <Header />
-      <main className={blogPageBg}>
-        <section className="container-padding mx-auto max-w-6xl px-4 pb-6 pt-8 sm:px-6 sm:pt-10">
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand">Recursos</p>
-          <h1 className="mt-2 max-w-3xl text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
-            Ideas para hacer crecer tu presencia digital
-          </h1>
-          <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-600 dark:text-slate-400">
-            Consejos, estrategias y experiencias sobre desarrollo web, tecnología y negocios
-            digitales.
-          </p>
+      <main className="min-h-screen bg-white pt-[calc(4.5rem+env(safe-area-inset-top,0px))] dark:bg-slate-950">
+        <section className="relative isolate overflow-hidden">
+          <div
+            className="pointer-events-none absolute inset-0 opacity-40 dark:opacity-20"
+            style={{
+              backgroundImage: 'radial-gradient(circle, #94a3b8 1px, transparent 1px)',
+              backgroundSize: '18px 18px',
+            }}
+            aria-hidden
+          />
+          <div className="container-padding relative mx-auto max-w-6xl px-4 py-14 text-center sm:px-6 sm:py-20">
+            <SectionLabel>Recursos</SectionLabel>
+            <h1 className="mx-auto mt-2 max-w-3xl text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15] dark:text-white">
+              Ideas para hacer crecer tu presencia digital
+            </h1>
+            <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg dark:text-slate-400">
+              Consejos, estrategias y experiencias sobre desarrollo web, tecnología y negocios
+              digitales.
+            </p>
+          </div>
         </section>
 
-        <section className="container-padding mx-auto max-w-6xl px-4 pb-14 sm:px-6 sm:pb-20">
+        <section className="container-padding mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-24">
           {posts.length === 0 ? (
-            <p className="rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+            <p className="rounded-2xl border border-slate-200 bg-slate-50 px-6 py-10 text-center text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
               Pronto publicaremos los primeros artículos.
             </p>
           ) : (

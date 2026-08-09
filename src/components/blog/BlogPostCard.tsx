@@ -63,12 +63,10 @@ export function BlogPostCard({ post, compact = false, horizontal = false }: Prop
   }
 
   return (
-    <article
-      className={`group flex h-full flex-col overflow-hidden ${blogSurface} transition hover:shadow-[0_14px_44px_rgba(15,23,42,0.1)]`}
-    >
+    <article className="group flex h-full flex-col">
       <Link
         href={blogPostPath(post.slug)}
-        className="relative block aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-900"
+        className="relative block aspect-[16/10] overflow-hidden rounded-3xl bg-slate-100 shadow-[0_10px_30px_rgba(15,23,42,0.08)] dark:bg-slate-900"
       >
         {post.featured_image_url ? (
           <Image
@@ -76,11 +74,11 @@ export function BlogPostCard({ post, compact = false, horizontal = false }: Prop
             alt={post.featured_image_alt || post.title}
             fill
             className="object-cover transition duration-500 group-hover:scale-[1.03]"
-            sizes={compact ? '(max-width: 768px) 100vw, 33vw' : '(max-width: 768px) 100vw, 40vw'}
+            sizes={compact ? '(max-width: 768px) 100vw, 33vw' : '(max-width: 768px) 100vw, 33vw'}
           />
         ) : null}
       </Link>
-      <div className={`flex flex-1 flex-col ${compact ? 'p-4' : 'p-5 sm:p-6'}`}>
+      <div className={`flex flex-1 flex-col ${compact ? 'pt-4' : 'pt-5'}`}>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
           <time dateTime={post.published_at || post.created_at}>
             {formatBlogDate(post.published_at || post.created_at)}

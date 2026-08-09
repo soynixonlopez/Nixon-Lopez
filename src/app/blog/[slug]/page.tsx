@@ -12,7 +12,6 @@ import { BlogCtaBox } from '@/components/blog/BlogCtaBox'
 import { BlogPostJsonLd } from '@/components/blog/BlogPostJsonLd'
 import { BlogPrevNext } from '@/components/blog/BlogPrevNext'
 import { BlogRelatedPosts } from '@/components/blog/BlogRelatedPosts'
-import { BlogSidebar } from '@/components/blog/BlogSidebar'
 import { BlogToc } from '@/components/blog/BlogToc'
 import { blogChip, blogPageBg, blogSurface } from '@/components/blog/blog-ui'
 import {
@@ -22,11 +21,7 @@ import {
   getPublishedBlogPosts,
   isSameCalendarDay,
 } from '@/lib/blog'
-import {
-  getAdjacentBlogPosts,
-  getPublishedCategories,
-  getRelatedBlogPosts,
-} from '@/lib/blog-related'
+import { getAdjacentBlogPosts, getRelatedBlogPosts } from '@/lib/blog-related'
 import { estimateReadingMinutes, formatReadingTime } from '@/lib/blog-reading'
 import { enrichBlogHeadings, shouldShowToc } from '@/lib/blog-toc'
 import { buildPageMetadata, DEFAULT_OG_IMAGE } from '@/lib/seo'
@@ -86,11 +81,6 @@ export default async function BlogPostPage({ params }: Props) {
   const allPosts = await getPublishedBlogPosts()
   const related = getRelatedBlogPosts(post, allPosts, 3)
   const { previous, next } = getAdjacentBlogPosts(post, allPosts)
-  const categories = getPublishedCategories(allPosts)
-  const categoryCounts = allPosts.reduce<Record<string, number>>((acc, item) => {
-    acc[item.category] = (acc[item.category] || 0) + 1
-    return acc
-  }, {})
   const { html: contentHtml, toc } = enrichBlogHeadings(post.content)
   const showToc = shouldShowToc(toc)
   const minutes = estimateReadingMinutes(post.content)
@@ -99,15 +89,17 @@ export default async function BlogPostPage({ params }: Props) {
     Boolean(post.updated_at) &&
     !isSameCalendarDay(post.published_at, post.updated_at)
 
+  const recent = allPosts.filter((p) => p.slug !== post.slug).slice(0, 3)
+
   return (
     <>
       <BlogPostJsonLd post={post} />
       <Header />
       <main className={blogPageBg}>
-        <div className="container-padding mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-          {/* Hero editorial: texto + imagen */}
-          <section className="grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12">
-            <div>
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+          {/* Hero: texto + imagen, sin sangría rara */}
+          <section className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
+            <div className="min-w-0">
               <BlogBreadcrumbs
                 items={[
                   { label: 'Inicio', href: '/' },
@@ -116,8 +108,8 @@ export default async function BlogPostPage({ params }: Props) {
                 ]}
               />
 
-              <p className={`${blogChip} mt-6`}>{post.category}</p>
-              <h1 className="mt-4 text-[2rem] font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.5rem] lg:leading-[1.15] dark:text-white">
+              <p className={`${blogChip} mt-5`}>{post.category}</p>
+              <h1 className="mt-4 text-[1.85rem] font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.4rem] lg:leading-[1.15] dark:text-white">
                 {post.title}
               </h1>
               {post.excerpt ? (
@@ -149,7 +141,7 @@ export default async function BlogPostPage({ params }: Props) {
 
               <Link
                 href="/blog"
-                className="mt-7 inline-flex min-h-[42px] items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-brand/30 hover:text-brand dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                className="mt-6 inline-flex min-h-[42px] items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-brand/30 hover:text-brand dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
               >
                 <ChevronLeft className="h-4 w-4" aria-hidden />
                 Volver al centro de recursos
@@ -157,14 +149,14 @@ export default async function BlogPostPage({ params }: Props) {
             </div>
 
             {post.featured_image_url ? (
-              <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] bg-slate-100 shadow-[0_16px_50px_rgba(15,23,42,0.12)] dark:bg-slate-900">
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl bg-slate-100 shadow-[0_16px_50px_rgba(15,23,42,0.12)] dark:bg-slate-900">
                 <Image
                   src={post.featured_image_url}
                   alt={post.featured_image_alt || post.title}
                   fill
                   priority
                   className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 480px"
+                  sizes="(max-width: 1024px) 100vw, 560px"
                 />
               </div>
             ) : null}
@@ -176,58 +168,76 @@ export default async function BlogPostPage({ params }: Props) {
             </div>
           ) : null}
 
-          {/* Contenido + sidebar */}
-          <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start lg:gap-10">
-            <article className={`${blogSurface} px-5 py-8 sm:px-8 sm:py-10 lg:px-10`}>
-              <div className="mx-auto max-w-[680px]">
-                <BlogContent html={contentHtml} />
+          {/* Contenido + TOC: grid simétrico, sin max-width anidado */}
+          <div className="mt-10 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-8">
+            <article className={`${blogSurface} p-6 sm:p-8`}>
+              <BlogContent html={contentHtml} />
 
-                {post.tags.length > 0 ? (
-                  <div className="mt-12 border-t border-slate-100 pt-8 dark:border-slate-800">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
-                      Etiquetas
-                    </p>
-                    <ul className="mt-3 flex flex-wrap gap-2">
-                      {post.tags.map((tag) => (
-                        <li
-                          key={tag}
-                          className="rounded-full bg-brand/10 px-3 py-1.5 text-xs font-semibold text-brand"
-                        >
-                          {tag}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-
-                <BlogRelatedPosts posts={related} />
-
-                <div className="mt-10">
-                  <BlogCtaBox
-                    secondaryHref="/proyectos"
-                    secondaryLabel="Ver proyectos"
-                  />
+              {post.tags.length > 0 ? (
+                <div className="mt-10 border-t border-slate-100 pt-8 dark:border-slate-800">
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
+                    Etiquetas
+                  </p>
+                  <ul className="mt-3 flex flex-wrap gap-2">
+                    {post.tags.map((tag) => (
+                      <li
+                        key={tag}
+                        className="rounded-full bg-brand/10 px-3 py-1.5 text-xs font-semibold text-brand"
+                      >
+                        {tag}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
+              ) : null}
 
-                <div className="mt-8">
-                  <BlogAuthorCard name={post.author_name} />
-                </div>
+              <BlogRelatedPosts posts={related} />
 
-                <BlogPrevNext previous={previous} next={next} />
+              <div className="mt-10">
+                <BlogCtaBox secondaryHref="/proyectos" secondaryLabel="Ver proyectos" />
               </div>
+
+              <div className="mt-8">
+                <BlogAuthorCard name={post.author_name} />
+              </div>
+
+              <BlogPrevNext previous={previous} next={next} />
             </article>
 
-            <div className="min-w-0">
-              <BlogSidebar
-                mode="article"
-                recentPosts={allPosts}
-                categories={categories}
-                categoryCounts={categoryCounts}
-                totalCount={allPosts.length}
-                currentSlug={post.slug}
-                toc={showToc ? toc : undefined}
+            <aside className="hidden min-w-0 space-y-5 lg:sticky lg:top-24 lg:block lg:self-start">
+              {showToc ? <BlogToc items={toc} /> : null}
+
+              {recent.length > 0 ? (
+                <div className={`${blogSurface} p-5`}>
+                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand">
+                    Lecturas destacadas
+                  </p>
+                  <ul className="mt-4 divide-y divide-slate-100 dark:divide-slate-800">
+                    {recent.map((item) => (
+                      <li key={item.id} className="py-3 first:pt-0 last:pb-0">
+                        <Link
+                          href={blogPostPath(item.slug)}
+                          className="block text-sm font-semibold leading-snug text-slate-800 transition hover:text-brand dark:text-slate-100"
+                        >
+                          {item.title}
+                        </Link>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {estimateReadingMinutes(item.content || item.excerpt)} min ·{' '}
+                          {formatBlogDate(item.published_at || item.created_at)}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              <BlogCtaBox
+                compact
+                title="¿Tienes un proyecto?"
+                description="Cuéntame qué quieres construir."
+                primaryLabel="Solicitar cotización →"
               />
-            </div>
+            </aside>
           </div>
         </div>
       </main>

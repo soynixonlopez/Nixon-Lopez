@@ -87,8 +87,8 @@ export function BlogContent({ html, className = '' }: Props) {
         hasClass(domNode.attribs, 'blog-callout')
       ) {
         return (
-          <aside className="my-8 rounded-xl border border-brand/20 bg-gradient-to-br from-brand/[0.06] to-transparent px-5 py-5 sm:px-6">
-            <div className="blog-callout-inner text-[0.95rem] leading-relaxed text-slate-700 dark:text-slate-300 [&_p]:my-2 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0 [&_strong]:font-semibold [&_strong]:text-slate-900 dark:[&_strong]:text-white">
+          <aside className="my-8 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5 dark:border-slate-700 dark:bg-slate-900/60">
+            <div className="text-[0.95rem] leading-relaxed text-slate-700 dark:text-slate-300 [&_p]:my-2 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0 [&_strong]:font-semibold [&_strong]:text-slate-900 dark:[&_strong]:text-white">
               {domToReact(domNode.children as DOMNode[], options)}
             </div>
           </aside>
