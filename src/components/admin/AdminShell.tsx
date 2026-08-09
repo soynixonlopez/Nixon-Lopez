@@ -16,6 +16,7 @@ import {
   GraduationCap,
   Home,
   Images,
+  Newspaper,
   PanelsTopLeft,
   ScrollText,
 } from 'lucide-react'
@@ -42,6 +43,7 @@ const navSections = [
     items: [
       { href: '/admin/landings', label: 'Landings', icon: PanelsTopLeft },
       { href: '/admin/portafolio', label: 'Portafolio web', icon: Images },
+      { href: '/admin/blog', label: 'Blog', icon: Newspaper },
       { href: '/admin/masterclass', label: 'Masterclass', icon: GraduationCap },
     ],
   },

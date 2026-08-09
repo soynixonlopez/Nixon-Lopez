@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { getPublishedBlogPostsForSitemap } from '@/lib/blog'
 import { getPublishedLandingsForSitemap } from '@/lib/landing-pages'
 import { SITE_URL } from '@/lib/site-config'
 
@@ -24,6 +25,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.9,
+    },
+    {
+      url: `${base}/blog`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.88,
     },
     {
       url: `${base}/bootcamp`,
@@ -59,5 +66,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
-  return [...staticEntries, ...landingEntries]
+  const blogPosts = await getPublishedBlogPostsForSitemap()
+  const blogEntries: MetadataRoute.Sitemap = blogPosts.map((post) => ({
+    url: `${base}/blog/${post.slug}`,
+    lastModified: new Date(post.lastModified),
+    changeFrequency: 'monthly',
+    priority: 0.75,
+  }))
+
+  return [...staticEntries, ...landingEntries, ...blogEntries]
 }

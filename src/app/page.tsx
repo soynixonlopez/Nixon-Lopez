@@ -9,6 +9,7 @@ import { HeroSection } from '@/components/home/HeroSection'
 import { ProblemSection } from '@/components/home/ProblemSection'
 import { QuoteBannerSection } from '@/components/home/QuoteBannerSection'
 import { HomeFaqJsonLd } from '@/components/seo/HomeFaqJsonLd'
+import { BlogPreviewSection } from '@/components/home/BlogPreviewSection'
 import { buildPageMetadata } from '@/lib/seo'
 import { getHomePortfolioProjects } from '@/lib/portfolio'
 
@@ -71,6 +72,7 @@ export default async function Home() {
         <TestimonialsSection />
         <AiSection />
         <AboutSection />
+        <BlogPreviewSection />
         <FaqSection />
         <FinalCtaSection />
       </main>
