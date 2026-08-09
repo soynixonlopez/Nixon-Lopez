@@ -9,13 +9,26 @@ export async function BlogPreviewSection() {
   if (!posts.length) return null
 
   return (
-    <section className="relative bg-white py-16 sm:py-24 dark:bg-slate-950">
-      <div className="container-padding mx-auto max-w-6xl px-4 sm:px-6">
+    <section
+      id="recursos"
+      className="relative isolate overflow-hidden bg-slate-50 py-16 sm:py-24 dark:bg-slate-900/40"
+    >
+      <div
+        className="pointer-events-none absolute inset-0 opacity-40 dark:opacity-20"
+        style={{
+          backgroundImage: 'radial-gradient(circle, #94a3b8 1px, transparent 1px)',
+          backgroundSize: '18px 18px',
+        }}
+        aria-hidden
+      />
+
+      <div className="container-padding relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
-          <SectionLabel>Blog</SectionLabel>
-          <SectionTitle>Últimos artículos</SectionTitle>
+          <SectionLabel>Recursos</SectionLabel>
+          <SectionTitle>Ideas para hacer crecer tu presencia digital</SectionTitle>
           <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
-            Ideas prácticas sobre desarrollo web, SEO y crecimiento digital.
+            Consejos, estrategias y experiencias sobre desarrollo web, tecnología y negocios
+            digitales.
           </p>
         </div>
 
@@ -28,7 +41,7 @@ export async function BlogPreviewSection() {
         <div className="mt-10 text-center">
           <Link
             href="/blog"
-            className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-800 transition hover:border-brand/30 hover:text-brand dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-brand px-6 text-sm font-semibold text-white transition hover:bg-brand-light"
           >
             Ver todos los artículos
           </Link>

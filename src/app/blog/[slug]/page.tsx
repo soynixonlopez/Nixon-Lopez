@@ -151,10 +151,11 @@ export default async function BlogPostPage({ params }: Props) {
 
           <aside className="mt-14 rounded-2xl border border-brand/15 bg-gradient-to-br from-brand/[0.06] to-transparent px-6 py-8 sm:px-8">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-              ¿Necesitas una página web para tu negocio?
+              ¿Tienes un proyecto en mente?
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-              Cotiza en minutos y recibe una propuesta clara, sin compromiso.
+              Cuéntame qué quieres construir y te ayudo a definir la solución adecuada para tu
+              negocio.
             </p>
             <Link
               href={quoteUrl()}

@@ -83,7 +83,7 @@ export function BlogContent({ html, className = '' }: Props) {
 
   return (
     <div
-      className={`blog-prose prose prose-slate max-w-none dark:prose-invert prose-headings:scroll-mt-28 prose-headings:font-semibold prose-h2:mt-10 prose-h2:text-2xl prose-h3:mt-8 prose-h3:text-xl prose-p:leading-relaxed prose-li:my-1 prose-blockquote:border-brand/40 prose-blockquote:text-slate-600 dark:prose-blockquote:text-slate-300 ${className}`}
+      className={`blog-prose prose prose-slate max-w-none dark:prose-invert prose-headings:scroll-mt-28 prose-headings:font-semibold prose-h2:mt-10 prose-h2:text-2xl prose-h3:mt-8 prose-h3:text-xl prose-p:leading-relaxed prose-li:my-1 prose-blockquote:border-brand/40 prose-blockquote:text-slate-600 dark:prose-blockquote:text-slate-300 prose-table:text-sm prose-th:bg-slate-50 prose-th:px-3 prose-th:py-2 prose-td:px-3 prose-td:py-2 dark:prose-th:bg-slate-900 ${className}`}
     >
       {parse(clean, options)}
     </div>

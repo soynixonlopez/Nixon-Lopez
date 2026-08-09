@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import {
@@ -20,6 +19,7 @@ import {
   PanelsTopLeft,
   ScrollText,
 } from 'lucide-react'
+import { BrandLogo } from '@/components/BrandLogo'
 import { createClient } from '@/lib/supabase/client'
 import { adminUi } from '@/lib/admin-ui'
 import { clsx } from 'clsx'
@@ -80,57 +80,55 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     window.location.href = '/admin/login'
   }
 
+  const sidebarWidth = collapsed ? 'lg:w-[72px]' : 'lg:w-64'
+  const contentOffset = collapsed ? 'lg:pl-[72px]' : 'lg:pl-64'
+
   return (
     <div
       className={clsx(
-        'admin-theme flex min-h-screen print:block print:min-h-0 print:h-auto print:overflow-visible print:bg-white',
+        'admin-theme min-h-screen print:block print:min-h-0 print:h-auto print:overflow-visible print:bg-white',
         adminUi.shellBg,
         'text-slate-900'
       )}
     >
       <aside
         className={clsx(
-          'fixed inset-y-0 left-0 z-40 flex flex-col',
+          'fixed inset-y-0 left-0 z-40 flex h-dvh max-h-dvh w-64 max-w-[min(100vw-1rem,16rem)] flex-col',
           adminUi.sidebar,
           'transition-[width,transform] duration-300 ease-out print:hidden',
-          'w-64 max-w-[min(100vw-1rem,16rem)]',
-          collapsed ? 'lg:w-[72px]' : 'lg:w-64',
+          sidebarWidth,
           open ? 'translate-x-0' : '-translate-x-full',
-          'lg:static lg:max-w-none lg:flex-shrink-0 lg:translate-x-0'
+          'lg:translate-x-0'
         )}
       >
         <div
           className={clsx(
-            'flex min-h-[3.5rem] items-center justify-between gap-2 p-3',
+            'flex min-h-[3.75rem] shrink-0 items-center justify-between gap-2 px-3 py-2.5',
             adminUi.sidebarHeader
           )}
         >
           <Link
             href="/admin/cotizaciones"
-            className="flex min-w-0 flex-1 items-center gap-2 font-bold"
+            className={clsx(
+              'flex min-w-0 flex-1 items-center',
+              collapsed && 'lg:justify-center'
+            )}
             onClick={() => setOpen(false)}
             title="Cotizaciones"
             aria-label="Nixon Lopez Services — administración"
           >
-            {collapsed ? (
-              <Image
-                src="/images/faviconweb.png"
-                alt=""
-                width={32}
-                height={32}
-                className="h-8 w-8 shrink-0 rounded object-contain"
-                aria-hidden
-              />
-            ) : (
-              <Image
-                src="/images/logoweb.png"
-                alt="Nixon López — logo"
-                width={1306}
-                height={199}
-                className="h-6 w-auto max-w-[min(100%,9rem)] object-contain object-left"
-                priority
-              />
-            )}
+            <BrandLogo
+              alt="Nixon Lopez Services"
+              sizes="40px"
+              priority
+              markOnly={collapsed}
+              className={clsx(
+                'gap-2 [&_img]:h-8 [&_img]:w-8 [&_img]:sm:h-8 [&_img]:sm:w-8',
+                collapsed
+                  ? 'lg:gap-0'
+                  : '[&_span:not(.sr-only)]:text-[0.95rem] [&_span:not(.sr-only)]:sm:text-[1rem]'
+              )}
+            />
           </Link>
           <div className="flex shrink-0 items-center gap-0.5">
             <button
@@ -158,7 +156,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <nav className="flex-1 space-y-5 overflow-x-hidden overflow-y-auto p-2 sm:p-3">
+        <nav className="min-h-0 flex-1 space-y-5 overflow-x-hidden overflow-y-auto overscroll-contain p-2 sm:p-3">
           {navSections.map((section) => (
             <div key={section.id}>
               <p
@@ -198,7 +196,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
 
-        <div className={clsx('p-2 sm:p-3', adminUi.sidebarHeader, 'border-b-0 border-t')}>
+        <div className={clsx('shrink-0 p-2 sm:p-3', adminUi.sidebarHeader, 'border-b-0 border-t')}>
           <button
             type="button"
             onClick={logout}
@@ -238,7 +236,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      <div className="relative flex min-w-0 flex-1 flex-col print:block print:h-auto print:min-h-0 print:overflow-visible">
+      <div
+        className={clsx(
+          'relative flex min-h-screen min-w-0 flex-col transition-[padding] duration-300 ease-out print:block print:h-auto print:min-h-0 print:overflow-visible print:pl-0',
+          contentOffset
+        )}
+      >
         <header
           className={clsx(
             'sticky top-0 z-20 flex items-center gap-3 px-4 py-3 lg:hidden print:hidden',
@@ -253,10 +256,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           >
             <Menu className="h-6 w-6 text-brand" />
           </button>
-          <span className="font-semibold text-brand">Admin Nixon López</span>
+          <BrandLogo
+            alt="Nixon Lopez Services"
+            sizes="32px"
+            className="gap-2 [&_img]:h-7 [&_img]:w-7 [&_img]:sm:h-7 [&_img]:sm:w-7 [&_span:not(.sr-only)]:text-[0.9rem]"
+          />
         </header>
 
-        <main className="relative z-10 flex-1 w-full min-w-0 overflow-x-hidden overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-6 md:p-8 print:block print:h-auto print:max-h-none print:flex-none print:overflow-visible print:bg-white print:p-0">
+        <main className="relative z-10 w-full min-w-0 flex-1 overflow-x-hidden p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-6 md:p-8 print:block print:h-auto print:max-h-none print:flex-none print:overflow-visible print:bg-white print:p-0">
           {children}
         </main>
       </div>

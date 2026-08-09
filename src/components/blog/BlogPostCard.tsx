@@ -38,7 +38,7 @@ export function BlogPostCard({ post }: Props) {
             href={blogPostPath(post.slug)}
             className="font-semibold text-brand hover:underline"
           >
-            Leer artículo
+            Leer artículo →
           </Link>
         </div>
       </div>
