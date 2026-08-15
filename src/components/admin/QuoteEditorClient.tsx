@@ -8,6 +8,7 @@ import {
   buildConfiguratorPayload,
   configuratorTotals,
   emptyConfiguratorState,
+  isSocialMediaProjectType,
   parseClientExtraFromPayload,
   parseConfiguratorFromPayload,
   parsePriceOverride,
@@ -98,10 +99,12 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
     [config, overrideValue]
   )
 
-  const canSave =
-    Boolean(config.projectType) &&
-    (config.hasDomain === 'si' || config.hasDomain === 'no') &&
-    (config.hasHosting === 'si' || config.hasHosting === 'no')
+  const canSave = Boolean(config.projectType) && (
+    isSocialMediaProjectType(config.projectType) ||
+    String(config.projectType || '').startsWith('redes-') ||
+    ((config.hasDomain === 'si' || config.hasDomain === 'no') &&
+      (config.hasHosting === 'si' || config.hasHosting === 'no'))
+  )
 
   async function save() {
     if (!canSave || !config.projectType) return

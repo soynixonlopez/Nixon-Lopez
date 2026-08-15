@@ -2,9 +2,13 @@ import { INVOICE_BRANDING } from '@/lib/invoice-branding'
 import {
   FEATURES,
   PROJECT_TYPES,
+  SOCIAL_MEDIA_ADDITIONAL_SERVICES,
+  SOCIAL_MEDIA_GENERAL_INCLUDES,
   getBusinessLabel,
   getFeature,
   getProjectType,
+  isSocialMediaProjectType,
+  isWebProjectType,
   type BusinessId,
   type ConfiguratorState,
   type FeatureId,
@@ -87,6 +91,7 @@ function titled(index: number, label: string) {
 
 export function inferServiceType(serviceLabel: string) {
   const s = serviceLabel.toLowerCase()
+  if (s.includes('redes') || s.includes('social')) return 'redes'
   if (s.includes('app')) return 'app'
   if (s.includes('ia') || s.includes('automat')) return 'automation'
   if (s.includes('ads') || s.includes('publicidad')) return 'ads'
@@ -99,6 +104,15 @@ export function inferServiceType(serviceLabel: string) {
 
 export function getContractTemplate(serviceLabel: string): ContractTemplate {
   const type = inferServiceType(serviceLabel)
+  if (type === 'redes') {
+    return {
+      objectText:
+        'EL PRESTADOR se compromete a prestar el servicio de manejo profesional de redes sociales (Instagram y Facebook), incluyendo estrategia, diseño, copywriting y programación de contenido, de acuerdo con el plan contratado.',
+      includes: [...SOCIAL_MEDIA_GENERAL_INCLUDES],
+      excludes: [...SOCIAL_MEDIA_ADDITIONAL_SERVICES],
+      timeline: 'Según el plan contratado (arranque entre 2 y 10 días)',
+    }
+  }
   if (type === 'landing') {
     return {
       objectText:
@@ -188,10 +202,7 @@ function parseConfiguratorFromTerms(terms: Record<string, unknown> | null): Part
   if (!nested) return null
   const serviceId = typeof nested.serviceId === 'string' ? nested.serviceId : null
   const projectType =
-    serviceId === 'landing' ||
-    serviceId === 'profesional' ||
-    serviceId === 'tienda' ||
-    serviceId === 'sistema'
+    serviceId && (isWebProjectType(serviceId) || isSocialMediaProjectType(serviceId))
       ? (serviceId as ProjectTypeId)
       : null
   return {
@@ -222,6 +233,9 @@ function projectObjectNarrative(
   serviceLabel: string
 ) {
   const business = businessLabel ? ` orientada al sector ${businessLabel}` : ''
+  if (isSocialMediaProjectType(projectType)) {
+    return `EL PRESTADOR se compromete a prestar a EL CLIENTE el servicio de manejo profesional de redes sociales${business}, correspondiente al plan “${serviceLabel}”, incluyendo estrategia, diseño, copywriting y programación de contenido en las plataformas acordadas, de conformidad con el alcance del presente contrato.`
+  }
   if (projectType === 'landing') {
     return `EL PRESTADOR se compromete a desarrollar para EL CLIENTE una Landing Page profesional, moderna, responsive y optimizada${business}, destinada a comunicar la oferta y convertir visitas en contactos o ventas, de acuerdo con el alcance establecido en el presente contrato.`
   }
@@ -287,18 +301,196 @@ export function buildContractIntroSegments(contract: ServiceContractRecord): Con
   return segs
 }
 
+function buildSocialMediaContractClauses(
+  contract: ServiceContractRecord,
+  projectType: ProjectTypeId | null
+): BuiltContractClauses {
+  const project = getProjectType(projectType) ?? getProjectType(
+    isSocialMediaProjectType(contract.service_type) ? contract.service_type : null
+  )
+  const terms = contract.terms_payload
+  const configurator = parseConfiguratorFromTerms(terms)
+  const businessId = (configurator?.business as BusinessId | null | undefined) ?? null
+  const businessLabel = getBusinessLabel(businessId)
+  const amount = Number(contract.total_amount || 0)
+  const amountTxt = money(amount)
+  const planLabel = project?.label || contract.service_label || 'Plan de manejo de redes'
+  const delivery = project?.delivery ?? 'Según plan contratado'
+  const includes = project?.includes?.length
+    ? [...project.includes]
+    : [...SOCIAL_MEDIA_GENERAL_INCLUDES]
+  const excludes = [
+    ...SOCIAL_MEDIA_ADDITIONAL_SERVICES,
+    'Presupuesto publicitario (inversión en anuncios)',
+    'Garantía de cantidad de seguidores, ventas, leads o resultados comerciales específicos',
+    'Sesiones de producción audiovisual no contratadas expresamente',
+    'Community management 24/7 salvo contratación adicional',
+  ]
+
+  const introSegments = buildContractIntroSegments(contract)
+  const intro = introSegments.map((s) => s.value).join('')
+  const serviceSubtitle = planLabel.toUpperCase()
+  const blocks: ContractClauseBlock[] = []
+  let i = 0
+
+  blocks.push({
+    title: titled(i++, 'OBJETO DEL CONTRATO'),
+    paragraphs: [
+      projectObjectNarrative(projectType ?? project?.id ?? null, businessLabel, planLabel),
+      'El servicio consiste en el manejo profesional de redes sociales (principalmente Instagram y Facebook), con enfoque en presencia de marca, contenido y comunicación constante con EL CLIENTE.',
+    ],
+  })
+
+  blocks.push({
+    title: titled(i++, 'PLAN CONTRATADO Y ALCANCE'),
+    paragraphs: [
+      `El plan contratado corresponde a: ${planLabel}.`,
+      project?.description ||
+        'Manejo mensual de redes sociales según el volumen y entregables del plan.',
+      'El alcance del plan incluye:',
+    ],
+    bullets: includes,
+  })
+
+  blocks.push({
+    title: titled(i++, 'SERVICIOS BASE INCLUIDOS'),
+    paragraphs: [
+      'Independientemente del plan, el servicio contempla como base operativa:',
+    ],
+    bullets: [...SOCIAL_MEDIA_GENERAL_INCLUDES],
+  })
+
+  blocks.push({
+    title: titled(i++, 'PLATAFORMAS Y ENTREGABLES'),
+    paragraphs: [
+      'Salvo pacto distinto, las plataformas principales serán Instagram y Facebook.',
+      `El tiempo estimado de arranque / primera entrega del mes es de ${delivery}, contado a partir del pago del periodo y de la recepción de accesos, identidad visual e información necesaria.`,
+      'EL CLIENTE deberá facilitar accesos de administrador a las cuentas, guías de marca, referencias y materiales requeridos para producir el contenido.',
+    ],
+  })
+
+  blocks.push({
+    title: titled(i++, 'OBLIGACIONES DEL CLIENTE'),
+    paragraphs: [
+      'EL CLIENTE será responsable de la veracidad, legalidad y autorización de uso de logotipos, fotografías, videos y textos que suministre.',
+      'Los retrasos en entregas de información, aprobaciones o accesos podrán afectar el calendario de publicaciones del mes correspondiente.',
+      'EL CLIENTE deberá revisar y aprobar el calendario o piezas cuando se solicite, en plazos razonables.',
+    ],
+  })
+
+  blocks.push({
+    title: titled(i++, 'COSTO MENSUAL Y FORMA DE PAGO'),
+    paragraphs: [
+      `El valor del servicio es de ${amountTxt} mensuales.`,
+      'El pago corresponde a un periodo mensual anticipado. El servicio del mes no se inicia o continúa sin el pago correspondiente, salvo acuerdo escrito distinto.',
+    ],
+    subsections: [
+      {
+        heading: 'Forma de pago',
+        bullets: [
+          `Pago mensual anticipado: ${amountTxt}`,
+          'Renovación mes a mes mientras no se notifique la cancelación',
+          'El primer mes inicia al confirmar el pago y los accesos necesarios',
+        ],
+      },
+      {
+        heading: 'Métodos de pago',
+        bullets: ['Transferencia bancaria / ACH', 'Yappy', 'Otro método previamente acordado'],
+      },
+    ],
+  })
+
+  blocks.push({
+    title: titled(i++, 'DURACIÓN Y CANCELACIÓN'),
+    paragraphs: [
+      'El contrato se renueva de forma mensual de manera automática mientras EL CLIENTE continúe pagando el servicio.',
+      'Cualquiera de las partes podrá dar por terminado el servicio con aviso escrito con al menos 7 días de anticipación al cierre del periodo mensual en curso.',
+      'Los pagos ya realizados por periodos iniciados no son reembolsables, salvo pacto distinto.',
+    ],
+  })
+
+  blocks.push({
+    title: titled(i++, 'SERVICIOS NO INCLUIDOS'),
+    paragraphs: [
+      'Quedan fuera del alcance del plan, salvo contratación expresa adicional:',
+    ],
+    bullets: excludes,
+  })
+
+  blocks.push({
+    title: titled(i++, 'RESULTADOS Y LIMITACIONES'),
+    paragraphs: [
+      'EL PRESTADOR se compromete a ejecutar el alcance contratado con diligencia profesional.',
+      'EL PRESTADOR no garantiza métricas específicas de crecimiento, ventas, leads ni posiciones, ya que dependen de factores externos (mercado, presupuesto publicitario, producto, competencia, etc.).',
+    ],
+  })
+
+  blocks.push({
+    title: titled(i++, 'PROPIEDAD DEL CONTENIDO'),
+    paragraphs: [
+      'El contenido gráfico y copy creado específicamente para EL CLIENTE bajo este contrato podrá ser usado por EL CLIENTE en sus redes.',
+      'EL PRESTADOR podrá incluir el trabajo en su portafolio profesional, salvo acuerdo de confidencialidad distinto.',
+    ],
+  })
+
+  blocks.push({
+    title: titled(i++, 'LEGISLACIÓN APLICABLE'),
+    paragraphs: [
+      'El presente contrato se rige por las leyes de la República de Panamá. Cualquier disputa será resuelta ante los tribunales competentes de Panamá.',
+    ],
+  })
+
+  blocks.push({
+    title: titled(i++, 'ACEPTACIÓN DEL CONTRATO'),
+    paragraphs: [
+      'Ambas partes manifiestan haber leído, comprendido y aceptado los términos establecidos en el presente contrato.',
+      'Cualquier modificación de plan, volumen o servicios adicionales deberá acordarse por escrito antes de ejecutarse.',
+    ],
+  })
+
+  if (contract.custom_notes?.trim()) {
+    blocks.push({
+      title: 'OBSERVACIONES ADICIONALES',
+      paragraphs: [contract.custom_notes.trim()],
+    })
+  }
+
+  return {
+    intro,
+    introSegments,
+    serviceSubtitle,
+    blocks,
+    primera: blocks[0]?.paragraphs?.[0] ?? '',
+    segundaIncluye: includes,
+    segundaNoIncluye: excludes,
+    tercera: [
+      `El valor mensual del servicio será de ${amountTxt}.`,
+      'Forma de pago: pago mensual anticipado.',
+      'Renovación mes a mes mientras no se notifique la cancelación.',
+      'Métodos de pago: Transferencia/ACH, Yappy u otro método previamente acordado.',
+    ],
+    cuarta: [
+      'Plataformas principales: Instagram y Facebook.',
+      'EL CLIENTE suministra accesos e identidad de marca.',
+      'Servicios adicionales (ads, sesiones, reels) cotizan aparte.',
+    ],
+    quinta: `El arranque estimado es de ${delivery}, contado a partir del pago del periodo y de la entrega de accesos/materiales por EL CLIENTE.`,
+  }
+}
+
 export function buildContractClauses(contract: ServiceContractRecord): BuiltContractClauses {
   const terms = contract.terms_payload
   const selectedServices = extractQuoteServiceSnapshots(terms)
   const configurator = parseConfiguratorFromTerms(terms)
   const projectType =
     (configurator?.projectType as ProjectTypeId | null | undefined) ??
-    (contract.service_type === 'landing' ||
-    contract.service_type === 'profesional' ||
-    contract.service_type === 'tienda' ||
-    contract.service_type === 'sistema'
+    (isWebProjectType(contract.service_type) || isSocialMediaProjectType(contract.service_type)
       ? (contract.service_type as ProjectTypeId)
       : null)
+
+  if (isSocialMediaProjectType(projectType) || inferServiceType(contract.service_label) === 'redes') {
+    return buildSocialMediaContractClauses(contract, projectType)
+  }
 
   const project = getProjectType(projectType)
   const businessId = (configurator?.business as BusinessId | null | undefined) ?? null

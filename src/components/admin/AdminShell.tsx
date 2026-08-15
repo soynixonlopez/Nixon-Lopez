@@ -118,16 +118,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             aria-label="Nixon Lopez Services — administración"
           >
             <BrandLogo
+              variant="official"
               alt="Nixon Lopez Services"
-              sizes="40px"
+              sizes="200px"
               priority
               markOnly={collapsed}
-              className={clsx(
-                'gap-2 [&_img]:h-8 [&_img]:w-8 [&_img]:sm:h-8 [&_img]:sm:w-8',
-                collapsed
-                  ? 'lg:gap-0'
-                  : '[&_span:not(.sr-only)]:text-[0.95rem] [&_span:not(.sr-only)]:sm:text-[1rem]'
-              )}
+              className={clsx(collapsed ? 'lg:justify-center' : '')}
             />
           </Link>
           <div className="flex shrink-0 items-center gap-0.5">
@@ -257,9 +253,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <Menu className="h-6 w-6 text-brand" />
           </button>
           <BrandLogo
+            variant="official"
             alt="Nixon Lopez Services"
-            sizes="32px"
-            className="gap-2 [&_img]:h-7 [&_img]:w-7 [&_img]:sm:h-7 [&_img]:sm:w-7 [&_span:not(.sr-only)]:text-[0.9rem]"
+            sizes="160px"
+            className="max-w-[160px]"
           />
         </header>
 

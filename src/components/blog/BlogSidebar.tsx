@@ -46,7 +46,7 @@ export function BlogSidebar({
   }
 
   return (
-    <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
+    <aside className="space-y-5 lg:sticky lg:top-24 lg:z-10 lg:self-start">
       {mode === 'index' ? (
         <div className={`${blogSurface} p-5`}>
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand">

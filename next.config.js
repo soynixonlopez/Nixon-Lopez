@@ -19,13 +19,13 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       // Next inyecta scripts inline; Meta Pixel requiere connect.facebook.net
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net",
-      "style-src 'self' 'unsafe-inline'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net https://translate.google.com https://translate.googleapis.com",
+      "style-src 'self' 'unsafe-inline' https://translate.googleapis.com https://www.gstatic.com",
       // https: permite pixel/CDN; remotePatterns de next/image sigue acotado
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.facebook.com https://connect.facebook.net https://res.cloudinary.com https://image.thum.io",
-      "frame-src 'self' https://www.facebook.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.facebook.com https://connect.facebook.net https://res.cloudinary.com https://image.thum.io https://translate.googleapis.com https://translate.google.com",
+      "frame-src 'self' https://www.facebook.com https://translate.google.com",
       "worker-src 'self' blob:",
       "media-src 'self'",
       "object-src 'none'",

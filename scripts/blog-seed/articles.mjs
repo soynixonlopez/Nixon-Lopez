@@ -139,12 +139,12 @@ ${img(workspaceInline, 'Escritorio de trabajo con laptop y notas para planificar
 <h2>¿Qué debería incluir una página web profesional?</h2>
 <p>Más allá del precio, una web útil para un negocio suele incluir:</p>
 <ul>
-<li>☐ Mensaje claro de a quién ayudas y qué ofreces</li>
-<li>☐ Diseño responsive (celular primero)</li>
-<li>☐ Contacto fácil: WhatsApp, formulario o ambos</li>
-<li>☐ Prueba de confianza: proceso, proyectos o explicación concreta</li>
-<li>☐ Base SEO técnica: títulos, headings, estructura limpia</li>
-<li>☐ Entrega ordenada: accesos, dominio y siguientes pasos</li>
+<li>Mensaje claro de a quién ayudas y qué ofreces</li>
+<li>Diseño responsive (celular primero)</li>
+<li>Contacto fácil: WhatsApp, formulario o ambos</li>
+<li>Prueba de confianza: proceso, proyectos o explicación concreta</li>
+<li>Base SEO técnica: títulos, headings, estructura limpia</li>
+<li>Entrega ordenada: accesos, dominio y siguientes pasos</li>
 </ul>
 <p>Si quieres ver enfoques reales, revisa <a href="/proyectos">proyectos</a>.</p>
 
@@ -299,16 +299,16 @@ ${img(checklistInline, 'Lista de verificación para evaluar candidatos de desarr
 
 <h2>Checklist antes de contratar</h2>
 <ul>
-<li>☐ Objetivo del sitio en una frase</li>
-<li>☐ Referencias visuales de sitios que te gustan</li>
-<li>☐ Portafolio revisado en celular</li>
-<li>☐ Tecnología explicada en lenguaje de negocio</li>
-<li>☐ Alcance escrito: páginas, funciones, revisiones</li>
-<li>☐ Ownership de dominio, hosting y código</li>
-<li>☐ Cómo se administra el contenido</li>
-<li>☐ SEO técnico básico incluido o excluido con claridad</li>
-<li>☐ Precio, plazos y forma de pago definidos</li>
-<li>☐ Soporte post-lanzamiento conversado</li>
+<li>Objetivo del sitio en una frase</li>
+<li>Referencias visuales de sitios que te gustan</li>
+<li>Portafolio revisado en celular</li>
+<li>Tecnología explicada en lenguaje de negocio</li>
+<li>Alcance escrito: páginas, funciones, revisiones</li>
+<li>Ownership de dominio, hosting y código</li>
+<li>Cómo se administra el contenido</li>
+<li>SEO técnico básico incluido o excluido con claridad</li>
+<li>Precio, plazos y forma de pago definidos</li>
+<li>Soporte post-lanzamiento conversado</li>
 </ul>
 
 <h2>Conclusión</h2>

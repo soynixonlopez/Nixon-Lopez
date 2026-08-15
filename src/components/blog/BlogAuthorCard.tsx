@@ -1,4 +1,6 @@
+import Image from 'next/image'
 import Link from 'next/link'
+import { HOME_IMAGES } from '@/lib/marketing'
 import { blogSurface } from '@/components/blog/blog-ui'
 
 type Props = {
@@ -7,14 +9,15 @@ type Props = {
 
 export function BlogAuthorCard({ name }: Props) {
   return (
-    <aside className={`flex flex-col gap-4 ${blogSurface} p-6 sm:flex-row sm:items-center`}>
-      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand text-lg font-bold text-white">
-        {name
-          .split(/\s+/)
-          .slice(0, 2)
-          .map((p) => p[0])
-          .join('')
-          .toUpperCase()}
+    <aside className={`flex flex-col gap-4 ${blogSurface} p-5 sm:flex-row sm:items-center sm:p-6`}>
+      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-slate-100 ring-2 ring-brand/15 dark:bg-slate-800">
+        <Image
+          src={HOME_IMAGES.about}
+          alt={name}
+          fill
+          className="object-cover object-top"
+          sizes="64px"
+        />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-base font-bold text-slate-900 dark:text-white">{name}</p>

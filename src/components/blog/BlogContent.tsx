@@ -29,9 +29,14 @@ function hasClass(attribs: Record<string, string> | undefined, name: string) {
     .includes(name)
 }
 
+/** Convierte checklists con ☐ en viñetas normales. */
+function normalizeChecklistMarkers(html: string) {
+  return (html || '').replace(/☐\s*/g, '')
+}
+
 /** Renderiza HTML sanitizado; imágenes → next/image; callouts/tablas editoriales. */
 export function BlogContent({ html, className = '' }: Props) {
-  const clean = sanitizeBlogHtml(html)
+  const clean = sanitizeBlogHtml(normalizeChecklistMarkers(html))
 
   const options: HTMLReactParserOptions = {
     replace(domNode) {

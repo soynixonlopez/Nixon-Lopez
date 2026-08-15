@@ -16,7 +16,7 @@ export const INVOICE_BRANDING = {
   addressLine2: 'Edificio Mirador 50',
   country: 'República de Panamá',
   /** Logo en /public (ruta absoluta para <Image> y PDF) */
-  logoPath: '/images/logoweb.png',
+  logoPath: '/images/logooficial.png',
   email: 'info@nixonlopez.com',
   /** Deja vacío para ocultar en el PDF/vista */
   phone: '',

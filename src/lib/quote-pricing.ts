@@ -623,6 +623,7 @@ export const ADMIN_SERVICE_TYPE_OPTIONS = [
   { value: 'google_ads', label: 'Publicidad en Google Ads' },
   { value: 'saas', label: 'Sistemas SaaS' },
   { value: 'consultoria', label: 'Consultorías' },
+  { value: 'redes_sociales', label: 'Manejo de redes sociales' },
   { value: 'other', label: 'Otro servicio' },
 ] as const
 

@@ -65,11 +65,11 @@ function LoginForm() {
         <div className={adminUi.loginCard}>
           <div className="mb-8 flex justify-center">
             <Image
-              src="/images/logoweb.png"
+              src="/images/logooficial.png"
               alt="Nixon López — logo"
-              width={1306}
-              height={199}
-              className="h-9 w-auto max-w-full object-contain sm:h-10"
+              width={1774}
+              height={887}
+              className="h-12 w-auto max-w-full object-contain sm:h-14"
               priority
             />
           </div>

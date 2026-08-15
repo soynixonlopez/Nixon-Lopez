@@ -44,7 +44,10 @@ const EMAIL_COUNTS: EmailCount[] = [0, 1, 2, 3, 4, 5, 6]
 
 export function buildLocalizedQuoteCatalog(quote: Messages['quote']): LocalizedQuoteCatalog {
   const projectTypes = quote.projectTypes.map((msg) => {
-    const base = PROJECT_TYPES.find((p) => p.id === msg.id)!
+    const base = PROJECT_TYPES.find((p) => p.id === msg.id)
+    if (!base || ('adminOnly' in base && base.adminOnly)) {
+      throw new Error(`Tipo de proyecto público inválido: ${msg.id}`)
+    }
     return {
       id: msg.id,
       label: msg.label,

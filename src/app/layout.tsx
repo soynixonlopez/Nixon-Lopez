@@ -120,7 +120,7 @@ export default async function RootLayout({
           <SiteJsonLd />
           <MetaPixel />
 
-          <div className="min-h-screen w-full min-w-0 max-w-full overflow-x-hidden bg-white text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
+          <div className="min-h-screen w-full min-w-0 max-w-full overflow-x-clip bg-white text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
             {children}
           </div>
         </SiteProviders>

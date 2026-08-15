@@ -1,12 +1,16 @@
 /** Puente admin ↔ configurador público de cotización. */
 
 import {
+  ADMIN_PROJECT_TYPES,
   BUSINESS_TYPES,
   FEATURES,
   INITIAL_CONFIGURATOR_STATE,
   PROJECT_TYPES,
+  SOCIAL_MEDIA_GENERAL_INCLUDES,
   TIMELINES,
   calculateQuote,
+  isSocialMediaProjectType,
+  isWebProjectType,
   type BusinessId,
   type ConfiguratorState,
   type EmailCount,
@@ -18,11 +22,13 @@ import {
 import { extractQuoteServiceSnapshots } from '@/lib/quote-pricing'
 
 export {
+  ADMIN_PROJECT_TYPES,
   PROJECT_TYPES,
   FEATURES,
   BUSINESS_TYPES,
   TIMELINES,
   calculateQuote,
+  isSocialMediaProjectType,
   type ConfiguratorState,
   type FeatureId,
   type ProjectTypeId,
@@ -93,12 +99,26 @@ export function parseConfiguratorFromPayload(raw: unknown): ConfiguratorState | 
   const projectType = mapServiceIdToProjectType(first.serviceId)
   if (!projectType) return null
 
+  if (isSocialMediaProjectType(projectType)) {
+    return {
+      ...emptyConfiguratorState(),
+      projectType,
+      features: [],
+      hasDomain: 'si',
+      hasHosting: 'si',
+      emailCount: 0,
+    }
+  }
+
   const featureIds = FEATURES.map((f) => f.id).filter((id) =>
-    first.lines.some((line) => line.label.toLowerCase().includes(FEATURES.find((f) => f.id === id)!.label.toLowerCase()))
+    first.lines.some((line) =>
+      line.label.toLowerCase().includes(FEATURES.find((f) => f.id === id)!.label.toLowerCase())
+    )
   ) as FeatureId[]
 
   const hasDomain: YesNo = first.hasDomain === 'si' || first.hasDomain === 'no' ? first.hasDomain : ''
-  const hasHosting: YesNo = first.hasHosting === 'si' || first.hasHosting === 'no' ? first.hasHosting : ''
+  const hasHosting: YesNo =
+    first.hasHosting === 'si' || first.hasHosting === 'no' ? first.hasHosting : ''
 
   return {
     ...emptyConfiguratorState(),
@@ -111,7 +131,7 @@ export function parseConfiguratorFromPayload(raw: unknown): ConfiguratorState | 
 }
 
 function mapServiceIdToProjectType(serviceId: string): ProjectTypeId | null {
-  if (serviceId === 'landing' || serviceId === 'profesional' || serviceId === 'tienda' || serviceId === 'sistema') {
+  if (isSocialMediaProjectType(serviceId) || isWebProjectType(serviceId)) {
     return serviceId
   }
   if (serviceId.includes('landing')) return 'landing'
@@ -123,10 +143,8 @@ function mapServiceIdToProjectType(serviceId: string): ProjectTypeId | null {
 
 function normalizeConfiguratorState(value: Record<string, unknown>): ConfiguratorState {
   const projectType =
-    value.projectType === 'landing' ||
-    value.projectType === 'profesional' ||
-    value.projectType === 'tienda' ||
-    value.projectType === 'sistema'
+    typeof value.projectType === 'string' &&
+    (isWebProjectType(value.projectType) || isSocialMediaProjectType(value.projectType))
       ? value.projectType
       : null
 
@@ -134,24 +152,41 @@ function normalizeConfiguratorState(value: Record<string, unknown>): Configurato
     ? (value.business as BusinessId)
     : null
 
-  const featureIds: FeatureId[] = Array.isArray(value.features)
-    ? value.features.filter((id): id is FeatureId =>
-        typeof id === 'string' && FEATURES.some((f) => f.id === id)
-      )
-    : []
+  const social = isSocialMediaProjectType(projectType)
 
-  const hasDomain: YesNo = value.hasDomain === 'si' || value.hasDomain === 'no' ? value.hasDomain : ''
-  const hasHosting: YesNo = value.hasHosting === 'si' || value.hasHosting === 'no' ? value.hasHosting : ''
+  const featureIds: FeatureId[] = social
+    ? []
+    : Array.isArray(value.features)
+      ? value.features.filter(
+          (id): id is FeatureId =>
+            typeof id === 'string' && FEATURES.some((f) => f.id === id)
+        )
+      : []
+
+  const hasDomain: YesNo = social
+    ? 'si'
+    : value.hasDomain === 'si' || value.hasDomain === 'no'
+      ? value.hasDomain
+      : ''
+  const hasHosting: YesNo = social
+    ? 'si'
+    : value.hasHosting === 'si' || value.hasHosting === 'no'
+      ? value.hasHosting
+      : ''
   const emailRaw = Number(value.emailCount)
-  const emailCount = ([0, 1, 2, 3, 4, 5, 6] as const).includes(emailRaw as EmailCount)
-    ? (emailRaw as EmailCount)
-    : 0
-  const timeline = TIMELINES.some((t) => t.id === value.timeline) ? (value.timeline as TimelineId) : null
+  const emailCount = social
+    ? 0
+    : ([0, 1, 2, 3, 4, 5, 6] as const).includes(emailRaw as EmailCount)
+      ? (emailRaw as EmailCount)
+      : 0
+  const timeline = TIMELINES.some((t) => t.id === value.timeline)
+    ? (value.timeline as TimelineId)
+    : null
 
   return {
     projectType,
     business,
-    features: featureIds.length > 0 ? featureIds : (['whatsapp'] as FeatureId[]),
+    features: social ? [] : featureIds.length > 0 ? featureIds : (['whatsapp'] as FeatureId[]),
     hasDomain,
     hasHosting,
     emailCount,
@@ -182,22 +217,25 @@ export function buildConfiguratorPayload(
         ]
       : quote.lines.map((line) => ({ label: line.label, amount: line.amount }))
 
+  const monthly = Boolean(project && 'monthly' in project && project.monthly)
+
   return {
     configurator: state,
     price_override: override,
     custom_decision: options?.customDecision?.trim() || null,
     tipoServicio: state.projectType,
     servicio: quote.projectLabel,
-    total: `$${total} USD`,
+    total: monthly ? `$${total} USD / mes` : `$${total} USD`,
     totalNumeric: total,
-    monthly: false,
+    monthly,
     catalog: true,
     manual: true,
     pasarelaPagos: state.features.includes('pasarela')
       ? 'Sí — Integración pasarela de pagos (+$100)'
       : 'No',
-    incluyeDominioHostingCorreo:
-      state.hasDomain === 'no' || state.hasHosting === 'no' || state.emailCount > 0
+    incluyeDominioHostingCorreo: monthly
+      ? 'No aplica (servicio de manejo de redes)'
+      : state.hasDomain === 'no' || state.hasHosting === 'no' || state.emailCount > 0
         ? 'Incluye ítems en presupuesto (dominio/hosting/correos según selección)'
         : 'Cliente ya cuenta con dominio/hosting',
     breakdown: { lines },
@@ -208,14 +246,15 @@ export function buildConfiguratorPayload(
         label: quote.projectLabel,
         baseAmount: project?.basePrice ?? quote.total,
         total,
-        monthly: false,
+        monthly,
         quantityPages: null,
         offerPoints: [
           ...(project?.includes ?? []),
+          ...(monthly ? [...SOCIAL_MEDIA_GENERAL_INCLUDES] : []),
           ...quote.lines
             .filter((line) => !line.id.startsWith('project-'))
             .map((line) => line.label),
-        ].slice(0, 10),
+        ].slice(0, 20),
         description: project?.description ?? '',
         includes: project?.includes ?? [],
         lines,
@@ -239,7 +278,7 @@ export function configuratorTotals(
     .filter((line) => !line.id.startsWith('project-'))
     .reduce((sum, line) => sum + line.amount, 0)
   const base = quote.lines.find((line) => line.id.startsWith('project-'))?.amount ?? 0
-  return { quote, total, base, extras, override }
+  return { quote, total, base, extras, override, monthly: quote.monthly }
 }
 
 export function toggleFeature(features: FeatureId[], id: FeatureId): FeatureId[] {

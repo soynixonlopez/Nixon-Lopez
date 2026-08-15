@@ -11,7 +11,8 @@
 body {
   font-family: var(--font-inter), system-ui, -apple-system, 'Segoe UI', sans-serif;
   line-height: 1.6;
-  overflow-x: hidden;
+  /* clip evita scroll horizontal sin romper position:sticky (hidden sí lo rompe) */
+  overflow-x: clip;
   max-width: 100%;
   background: #ffffff;
   color: #0f172a;
@@ -97,9 +98,9 @@ html.dark .section-title {
   color: #f8fafc !important;
 }
 
-/* Evitar scroll horizontal: html + body (100vw y elementos posicionados suelen desbordar solo en body) */
+/* Evitar scroll horizontal sin romper sticky (overflow-x:hidden crea scroll container) */
 html {
-  overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100%;
   scroll-behavior: smooth;
   scroll-padding-top: calc(5rem + env(safe-area-inset-top, 0px));
@@ -522,4 +523,27 @@ main > section[id]:not(#hero):not(#benefits) {
 .quote-features-scroll::-webkit-scrollbar-track {
   background: #f1f5f9;
   border-radius: 999px;
+}
+
+/* Google Translate: ocultar barra superior sin romper la traducción */
+.goog-te-banner-frame,
+.goog-te-balloon-frame,
+#goog-gt-tt,
+.goog-tooltip,
+.goog-te-spinner-pos {
+  display: none !important;
+}
+
+body {
+  top: 0 !important;
+}
+
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+}
+
+font font {
+  background: none !important;
+  box-shadow: none !important;
 }

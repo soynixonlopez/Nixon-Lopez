@@ -1,6 +1,12 @@
 /** Configurador de cotización — precios y reglas del wizard premium. */
 
-export type ProjectTypeId = 'landing' | 'profesional' | 'tienda' | 'sistema'
+export type WebProjectTypeId = 'landing' | 'profesional' | 'tienda' | 'sistema'
+export type SocialMediaPlanId =
+  | 'redes-emprendedor'
+  | 'redes-profesional'
+  | 'redes-corporativo'
+  | 'redes-premium'
+export type ProjectTypeId = WebProjectTypeId | SocialMediaPlanId
 export type BusinessId =
   | 'turismo'
   | 'restaurante'
@@ -62,7 +68,25 @@ export const INITIAL_CONFIGURATOR_STATE: ConfiguratorState = {
   whatsapp: '',
 }
 
-export const PROJECT_TYPES = [
+/** Incluidos en todos los planes de redes (admin). */
+export const SOCIAL_MEDIA_GENERAL_INCLUDES = [
+  'Investigación de marca y audiencia',
+  'Planificación mensual de contenido',
+  'Diseño de piezas gráficas',
+  'Copywriting profesional',
+  'Programación de publicaciones',
+  'Soporte y comunicación constante',
+] as const
+
+/** Servicios adicionales (no incluidos en los planes de redes). */
+export const SOCIAL_MEDIA_ADDITIONAL_SERVICES = [
+  'Gestión de anuncios (Meta Ads): desde $150 USD / mes + inversión publicitaria',
+  'Sesión de fotos / video: cotización aparte',
+  'Grabación de reels: cotización aparte',
+  'Community management intensivo 24/7: costo adicional según volumen',
+] as const
+
+const WEB_PROJECT_TYPES = [
   {
     id: 'landing' as const,
     label: 'Landing Page',
@@ -70,6 +94,9 @@ export const PROJECT_TYPES = [
     basePrice: 90,
     priceLabel: 'Precio base',
     delivery: '3 a 5 días hábiles',
+    category: 'web' as const,
+    adminOnly: false as const,
+    monthly: false as const,
     includes: [
       'Una sola página enfocada en conversión',
       'Mensaje comercial claro (beneficios + llamada a la acción)',
@@ -85,6 +112,9 @@ export const PROJECT_TYPES = [
     basePrice: 150,
     priceLabel: 'Precio base',
     delivery: '5 a 7 días hábiles',
+    category: 'web' as const,
+    adminOnly: false as const,
+    monthly: false as const,
     includes: [
       'Varias secciones (inicio, servicios, nosotros, contacto)',
       'Diseño profesional adaptable a todos los dispositivos',
@@ -100,6 +130,9 @@ export const PROJECT_TYPES = [
     basePrice: 300,
     priceLabel: 'Precio base',
     delivery: '10 a 14 días hábiles',
+    category: 'web' as const,
+    adminOnly: false as const,
+    monthly: false as const,
     includes: [
       'Catálogo de productos con fichas',
       'Carrito de compras y flujo de checkout',
@@ -115,7 +148,10 @@ export const PROJECT_TYPES = [
     basePrice: 500,
     priceLabel: 'Desde',
     delivery: '15 a 30 días hábiles',
-    fromPrice: true,
+    fromPrice: true as const,
+    category: 'web' as const,
+    adminOnly: false as const,
+    monthly: false as const,
     includes: [
       'Análisis de procesos y alcance funcional',
       'Desarrollo a medida según tus flujos',
@@ -125,6 +161,125 @@ export const PROJECT_TYPES = [
     ],
   },
 ] as const
+
+/** Planes de manejo de redes — solo admin / clientes seleccionados. */
+const SOCIAL_MEDIA_PLANS = [
+  {
+    id: 'redes-emprendedor' as const,
+    label: 'Plan Emprendedor — Manejo de redes',
+    description: 'Para negocios que necesitan empezar a tener presencia profesional.',
+    basePrice: 100,
+    priceLabel: 'Mensual',
+    delivery: '2 a 3 días',
+    category: 'redes' as const,
+    adminOnly: true as const,
+    monthly: true as const,
+    badge: 'Para quienes inician',
+    target: 'Emprendedores y negocios que empiezan',
+    includes: [
+      '6 posts al mes',
+      'Diseño gráfico de las publicaciones',
+      'Copywriting (textos)',
+      'Publicación en Instagram y Facebook',
+      'Programación de contenido',
+      'Calendario de contenido básico',
+      'Adaptación a la identidad de la marca',
+      '1 reporte mensual básico',
+    ],
+  },
+  {
+    id: 'redes-profesional' as const,
+    label: 'Plan Profesional — Manejo de redes',
+    description: 'Para negocios que quieren mantener presencia activa y seguir creciendo.',
+    basePrice: 180,
+    priceLabel: 'Mensual',
+    delivery: '3 a 5 días',
+    category: 'redes' as const,
+    adminOnly: true as const,
+    monthly: true as const,
+    badge: 'Más vendido',
+    target: 'Para negocios en crecimiento',
+    includes: [
+      '10 posts al mes',
+      'Hasta 4 stories al mes',
+      '2 reels básicos al mes',
+      'Diseño de contenido personalizado',
+      'Estrategia mensual de contenido',
+      'Optimización de bio / perfil',
+      'Programación de contenido',
+      'Reporte mensual de resultados',
+      '1 reunión online al mes',
+    ],
+  },
+  {
+    id: 'redes-corporativo' as const,
+    label: 'Plan Corporativo — Manejo de redes',
+    description: 'Para empresas que buscan un manejo más completo y estratégico.',
+    basePrice: 280,
+    priceLabel: 'Mensual',
+    delivery: '5 a 7 días',
+    category: 'redes' as const,
+    adminOnly: true as const,
+    monthly: true as const,
+    badge: 'Para empresas',
+    target: 'Para empresas que quieren destacar',
+    includes: [
+      '14 posts al mes',
+      'Hasta 8 stories al mes',
+      'Hasta 4 reels al mes',
+      'Calendario de contenido estratégico',
+      'Gestión básica de comentarios y mensajes',
+      'Estrategia de crecimiento',
+      'Diseño gráfico avanzado',
+      'Reporte mensual con métricas',
+      '1 reunión online al mes',
+    ],
+  },
+  {
+    id: 'redes-premium' as const,
+    label: 'Plan Premium — Manejo de redes',
+    description: 'Manejo completo para marcas que quieren delegar su presencia en redes.',
+    basePrice: 400,
+    priceLabel: 'Mensual',
+    delivery: '7 a 10 días',
+    category: 'redes' as const,
+    adminOnly: true as const,
+    monthly: true as const,
+    badge: 'Resultados reales',
+    target: 'Para marcas que quieren resultados reales',
+    includes: [
+      '18 posts al mes',
+      'Stories ilimitadas (sujeto a volumen razonable acordado)',
+      'Hasta 8 reels al mes',
+      'Gestión de comentarios y mensajes',
+      'Estrategia de contenido y crecimiento',
+      'Contenido promocional',
+      'Diseño personalizado premium',
+      'Reporte detallado de resultados',
+      'Reunión quincenal',
+      'Optimización continua del perfil',
+      'Asesoría estratégica',
+    ],
+  },
+] as const
+
+export const PROJECT_TYPES = [...WEB_PROJECT_TYPES, ...SOCIAL_MEDIA_PLANS] as const
+
+/** Tipos visibles en cotizador público (sin planes de redes). */
+export const PUBLIC_PROJECT_TYPES = WEB_PROJECT_TYPES
+
+/** Tipos disponibles en admin (web + redes). */
+export const ADMIN_PROJECT_TYPES = PROJECT_TYPES
+
+export function isSocialMediaProjectType(
+  id: ProjectTypeId | string | null | undefined
+): id is SocialMediaPlanId {
+  return typeof id === 'string' && id.startsWith('redes-')
+}
+
+export function isWebProjectType(id: ProjectTypeId | string | null | undefined): id is WebProjectTypeId {
+  return id === 'landing' || id === 'profesional' || id === 'tienda' || id === 'sistema'
+}
 
 export const BUSINESS_TYPES = [
   { id: 'turismo' as const, label: 'Turismo' },
@@ -202,9 +357,14 @@ export function buildQuoteLines(state: ConfiguratorState): QuoteLine[] {
   if (project) {
     lines.push({
       id: `project-${project.id}`,
-      label: project.label,
+      label: project.monthly ? `${project.label} (mensual)` : project.label,
       amount: project.basePrice,
     })
+  }
+
+  // Planes de redes: precio fijo mensual, sin extras de web
+  if (isSocialMediaProjectType(state.projectType)) {
+    return lines
   }
 
   for (const featureId of state.features) {
@@ -241,22 +401,27 @@ export function calculateQuote(state: ConfiguratorState) {
   const lines = buildQuoteLines(state)
   const total = lines.reduce((sum, line) => sum + line.amount, 0)
   const project = getProjectType(state.projectType)
+  const isMonthly = Boolean(project && 'monthly' in project && project.monthly)
   return {
     lines,
     total,
     delivery: project?.delivery ?? 'Por definir',
     projectLabel: project?.label ?? 'Tu proyecto',
-    includedZeroPriceFeatures: state.features
-      .map((id) => getFeature(id))
-      .filter((item): item is NonNullable<typeof item> => Boolean(item))
-      .filter((item) => item.price === 0)
-      .map((item) => item.label),
+    monthly: isMonthly,
+    includedZeroPriceFeatures: isSocialMediaProjectType(state.projectType)
+      ? []
+      : state.features
+          .map((id) => getFeature(id))
+          .filter((item): item is NonNullable<typeof item> => Boolean(item))
+          .filter((item) => item.price === 0)
+          .map((item) => item.label),
   }
 }
 
 export function mapLegacyServiceToProject(serviceId: string | null): ProjectTypeId | null {
   if (!serviceId) return null
   const id = serviceId.toLowerCase()
+  if (isSocialMediaProjectType(id)) return id
   if (id === 'landing') return 'landing'
   if (id.includes('tienda') || id.includes('productos') || id.includes('ecommerce') || id === 'tienda') {
     return 'tienda'

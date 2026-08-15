@@ -8,6 +8,7 @@ import {
   buildConfiguratorPayload,
   configuratorTotals,
   emptyConfiguratorState,
+  isSocialMediaProjectType,
   PROJECT_TYPES,
   type ConfiguratorState,
 } from '@/lib/admin-configurator-quote'
@@ -51,16 +52,33 @@ export default function NuevaCotizacionPage() {
     [config, overrideValue]
   )
 
-  const canGoNextStep =
-    (step === 1 &&
-      form.client_first_name.trim() &&
-      form.client_last_name.trim() &&
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.client_email)) ||
-    (step === 2 &&
-      Boolean(config.projectType) &&
-      (config.hasDomain === 'si' || config.hasDomain === 'no') &&
-      (config.hasHosting === 'si' || config.hasHosting === 'no')) ||
-    step === 3
+  const isRedesPlan =
+    isSocialMediaProjectType(config.projectType) ||
+    Boolean(
+      config.projectType &&
+        PROJECT_TYPES.find((p) => p.id === config.projectType)?.category === 'redes'
+    )
+
+  const canGoNextStep = (() => {
+    if (step === 1) {
+      return Boolean(
+        form.client_first_name.trim() &&
+          form.client_last_name.trim() &&
+          /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.client_email)
+      )
+    }
+    if (step === 2) {
+      if (!config.projectType) return false
+      // Planes de redes: no requieren dominio/hosting
+      if (isRedesPlan) return true
+      return (
+        (config.hasDomain === 'si' || config.hasDomain === 'no') &&
+        (config.hasHosting === 'si' || config.hasHosting === 'no')
+      )
+    }
+    if (step === 3) return true
+    return false
+  })()
 
   const stepProgress = ((step - 1) / (steps.length - 1)) * 100
 
@@ -370,7 +388,9 @@ export default function NuevaCotizacionPage() {
                     <span className="text-slate-400">Decisión:</span> {customDecision}
                   </p>
                 ) : null}
-                <p className="text-lg font-bold text-slate-900">Total: ${totals.total} USD</p>
+                <p className="text-lg font-bold text-slate-900">
+                  Total: ${totals.total} USD{totals.monthly ? ' / mes' : ''}
+                </p>
               </div>
             </div>
           ) : null}
@@ -386,15 +406,29 @@ export default function NuevaCotizacionPage() {
               Anterior
             </button>
             {step < 4 ? (
-              <button
-                type="button"
-                onClick={() => setStep((c) => Math.min(4, c + 1))}
-                disabled={!canGoNextStep || loading}
-                className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-brand px-5 py-2 font-medium text-white hover:bg-brand-light disabled:opacity-50 sm:w-auto"
-              >
-                Siguiente
-                <ChevronRight className="h-4 w-4" />
-              </button>
+              <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:items-end">
+                {step === 2 && !canGoNextStep ? (
+                  <p className="text-right text-xs text-amber-700">
+                    {config.projectType
+                      ? 'Para proyectos web, indica si ya tiene dominio y hosting.'
+                      : 'Selecciona un tipo de proyecto o plan para continuar.'}
+                  </p>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    if (!canGoNextStep || loading) return
+                    setStep((c) => Math.min(4, c + 1))
+                  }}
+                  disabled={!canGoNextStep || loading}
+                  className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-brand px-5 py-2 font-medium text-white hover:bg-brand-light disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                >
+                  Siguiente
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
             ) : (
               <button
                 type="submit"

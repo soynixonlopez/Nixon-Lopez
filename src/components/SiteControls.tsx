@@ -35,7 +35,7 @@ export function SiteControls({ className = '', compact = false }: Props) {
   return (
     <nav
       aria-label={`${messages.common.language}, ${messages.common.theme}`}
-      className={`inline-flex items-center gap-2.5 ${className}`}
+      className={`notranslate inline-flex items-center gap-2.5 ${className}`}
     >
       <button
         type="button"

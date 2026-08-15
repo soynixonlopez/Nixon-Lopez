@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { LocaleProvider } from '@/i18n/LocaleProvider'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
+import { GooglePageTranslate } from '@/components/i18n/GooglePageTranslate'
 import type { Locale } from '@/i18n/types'
 
 export function SiteProviders({
@@ -18,7 +19,10 @@ export function SiteProviders({
 
   return (
     <ThemeProvider defaultTheme="light" forcedTheme={isAdmin ? 'light' : undefined}>
-      <LocaleProvider initialLocale={initialLocale}>{children}</LocaleProvider>
+      <LocaleProvider initialLocale={initialLocale}>
+        {children}
+        {!isAdmin ? <GooglePageTranslate /> : null}
+      </LocaleProvider>
     </ThemeProvider>
   )
 }

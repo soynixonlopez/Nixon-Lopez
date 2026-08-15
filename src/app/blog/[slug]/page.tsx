@@ -24,6 +24,7 @@ import {
 import { getAdjacentBlogPosts, getRelatedBlogPosts } from '@/lib/blog-related'
 import { estimateReadingMinutes, formatReadingTime } from '@/lib/blog-reading'
 import { enrichBlogHeadings, shouldShowToc } from '@/lib/blog-toc'
+import { HOME_IMAGES } from '@/lib/marketing'
 import { buildPageMetadata, DEFAULT_OG_IMAGE } from '@/lib/seo'
 import { SITE_NAME } from '@/lib/site-config'
 
@@ -89,16 +90,13 @@ export default async function BlogPostPage({ params }: Props) {
     Boolean(post.updated_at) &&
     !isSameCalendarDay(post.published_at, post.updated_at)
 
-  const recent = allPosts.filter((p) => p.slug !== post.slug).slice(0, 3)
-
   return (
     <>
       <BlogPostJsonLd post={post} />
       <Header />
       <main className={blogPageBg}>
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-          {/* Hero: texto + imagen, sin sangría rara */}
-          <section className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
+        <div className="container-padding mx-auto max-w-6xl py-8 sm:py-12">
+          <section className="grid items-center gap-6 sm:gap-8 lg:grid-cols-2 lg:gap-10">
             <div className="min-w-0">
               <BlogBreadcrumbs
                 items={[
@@ -109,7 +107,7 @@ export default async function BlogPostPage({ params }: Props) {
               />
 
               <p className={`${blogChip} mt-5`}>{post.category}</p>
-              <h1 className="mt-4 text-[1.85rem] font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.4rem] lg:leading-[1.15] dark:text-white">
+              <h1 className="mt-4 text-[1.75rem] font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.35rem] lg:leading-[1.15] dark:text-white">
                 {post.title}
               </h1>
               {post.excerpt ? (
@@ -123,7 +121,18 @@ export default async function BlogPostPage({ params }: Props) {
                   {formatBlogDate(post.published_at || post.created_at)}
                 </time>
                 <span aria-hidden>·</span>
-                <span>por {post.author_name}</span>
+                <span className="inline-flex items-center gap-2">
+                  <span className="relative h-7 w-7 overflow-hidden rounded-full bg-slate-200">
+                    <Image
+                      src={HOME_IMAGES.about}
+                      alt=""
+                      fill
+                      className="object-cover object-top"
+                      sizes="28px"
+                    />
+                  </span>
+                  <span>por {post.author_name}</span>
+                </span>
                 <span aria-hidden>·</span>
                 <span className="inline-flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5" aria-hidden />
@@ -149,7 +158,7 @@ export default async function BlogPostPage({ params }: Props) {
             </div>
 
             {post.featured_image_url ? (
-              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl bg-slate-100 shadow-[0_16px_50px_rgba(15,23,42,0.12)] dark:bg-slate-900">
+              <div className="relative aspect-[16/11] w-full overflow-hidden rounded-2xl bg-slate-100 shadow-[0_16px_50px_rgba(15,23,42,0.12)] sm:rounded-3xl dark:bg-slate-900">
                 <Image
                   src={post.featured_image_url}
                   alt={post.featured_image_alt || post.title}
@@ -168,9 +177,8 @@ export default async function BlogPostPage({ params }: Props) {
             </div>
           ) : null}
 
-          {/* Contenido + TOC: grid simétrico, sin max-width anidado */}
-          <div className="mt-10 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-8">
-            <article className={`${blogSurface} p-6 sm:p-8`}>
+          <div className="mt-8 grid items-start gap-6 lg:mt-10 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-8">
+            <article className={`${blogSurface} min-w-0 p-5 sm:p-7 lg:p-8`}>
               <BlogContent html={contentHtml} />
 
               {post.tags.length > 0 ? (
@@ -204,39 +212,17 @@ export default async function BlogPostPage({ params }: Props) {
               <BlogPrevNext previous={previous} next={next} />
             </article>
 
-            <aside className="hidden min-w-0 space-y-5 lg:sticky lg:top-24 lg:block lg:self-start">
-              {showToc ? <BlogToc items={toc} /> : null}
-
-              {recent.length > 0 ? (
-                <div className={`${blogSurface} p-5`}>
-                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand">
-                    Lecturas destacadas
-                  </p>
-                  <ul className="mt-4 divide-y divide-slate-100 dark:divide-slate-800">
-                    {recent.map((item) => (
-                      <li key={item.id} className="py-3 first:pt-0 last:pb-0">
-                        <Link
-                          href={blogPostPath(item.slug)}
-                          className="block text-sm font-semibold leading-snug text-slate-800 transition hover:text-brand dark:text-slate-100"
-                        >
-                          {item.title}
-                        </Link>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {estimateReadingMinutes(item.content || item.excerpt)} min ·{' '}
-                          {formatBlogDate(item.published_at || item.created_at)}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-
-              <BlogCtaBox
-                compact
-                title="¿Tienes un proyecto?"
-                description="Cuéntame qué quieres construir."
-                primaryLabel="Solicitar cotización →"
-              />
+            <aside className="hidden lg:block">
+              {/* Índice + CTA compacto: sticky sin scroll interno */}
+              <div className="sticky top-24 z-10 space-y-5 self-start">
+                {showToc ? <BlogToc items={toc} /> : null}
+                <BlogCtaBox
+                  compact
+                  title="¿Tienes un proyecto?"
+                  description="Cuéntame qué quieres construir."
+                  primaryLabel="Solicitar cotización →"
+                />
+              </div>
             </aside>
           </div>
         </div>

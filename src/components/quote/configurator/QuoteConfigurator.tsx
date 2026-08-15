@@ -41,17 +41,18 @@ import {
   type FeatureId,
   type ProjectTypeId,
   type TimelineId,
+  type WebProjectTypeId,
   mapLegacyServiceToFeatures,
   mapLegacyServiceToProject,
   splitFullName,
 } from '@/lib/quote-configurator'
 
-const PROJECT_ICONS = {
+const PROJECT_ICONS: Record<WebProjectTypeId, typeof Layout> = {
   landing: Layout,
   profesional: Building2,
   tienda: Store,
   sistema: Code2,
-} as const
+}
 
 const fieldClass =
   'w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm outline-none transition focus:border-brand/40 focus:ring-2 focus:ring-brand/15'
@@ -375,17 +376,19 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
 
       <div className="container-padding relative z-10 mx-auto max-w-6xl px-4 sm:px-6">
         <div className="grid items-start gap-6 lg:grid-cols-2 lg:items-stretch lg:gap-8">
-          {/* Izquierda — la altura la marca el formulario; la imagen se recorta para llenar */}
-          <div className="relative order-1 min-h-[240px] overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:min-h-[280px] sm:rounded-3xl lg:order-none lg:min-h-0">
-            <Image
-              src="/images/cotizador.webp"
-              alt={q.pageImageAlt}
-              fill
-              priority
-              unoptimized
-              className="object-cover object-[center_18%]"
-              sizes="(max-width: 1024px) 100vw, 540px"
-            />
+          {/* Formulario primero en móvil; imagen completa debajo */}
+          <div className="relative order-2 overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:rounded-3xl lg:order-1 lg:h-full lg:min-h-0">
+            <div className="relative aspect-[4/3] w-full lg:absolute lg:inset-0 lg:aspect-auto">
+              <Image
+                src="/images/cotizador.webp"
+                alt={q.pageImageAlt}
+                fill
+                priority
+                unoptimized
+                className="object-cover object-center lg:object-[center_18%]"
+                sizes="(max-width: 1024px) 100vw, 540px"
+              />
+            </div>
 
             <div
               className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent"
@@ -398,8 +401,7 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
             </div>
           </div>
 
-          {/* Derecha — define la altura de la fila en desktop */}
-          <div className="order-2 flex h-full flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:rounded-3xl sm:p-6 lg:order-none lg:p-7">
+          <div className="order-1 flex h-full flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_40px_rgba(15,23,42,0.08)] sm:rounded-3xl sm:p-6 lg:order-2 lg:p-7">
             <div className="mb-6 flex items-start gap-3 border-b border-slate-100 pb-5">
               <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${BRAND_ICON_TONES.blue.wrap}`}>
                 <Calculator className="h-5 w-5" aria-hidden />
@@ -446,7 +448,7 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                     </p>
                     <div className="space-y-3">
                       {catalog.projectTypes.map((project) => {
-                        const Icon = PROJECT_ICONS[project.id]
+                        const Icon = PROJECT_ICONS[project.id as WebProjectTypeId]
                         const active = state.projectType === project.id
                         return (
                           <button
