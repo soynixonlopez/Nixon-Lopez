@@ -9,6 +9,8 @@ import {
   SOCIAL_MEDIA_GENERAL_INCLUDES,
   TIMELINES,
   calculateQuote,
+  isFixedScopeAdminProject,
+  isRedesignProjectType,
   isSocialMediaProjectType,
   isWebProjectType,
   type BusinessId,
@@ -28,6 +30,8 @@ export {
   BUSINESS_TYPES,
   TIMELINES,
   calculateQuote,
+  isFixedScopeAdminProject,
+  isRedesignProjectType,
   isSocialMediaProjectType,
   type ConfiguratorState,
   type FeatureId,
@@ -99,7 +103,7 @@ export function parseConfiguratorFromPayload(raw: unknown): ConfiguratorState | 
   const projectType = mapServiceIdToProjectType(first.serviceId)
   if (!projectType) return null
 
-  if (isSocialMediaProjectType(projectType)) {
+  if (isFixedScopeAdminProject(projectType)) {
     return {
       ...emptyConfiguratorState(),
       projectType,
@@ -131,12 +135,17 @@ export function parseConfiguratorFromPayload(raw: unknown): ConfiguratorState | 
 }
 
 function mapServiceIdToProjectType(serviceId: string): ProjectTypeId | null {
-  if (isSocialMediaProjectType(serviceId) || isWebProjectType(serviceId)) {
+  if (
+    isSocialMediaProjectType(serviceId) ||
+    isWebProjectType(serviceId) ||
+    isRedesignProjectType(serviceId)
+  ) {
     return serviceId
   }
   if (serviceId.includes('landing')) return 'landing'
   if (serviceId.includes('tienda') || serviceId.includes('ecommerce')) return 'tienda'
   if (serviceId.includes('sistema') || serviceId.includes('software')) return 'sistema'
+  if (serviceId.includes('rediseno') || serviceId.includes('rediseño')) return 'rediseno-web'
   if (serviceId.includes('web') || serviceId.includes('wordpress')) return 'profesional'
   return null
 }
@@ -144,7 +153,9 @@ function mapServiceIdToProjectType(serviceId: string): ProjectTypeId | null {
 function normalizeConfiguratorState(value: Record<string, unknown>): ConfiguratorState {
   const projectType =
     typeof value.projectType === 'string' &&
-    (isWebProjectType(value.projectType) || isSocialMediaProjectType(value.projectType))
+    (isWebProjectType(value.projectType) ||
+      isSocialMediaProjectType(value.projectType) ||
+      isRedesignProjectType(value.projectType))
       ? value.projectType
       : null
 
@@ -152,9 +163,9 @@ function normalizeConfiguratorState(value: Record<string, unknown>): Configurato
     ? (value.business as BusinessId)
     : null
 
-  const social = isSocialMediaProjectType(projectType)
+  const fixedScope = isFixedScopeAdminProject(projectType)
 
-  const featureIds: FeatureId[] = social
+  const featureIds: FeatureId[] = fixedScope
     ? []
     : Array.isArray(value.features)
       ? value.features.filter(
@@ -163,18 +174,18 @@ function normalizeConfiguratorState(value: Record<string, unknown>): Configurato
         )
       : []
 
-  const hasDomain: YesNo = social
+  const hasDomain: YesNo = fixedScope
     ? 'si'
     : value.hasDomain === 'si' || value.hasDomain === 'no'
       ? value.hasDomain
       : ''
-  const hasHosting: YesNo = social
+  const hasHosting: YesNo = fixedScope
     ? 'si'
     : value.hasHosting === 'si' || value.hasHosting === 'no'
       ? value.hasHosting
       : ''
   const emailRaw = Number(value.emailCount)
-  const emailCount = social
+  const emailCount = fixedScope
     ? 0
     : ([0, 1, 2, 3, 4, 5, 6] as const).includes(emailRaw as EmailCount)
       ? (emailRaw as EmailCount)
@@ -186,7 +197,7 @@ function normalizeConfiguratorState(value: Record<string, unknown>): Configurato
   return {
     projectType,
     business,
-    features: social ? [] : featureIds.length > 0 ? featureIds : (['whatsapp'] as FeatureId[]),
+    features: fixedScope ? [] : featureIds.length > 0 ? featureIds : (['whatsapp'] as FeatureId[]),
     hasDomain,
     hasHosting,
     emailCount,
@@ -235,9 +246,11 @@ export function buildConfiguratorPayload(
       : 'No',
     incluyeDominioHostingCorreo: monthly
       ? 'No aplica (servicio de manejo de redes)'
-      : state.hasDomain === 'no' || state.hasHosting === 'no' || state.emailCount > 0
-        ? 'Incluye ítems en presupuesto (dominio/hosting/correos según selección)'
-        : 'Cliente ya cuenta con dominio/hosting',
+      : isRedesignProjectType(state.projectType)
+        ? 'No aplica (rediseño sobre sitio y accesos existentes)'
+        : state.hasDomain === 'no' || state.hasHosting === 'no' || state.emailCount > 0
+          ? 'Incluye ítems en presupuesto (dominio/hosting/correos según selección)'
+          : 'Cliente ya cuenta con dominio/hosting',
     breakdown: { lines },
     selected_services: [
       {

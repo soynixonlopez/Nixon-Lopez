@@ -8,7 +8,7 @@ import {
   buildConfiguratorPayload,
   configuratorTotals,
   emptyConfiguratorState,
-  isSocialMediaProjectType,
+  isFixedScopeAdminProject,
   parseClientExtraFromPayload,
   parseConfiguratorFromPayload,
   parsePriceOverride,
@@ -100,8 +100,7 @@ export function QuoteEditorClient({ quote }: { quote: Quote }) {
   )
 
   const canSave = Boolean(config.projectType) && (
-    isSocialMediaProjectType(config.projectType) ||
-    String(config.projectType || '').startsWith('redes-') ||
+    isFixedScopeAdminProject(config.projectType) ||
     ((config.hasDomain === 'si' || config.hasDomain === 'no') &&
       (config.hasHosting === 'si' || config.hasHosting === 'no'))
   )

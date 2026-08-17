@@ -7,6 +7,8 @@ import {
   FEATURES,
   TIMELINES,
   calculateQuote,
+  isFixedScopeAdminProject,
+  isRedesignProjectType,
   isSocialMediaProjectType,
   toggleFeature,
   type ConfiguratorState,
@@ -15,6 +17,7 @@ import {
   type ProjectTypeId,
 } from '@/lib/admin-configurator-quote'
 import {
+  REDESIGN_EXCLUDES,
   SOCIAL_MEDIA_ADDITIONAL_SERVICES,
   SOCIAL_MEDIA_GENERAL_INCLUDES,
 } from '@/lib/quote-configurator'
@@ -30,6 +33,7 @@ const EMAIL_OPTIONS: Array<{ value: EmailCount; label: string }> = [
 ]
 
 const WEB_TYPES = ADMIN_PROJECT_TYPES.filter((p) => p.category === 'web')
+const REDESIGN_TYPES = ADMIN_PROJECT_TYPES.filter((p) => p.category === 'rediseno')
 const REDES_TYPES = ADMIN_PROJECT_TYPES.filter((p) => p.category === 'redes')
 
 type Props = {
@@ -41,18 +45,19 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
   const quote = calculateQuote(state)
   const selectedProject = ADMIN_PROJECT_TYPES.find((p) => p.id === state.projectType) ?? null
   const isRedes = isSocialMediaProjectType(state.projectType)
+  const isRediseno = isRedesignProjectType(state.projectType)
+  const isFixedScope = isFixedScopeAdminProject(state.projectType)
 
   function patch<K extends keyof ConfiguratorState>(key: K, value: ConfiguratorState[K]) {
     onChange({ ...state, [key]: value })
   }
 
   function selectProject(id: ProjectTypeId) {
-    if (isSocialMediaProjectType(id)) {
+    if (isFixedScopeAdminProject(id)) {
       onChange({
         ...state,
         projectType: id,
         features: [],
-        // Marcamos si/no para no bloquear validaciones legacy de web
         hasDomain: 'si',
         hasHosting: 'si',
         emailCount: 0,
@@ -110,6 +115,101 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
             )
           })}
         </div>
+
+        {selectedProject && selectedProject.category === 'web' ? (
+          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand">
+              Qué incluye · {selectedProject.label}
+            </p>
+            <p className="mt-1 text-sm text-slate-600">{selectedProject.description}</p>
+            <ul className="mt-3 space-y-1.5">
+              {selectedProject.includes.map((item) => (
+                <li key={item} className="flex items-start gap-2 text-sm text-slate-700">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" strokeWidth={2.5} />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </section>
+
+      <section>
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <p className="text-sm font-bold text-slate-900">Rediseño web</p>
+          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">
+            Solo admin
+          </span>
+        </div>
+        <p className="mb-3 text-xs text-slate-500">
+          Mejora de diseño y contenido del sitio existente (WordPress u otra). Sin páginas ni
+          funciones nuevas.
+        </p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {REDESIGN_TYPES.map((project) => {
+            const active = state.projectType === project.id
+            return (
+              <button
+                key={project.id}
+                type="button"
+                onClick={() => selectProject(project.id as ProjectTypeId)}
+                className={`rounded-xl border px-3 py-3 text-left transition ${
+                  active
+                    ? 'border-brand/35 bg-brand/[0.06] ring-1 ring-brand/20'
+                    : 'border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {'badge' in project && project.badge ? (
+                    <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                      {project.badge}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="mt-1.5 flex items-baseline justify-between gap-2">
+                  <span className="text-sm font-semibold text-slate-900">{project.label}</span>
+                  <span className="shrink-0 text-sm font-bold text-brand">${project.basePrice}</span>
+                </div>
+                <p className="mt-1 text-xs leading-relaxed text-slate-500">{project.description}</p>
+              </button>
+            )
+          })}
+        </div>
+
+        {selectedProject && isRediseno ? (
+          <div className="mt-3 space-y-3">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-brand">
+                Qué incluye · {selectedProject.label}
+              </p>
+              {'target' in selectedProject && selectedProject.target ? (
+                <p className="mt-1 text-sm font-medium text-slate-700">{selectedProject.target}</p>
+              ) : null}
+              <p className="mt-1 text-sm text-slate-600">{selectedProject.description}</p>
+              <ul className="mt-3 space-y-1.5">
+                {selectedProject.includes.map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-sm text-slate-700">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" strokeWidth={2.5} />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 text-xs text-slate-500">Entrega: {selectedProject.delivery}</p>
+            </div>
+            <div className="rounded-xl border border-amber-200/80 bg-amber-50/60 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
+                No incluidos
+              </p>
+              <ul className="mt-2 space-y-1">
+                {REDESIGN_EXCLUDES.map((item) => (
+                  <li key={item} className="text-xs text-amber-900/80">
+                    · {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section>
@@ -201,26 +301,9 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
             </div>
           </div>
         ) : null}
-
-        {selectedProject && !isRedes ? (
-          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand">
-              Qué incluye · {selectedProject.label}
-            </p>
-            <p className="mt-1 text-sm text-slate-600">{selectedProject.description}</p>
-            <ul className="mt-3 space-y-1.5">
-              {selectedProject.includes.map((item) => (
-                <li key={item} className="flex items-start gap-2 text-sm text-slate-700">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" strokeWidth={2.5} />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
       </section>
 
-      {!isRedes ? (
+      {!isFixedScope ? (
         <>
           <section>
             <p className="mb-2 text-sm font-bold text-slate-900">Funcionalidades</p>

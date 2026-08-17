@@ -8,7 +8,7 @@ import {
   buildConfiguratorPayload,
   configuratorTotals,
   emptyConfiguratorState,
-  isSocialMediaProjectType,
+  isFixedScopeAdminProject,
   PROJECT_TYPES,
   type ConfiguratorState,
 } from '@/lib/admin-configurator-quote'
@@ -52,12 +52,7 @@ export default function NuevaCotizacionPage() {
     [config, overrideValue]
   )
 
-  const isRedesPlan =
-    isSocialMediaProjectType(config.projectType) ||
-    Boolean(
-      config.projectType &&
-        PROJECT_TYPES.find((p) => p.id === config.projectType)?.category === 'redes'
-    )
+  const isFixedScope = isFixedScopeAdminProject(config.projectType)
 
   const canGoNextStep = (() => {
     if (step === 1) {
@@ -69,8 +64,8 @@ export default function NuevaCotizacionPage() {
     }
     if (step === 2) {
       if (!config.projectType) return false
-      // Planes de redes: no requieren dominio/hosting
-      if (isRedesPlan) return true
+      // Redes / rediseño: no requieren dominio/hosting
+      if (isFixedScope) return true
       return (
         (config.hasDomain === 'si' || config.hasDomain === 'no') &&
         (config.hasHosting === 'si' || config.hasHosting === 'no')

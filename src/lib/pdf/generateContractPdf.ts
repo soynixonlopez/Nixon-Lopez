@@ -330,6 +330,16 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
   if (clientTax) {
     page.drawText(`Cedula / RUC: ${clientTax}`, { x: colR, y, size: 9, font, color: muted })
   }
+
+  const prestadorAddr = `${INVOICE_BRANDING.addressLine1}, ${INVOICE_BRANDING.addressLine2}`
+  const prestadorAddrLines = wrapText(prestadorAddr, sigW, font, 8).slice(0, 3)
+  let yPrestadorAddr = y - 12
+  for (let i = 0; i < prestadorAddrLines.length; i++) {
+    page.drawText(prestadorAddrLines[i], { x: colL, y: yPrestadorAddr, size: 8, font, color: muted })
+    if (i < prestadorAddrLines.length - 1) yPrestadorAddr -= 10
+  }
+  yAfterRucRow = Math.min(yAfterRucRow, yPrestadorAddr)
+
   if (contract.client_address?.trim()) {
     const addr = contract.client_address.trim()
     const addrLines = wrapText(addr, sigW, font, 8).slice(0, 2)
@@ -340,7 +350,7 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
     }
     yAfterRucRow = Math.min(yAfterRucRow, yAddr)
   } else if (clientTax) {
-    yAfterRucRow = y
+    yAfterRucRow = Math.min(yAfterRucRow, y)
   }
   y = yAfterRucRow - 14
 

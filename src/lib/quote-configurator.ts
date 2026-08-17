@@ -6,7 +6,9 @@ export type SocialMediaPlanId =
   | 'redes-profesional'
   | 'redes-corporativo'
   | 'redes-premium'
-export type ProjectTypeId = WebProjectTypeId | SocialMediaPlanId
+/** Servicios admin (no cotizador público). */
+export type AdminOnlyProjectTypeId = 'rediseno-web'
+export type ProjectTypeId = WebProjectTypeId | SocialMediaPlanId | AdminOnlyProjectTypeId
 export type BusinessId =
   | 'turismo'
   | 'restaurante'
@@ -263,18 +265,70 @@ const SOCIAL_MEDIA_PLANS = [
   },
 ] as const
 
-export const PROJECT_TYPES = [...WEB_PROJECT_TYPES, ...SOCIAL_MEDIA_PLANS] as const
+/** Rediseño de sitio existente — solo admin. */
+const ADMIN_WEB_SERVICES = [
+  {
+    id: 'rediseno-web' as const,
+    label: 'Rediseño web',
+    description:
+      'Mejora visual y de contenido del sitio actual (páginas existentes). Ideal para WordPress u otra web ya publicada.',
+    basePrice: 150,
+    priceLabel: 'Precio fijo',
+    delivery: '5 a 10 días hábiles',
+    category: 'rediseno' as const,
+    adminOnly: true as const,
+    monthly: false as const,
+    badge: 'Sitio existente',
+    target: 'WordPress u otra web ya publicada — sin nuevas páginas ni funciones',
+    includes: [
+      'Rediseño visual general de las páginas ya existentes',
+      'Ajustes de contenido orientados a SEO (títulos, textos, estructura)',
+      'Mejora de hooks / mensajes de apertura',
+      'Optimización de llamadas a la acción (CTAs)',
+      'Ajuste e integración de imágenes en el diseño actual',
+      'Mejora de jerarquía visual y legibilidad',
+      'Adaptación responsive del diseño rediseñado',
+      'Sin agregar nuevas funcionalidades',
+      'Sin crear páginas nuevas (solo páginas disponibles)',
+    ],
+  },
+] as const
 
-/** Tipos visibles en cotizador público (sin planes de redes). */
+export const REDESIGN_EXCLUDES = [
+  'Nuevas páginas o secciones no existentes en el sitio actual',
+  'Nuevas funcionalidades, plugins, módulos o integraciones',
+  'Desarrollo de tienda, reservas, pasarela u otros sistemas',
+  'Campañas publicitarias o presupuesto de anuncios',
+  'Diseño de logotipo o identidad visual completa (salvo acuerdo expreso)',
+  'Redacción de todo el contenido desde cero si EL CLIENTE no suministra textos',
+  'Dominio, hosting o correos (se trabaja sobre el sitio y accesos existentes)',
+] as const
+
+export const PROJECT_TYPES = [...WEB_PROJECT_TYPES, ...ADMIN_WEB_SERVICES, ...SOCIAL_MEDIA_PLANS] as const
+
+/** Tipos visibles en cotizador público (sin servicios solo-admin). */
 export const PUBLIC_PROJECT_TYPES = WEB_PROJECT_TYPES
 
-/** Tipos disponibles en admin (web + redes). */
+/** Tipos disponibles en admin (web + rediseño + redes). */
 export const ADMIN_PROJECT_TYPES = PROJECT_TYPES
 
 export function isSocialMediaProjectType(
   id: ProjectTypeId | string | null | undefined
 ): id is SocialMediaPlanId {
   return typeof id === 'string' && id.startsWith('redes-')
+}
+
+export function isRedesignProjectType(
+  id: ProjectTypeId | string | null | undefined
+): id is AdminOnlyProjectTypeId {
+  return id === 'rediseno-web'
+}
+
+/** Alcance fijo (sin extras de dominio/features): redes o rediseño. */
+export function isFixedScopeAdminProject(
+  id: ProjectTypeId | string | null | undefined
+): boolean {
+  return isSocialMediaProjectType(id) || isRedesignProjectType(id)
 }
 
 export function isWebProjectType(id: ProjectTypeId | string | null | undefined): id is WebProjectTypeId {
@@ -362,8 +416,8 @@ export function buildQuoteLines(state: ConfiguratorState): QuoteLine[] {
     })
   }
 
-  // Planes de redes: precio fijo mensual, sin extras de web
-  if (isSocialMediaProjectType(state.projectType)) {
+  // Planes de redes / rediseño: precio fijo del servicio, sin extras de web
+  if (isFixedScopeAdminProject(state.projectType)) {
     return lines
   }
 
@@ -408,7 +462,7 @@ export function calculateQuote(state: ConfiguratorState) {
     delivery: project?.delivery ?? 'Por definir',
     projectLabel: project?.label ?? 'Tu proyecto',
     monthly: isMonthly,
-    includedZeroPriceFeatures: isSocialMediaProjectType(state.projectType)
+    includedZeroPriceFeatures: isFixedScopeAdminProject(state.projectType)
       ? []
       : state.features
           .map((id) => getFeature(id))
@@ -422,6 +476,7 @@ export function mapLegacyServiceToProject(serviceId: string | null): ProjectType
   if (!serviceId) return null
   const id = serviceId.toLowerCase()
   if (isSocialMediaProjectType(id)) return id
+  if (isRedesignProjectType(id)) return id
   if (id === 'landing') return 'landing'
   if (id.includes('tienda') || id.includes('productos') || id.includes('ecommerce') || id === 'tienda') {
     return 'tienda'
@@ -434,6 +489,7 @@ export function mapLegacyServiceToProject(serviceId: string | null): ProjectType
   ) {
     return 'sistema'
   }
+  // En cotizador público, rediseño legacy se trata como web profesional
   if (id.includes('web') || id.includes('wordpress') || id.includes('rediseno') || id === 'profesional') {
     return 'profesional'
   }

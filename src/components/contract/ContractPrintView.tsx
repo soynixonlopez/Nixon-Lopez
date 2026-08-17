@@ -100,6 +100,12 @@ export function ContractPrintView({ contract }: { contract: ServiceContractRecor
               <p className="mt-1 text-xs text-slate-600">
                 RUC <KeyField>{INVOICE_BRANDING.ruc}</KeyField>
               </p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                Ubicación:{' '}
+                <KeyField>
+                  {INVOICE_BRANDING.addressLine1}, {INVOICE_BRANDING.addressLine2}
+                </KeyField>
+              </p>
             </div>
             <div>
               <div className="min-h-[2.25rem] border-b border-slate-900" aria-hidden />

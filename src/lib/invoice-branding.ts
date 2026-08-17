@@ -11,9 +11,9 @@ export const INVOICE_BRANDING = {
   /** Línea de actividad bajo el nombre comercial */
   businessSubtitle: 'Desarrollo web, automatización e IA',
   /** RUC Panamá */
-  ruc: '10-711-1351 DV.0',
-  addressLine1: 'Panama City, Calle 50',
-  addressLine2: 'Edificio Mirador 50',
+  ruc: '10-711-1351 DV 00',
+  addressLine1: 'Panamá, San Francisco, Calle 50',
+  addressLine2: 'Edificio Mirador 50, Oficina 9B',
   country: 'República de Panamá',
   /** Logo en /public (ruta absoluta para <Image> y PDF) */
   logoPath: '/images/logooficial.png',

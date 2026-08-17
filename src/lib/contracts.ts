@@ -2,11 +2,13 @@ import { INVOICE_BRANDING } from '@/lib/invoice-branding'
 import {
   FEATURES,
   PROJECT_TYPES,
+  REDESIGN_EXCLUDES,
   SOCIAL_MEDIA_ADDITIONAL_SERVICES,
   SOCIAL_MEDIA_GENERAL_INCLUDES,
   getBusinessLabel,
   getFeature,
   getProjectType,
+  isRedesignProjectType,
   isSocialMediaProjectType,
   isWebProjectType,
   type BusinessId,
@@ -92,6 +94,7 @@ function titled(index: number, label: string) {
 export function inferServiceType(serviceLabel: string) {
   const s = serviceLabel.toLowerCase()
   if (s.includes('redes') || s.includes('social')) return 'redes'
+  if (s.includes('rediseñ') || s.includes('rediseno') || s.includes('rediseño')) return 'rediseno'
   if (s.includes('app')) return 'app'
   if (s.includes('ia') || s.includes('automat')) return 'automation'
   if (s.includes('ads') || s.includes('publicidad')) return 'ads'
@@ -104,6 +107,15 @@ export function inferServiceType(serviceLabel: string) {
 
 export function getContractTemplate(serviceLabel: string): ContractTemplate {
   const type = inferServiceType(serviceLabel)
+  if (type === 'rediseno') {
+    return {
+      objectText:
+        'EL PRESTADOR se compromete a realizar el rediseño visual y de contenido del sitio web existente de EL CLIENTE, trabajando sobre las páginas ya disponibles, sin agregar nuevas páginas ni nuevas funcionalidades.',
+      includes: [...(getProjectType('rediseno-web')?.includes ?? [])],
+      excludes: [...REDESIGN_EXCLUDES],
+      timeline: getProjectType('rediseno-web')?.delivery ?? '5 a 10 días hábiles',
+    }
+  }
   if (type === 'redes') {
     return {
       objectText:
@@ -202,7 +214,10 @@ function parseConfiguratorFromTerms(terms: Record<string, unknown> | null): Part
   if (!nested) return null
   const serviceId = typeof nested.serviceId === 'string' ? nested.serviceId : null
   const projectType =
-    serviceId && (isWebProjectType(serviceId) || isSocialMediaProjectType(serviceId))
+    serviceId &&
+    (isWebProjectType(serviceId) ||
+      isSocialMediaProjectType(serviceId) ||
+      isRedesignProjectType(serviceId))
       ? (serviceId as ProjectTypeId)
       : null
   return {
@@ -233,6 +248,9 @@ function projectObjectNarrative(
   serviceLabel: string
 ) {
   const business = businessLabel ? ` orientada al sector ${businessLabel}` : ''
+  if (isRedesignProjectType(projectType)) {
+    return `EL PRESTADOR se compromete a realizar para EL CLIENTE el rediseño visual y de contenido de su sitio web existente${business}, trabajando sobre las páginas ya publicadas, incluyendo ajustes de SEO de contenido, hooks, llamadas a la acción e imágenes, sin agregar nuevas páginas ni nuevas funcionalidades, de conformidad con el alcance del presente contrato.`
+  }
   if (isSocialMediaProjectType(projectType)) {
     return `EL PRESTADOR se compromete a prestar a EL CLIENTE el servicio de manejo profesional de redes sociales${business}, correspondiente al plan “${serviceLabel}”, incluyendo estrategia, diseño, copywriting y programación de contenido en las plataformas acordadas, de conformidad con el alcance del presente contrato.`
   }
@@ -478,18 +496,201 @@ function buildSocialMediaContractClauses(
   }
 }
 
+function buildRedesignContractClauses(
+  contract: ServiceContractRecord,
+  projectType: ProjectTypeId | null
+): BuiltContractClauses {
+  const project = getProjectType(projectType) ?? getProjectType('rediseno-web')
+  const terms = contract.terms_payload
+  const configurator = parseConfiguratorFromTerms(terms)
+  const businessId = (configurator?.business as BusinessId | null | undefined) ?? null
+  const businessLabel = getBusinessLabel(businessId)
+  const amount = Number(contract.total_amount || 0)
+  const amountTxt = money(amount)
+  const planLabel = project?.label || contract.service_label || 'Rediseño web'
+  const delivery = project?.delivery ?? '5 a 10 días hábiles'
+  const includes = project?.includes?.length ? [...project.includes] : []
+  const excludes = [...REDESIGN_EXCLUDES]
+
+  const introSegments = buildContractIntroSegments(contract)
+  const intro = introSegments.map((s) => s.value).join('')
+  const serviceSubtitle = planLabel.toUpperCase()
+  const blocks: ContractClauseBlock[] = []
+  let i = 0
+
+  blocks.push({
+    title: titled(i++, 'OBJETO DEL CONTRATO'),
+    paragraphs: [
+      projectObjectNarrative(projectType ?? 'rediseno-web', businessLabel, planLabel),
+      'El servicio consiste en mejorar el diseño y el contenido de un sitio web ya existente (incluyendo sitios WordPress u otras plataformas), sin ampliar el alcance funcional ni la estructura de páginas.',
+    ],
+  })
+
+  blocks.push({
+    title: titled(i++, 'ALCANCE DEL REDISEÑO'),
+    paragraphs: [
+      `El servicio contratado corresponde a: ${planLabel}.`,
+      project?.description ||
+        'Rediseño visual y de contenido sobre las páginas disponibles del sitio actual.',
+      'El alcance incluye:',
+    ],
+    bullets: includes,
+  })
+
+  blocks.push({
+    title: titled(i++, 'CONTENIDO, SEO Y CONVERSIÓN'),
+    paragraphs: [
+      'Dentro del alcance se contemplan ajustes de contenido orientados a mejorar claridad comercial y base SEO on-page, tales como:',
+    ],
+    bullets: [
+      'Revisión y mejora de títulos, textos y jerarquía de contenido en páginas existentes',
+      'Ajuste de hooks o mensajes de apertura para captar atención',
+      'Optimización de llamadas a la acción (CTAs) visibles y claras',
+      'Integración o ajuste de imágenes dentro del diseño rediseñado',
+      'Mejoras de legibilidad, espaciado y presentación visual responsive',
+    ],
+    afterBullets: [
+      'Esta implementación SEO corresponde a una mejora de contenido y estructura en las páginas existentes. EL PRESTADOR no garantiza posiciones específicas en buscadores ni resultados comerciales.',
+    ],
+  })
+
+  blocks.push({
+    title: titled(i++, 'LIMITACIONES DEL ALCANCE'),
+    paragraphs: [
+      'Queda expresamente fuera del alcance de este contrato:',
+    ],
+    bullets: excludes,
+  })
+
+  blocks.push({
+    title: titled(i++, 'ACCESOS Y RESPONSABILIDAD DEL CLIENTE'),
+    paragraphs: [
+      'EL CLIENTE deberá facilitar accesos de administración al sitio (por ejemplo WordPress u otro CMS), identidad visual, textos e imágenes autorizadas.',
+      'EL CLIENTE será responsable de la veracidad, legalidad y autorización de uso del contenido suministrado.',
+      'Los retrasos en accesos, aprobaciones o entrega de materiales podrán extender el plazo de entrega.',
+    ],
+  })
+
+  blocks.push({
+    title: titled(i++, 'PLAZO DE ENTREGA'),
+    paragraphs: [
+      `El tiempo estimado de ejecución será de ${delivery}.`,
+      'El plazo comenzará a contar a partir de la recepción del pago inicial, de los accesos necesarios y del contenido/materiales requeridos.',
+    ],
+  })
+
+  blocks.push({
+    title: titled(i++, 'COSTO DEL SERVICIO Y FORMA DE PAGO'),
+    paragraphs: [
+      `El valor total acordado para el rediseño será de ${amountTxt}.`,
+      'El valor incluye el alcance descrito en las cláusulas anteriores, de conformidad con la cotización aprobada.',
+    ],
+    subsections: [
+      {
+        heading: 'Forma de pago',
+        bullets: [
+          `50% para iniciar el servicio: ${half(amount)}`,
+          `50% contra entrega y aprobación final: ${half(amount)}`,
+          'El servicio no iniciará hasta recibir el pago inicial.',
+        ],
+      },
+      {
+        heading: 'Métodos de pago',
+        bullets: ['Transferencia bancaria / ACH', 'Yappy', 'Otro método previamente acordado'],
+      },
+    ],
+  })
+
+  blocks.push({
+    title: titled(i++, 'ENTREGA Y APROBACIÓN'),
+    paragraphs: [
+      'Una vez finalizado el rediseño, EL PRESTADOR presentará el resultado a EL CLIENTE para revisión.',
+      'EL CLIENTE podrá reportar ajustes correspondientes al alcance originalmente contratado. Las nuevas páginas, funcionalidades o cambios sustanciales podrán cotizarse por separado.',
+      'La aprobación podrá realizarse mediante WhatsApp, correo electrónico, firma u otro medio que deje constancia.',
+    ],
+  })
+
+  blocks.push({
+    title: titled(i++, 'GARANTÍA TÉCNICA'),
+    paragraphs: [
+      'EL PRESTADOR otorgará una garantía técnica de 7 días calendario posteriores a la entrega final, limitada a errores derivados del rediseño contratado.',
+    ],
+    bullets: [
+      'Errores de maquetación o visualización del alcance entregado',
+      'Ajustes menores derivados del trabajo original',
+    ],
+    afterBullets: [
+      'La garantía no incluye nuevas páginas, nuevas funcionalidades, rediseños adicionales ni cambios solicitados fuera del alcance.',
+    ],
+  })
+
+  blocks.push({
+    title: titled(i++, 'LEGISLACIÓN APLICABLE'),
+    paragraphs: [
+      'El presente contrato se rige por las leyes de la República de Panamá. Cualquier disputa será resuelta ante los tribunales competentes de Panamá.',
+    ],
+  })
+
+  blocks.push({
+    title: titled(i++, 'ACEPTACIÓN DEL CONTRATO'),
+    paragraphs: [
+      'Ambas partes manifiestan haber leído, comprendido y aceptado los términos establecidos en el presente contrato.',
+      'Cualquier ampliación de alcance (páginas o funcionalidades nuevas) deberá acordarse por escrito antes de ejecutarse.',
+    ],
+  })
+
+  if (contract.custom_notes?.trim()) {
+    blocks.push({
+      title: 'OBSERVACIONES ADICIONALES',
+      paragraphs: [contract.custom_notes.trim()],
+    })
+  }
+
+  return {
+    intro,
+    introSegments,
+    serviceSubtitle,
+    blocks,
+    primera: blocks[0]?.paragraphs?.[0] ?? '',
+    segundaIncluye: includes,
+    segundaNoIncluye: excludes,
+    tercera: [
+      `El valor total del rediseño será de ${amountTxt}.`,
+      `Forma de pago: 50% anticipo (${half(amount)}) y 50% contra entrega (${half(amount)}).`,
+      'El servicio no iniciará hasta recibir el pago inicial.',
+      'Métodos de pago: Transferencia/ACH, Yappy u otro método previamente acordado.',
+    ],
+    cuarta: [
+      'Trabajo sobre sitio y páginas existentes.',
+      'EL CLIENTE suministra accesos e identidad de marca.',
+      'Sin nuevas páginas ni nuevas funcionalidades.',
+    ],
+    quinta: `El tiempo estimado será de ${delivery}, contado a partir del pago inicial y de la entrega de accesos/materiales por EL CLIENTE.`,
+  }
+}
+
 export function buildContractClauses(contract: ServiceContractRecord): BuiltContractClauses {
   const terms = contract.terms_payload
   const selectedServices = extractQuoteServiceSnapshots(terms)
   const configurator = parseConfiguratorFromTerms(terms)
   const projectType =
     (configurator?.projectType as ProjectTypeId | null | undefined) ??
-    (isWebProjectType(contract.service_type) || isSocialMediaProjectType(contract.service_type)
+    (isWebProjectType(contract.service_type) ||
+    isSocialMediaProjectType(contract.service_type) ||
+    isRedesignProjectType(contract.service_type)
       ? (contract.service_type as ProjectTypeId)
       : null)
 
   if (isSocialMediaProjectType(projectType) || inferServiceType(contract.service_label) === 'redes') {
     return buildSocialMediaContractClauses(contract, projectType)
+  }
+
+  if (
+    isRedesignProjectType(projectType) ||
+    inferServiceType(contract.service_label) === 'rediseno' ||
+    contract.service_type === 'rediseno-web'
+  ) {
+    return buildRedesignContractClauses(contract, projectType ?? 'rediseno-web')
   }
 
   const project = getProjectType(projectType)
