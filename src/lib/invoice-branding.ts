@@ -28,6 +28,9 @@ export const INVOICE_BRANDING = {
     'Documento emitido a efectos informativos y de cobro. Conserve este comprobante para sus registros.',
   /** Firmante que representa al prestador en contratos impresos / PDF */
   signatoryLegalName: 'Nixon Jill Lopez Hernandez',
+  /** Ingeniero / responsable técnico en contratos */
+  engineerInCharge: 'Nixon López',
+  engineerTitle: 'Ingeniero encargado',
 } as const
 
 export function documentTitle(kind: 'prefactura' | 'final') {

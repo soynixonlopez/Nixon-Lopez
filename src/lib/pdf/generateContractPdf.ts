@@ -157,41 +157,127 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
 
   const maxWidth = W - M * 2
   const logoPath = path.join(process.cwd(), 'public', INVOICE_BRANDING.logoPath.replace(/^\//, ''))
+  let logoBottomY = y
   try {
     const bytes = fs.readFileSync(logoPath)
     const img = await pdf.embedPng(bytes)
-    const maxW = 170
+    const maxW = 150
     const scale = maxW / img.width
     const ih = img.height * scale
-    page.drawImage(img, { x: (W - maxW) / 2, y: y - ih, width: maxW, height: ih })
-    y -= ih + 28
+    page.drawImage(img, { x: M, y: y - ih, width: maxW, height: ih })
+    logoBottomY = y - ih
   } catch {
-    // ignore logo embedding failure — deja espacio coherente con el bloque del título
-    y -= 16
+    logoBottomY = y - 8
   }
 
-  const contractTitle = 'CONTRATO DE PRESTACION DE SERVICIOS TECNOLOGICOS'
-  const titleLines = wrapText(contractTitle, maxWidth, bold, 11)
-  for (const line of titleLines) {
-    page.drawText(line, {
-      x: centerTextX(line, bold, 11),
-      y,
-      size: 11,
-      font: bold,
-      color: accent,
-    })
-    y -= 15
-  }
-  y -= 10
-  const contractNoLine = `No. ${contract.contract_number}`
-  page.drawText(contractNoLine, {
-    x: centerTextX(contractNoLine, bold, 10),
+  // Bloque derecho: tipo de documento + número
+  const rightTitle = 'CONTRATO DE PRESTACION'
+  const rightTitle2 = 'DE SERVICIOS TECNOLOGICOS'
+  const rightX = M + 200
+  const rightW = W - M - rightX
+  page.drawText(rightTitle, {
+    x: W - M - bold.widthOfTextAtSize(rightTitle, 10),
     y,
     size: 10,
     font: bold,
+    color: accent,
+  })
+  y -= 13
+  page.drawText(rightTitle2, {
+    x: W - M - bold.widthOfTextAtSize(rightTitle2, 10),
+    y,
+    size: 10,
+    font: bold,
+    color: accent,
+  })
+  y -= 18
+  const serviceLine = pdfSafe(clauses.serviceSubtitle)
+  page.drawText('SERVICIO', {
+    x: W - M - bold.widthOfTextAtSize('SERVICIO', 8),
+    y,
+    size: 8,
+    font: bold,
     color: muted,
   })
-  y -= 30
+  y -= 11
+  const serviceLines = wrapText(serviceLine, rightW, bold, 9)
+  for (const line of serviceLines.slice(0, 2)) {
+    page.drawText(line, {
+      x: W - M - bold.widthOfTextAtSize(line, 9),
+      y,
+      size: 9,
+      font: bold,
+      color: text,
+    })
+    y -= 11
+  }
+  y -= 4
+  page.drawText('CONTRATO No.', {
+    x: W - M - bold.widthOfTextAtSize('CONTRATO No.', 8),
+    y,
+    size: 8,
+    font: bold,
+    color: muted,
+  })
+  y -= 11
+  const noLine = pdfSafe(contract.contract_number)
+  page.drawText(noLine, {
+    x: W - M - bold.widthOfTextAtSize(noLine, 10),
+    y,
+    size: 10,
+    font: bold,
+    color: text,
+  })
+  const rightBlockBottom = y
+
+  // Datos del negocio bajo el logo (izquierda)
+  y = Math.min(logoBottomY, rightBlockBottom) - 16
+  page.drawText(pdfSafe(INVOICE_BRANDING.businessName), {
+    x: M,
+    y,
+    size: 11,
+    font: bold,
+    color: accent,
+  })
+  y -= 13
+  page.drawText(pdfSafe(INVOICE_BRANDING.businessSubtitle), {
+    x: M,
+    y,
+    size: 9,
+    font,
+    color: muted,
+  })
+  y -= 16
+
+  // Caja de datos fiscales
+  const infoLines = [
+    `RUC: ${INVOICE_BRANDING.ruc}`,
+    `Ubicacion: ${INVOICE_BRANDING.addressLine1}`,
+    INVOICE_BRANDING.addressLine2,
+    INVOICE_BRANDING.country,
+    `${INVOICE_BRANDING.engineerTitle}: ${INVOICE_BRANDING.engineerInCharge}`,
+    INVOICE_BRANDING.email,
+    INVOICE_BRANDING.website.replace(/^https?:\/\//, ''),
+  ]
+  const boxPadding = 8
+  const lineH = 11
+  const boxHeight = infoLines.length * lineH + boxPadding * 2
+  const boxBottom = y - boxHeight
+  page.drawRectangle({
+    x: M,
+    y: boxBottom,
+    width: maxWidth,
+    height: boxHeight,
+    borderColor: rgb(0.86, 0.89, 0.92),
+    borderWidth: 0.8,
+    color: rgb(0.97, 0.98, 0.99),
+  })
+  let ty = y - boxPadding - 8
+  for (const line of infoLines) {
+    page.drawText(pdfSafe(line), { x: M + boxPadding, y: ty, size: 8, font, color: text })
+    ty -= lineH
+  }
+  y = boxBottom - 22
 
   const drawParagraph = (p: string, size = 10, spacing = 17) => {
     const lines = wrapText(p, maxWidth, font, size)
@@ -338,6 +424,11 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
     page.drawText(prestadorAddrLines[i], { x: colL, y: yPrestadorAddr, size: 8, font, color: muted })
     if (i < prestadorAddrLines.length - 1) yPrestadorAddr -= 10
   }
+  yPrestadorAddr -= 10
+  page.drawText(
+    pdfSafe(`${INVOICE_BRANDING.engineerTitle}: ${INVOICE_BRANDING.engineerInCharge}`),
+    { x: colL, y: yPrestadorAddr, size: 8, font, color: muted }
+  )
   yAfterRucRow = Math.min(yAfterRucRow, yPrestadorAddr)
 
   if (contract.client_address?.trim()) {

@@ -19,28 +19,73 @@ export function ContractPrintView({ contract }: { contract: ServiceContractRecor
       id="contract-print-root"
       className="mx-auto w-full max-w-[210mm] bg-white text-slate-900 border border-slate-200 shadow-xl print:shadow-none print:border-0 print:max-w-none print:overflow-visible"
     >
-      <header className="px-8 pt-8 pb-6 border-b border-slate-200">
-        <div className="flex items-start justify-between gap-6">
-          <div className="relative h-16 w-56">
-            <Image
-              src={INVOICE_BRANDING.logoPath}
-              alt={INVOICE_BRANDING.logoAlt}
-              fill
-              className="object-contain object-left"
-              priority
-            />
+      <header className="border-b border-slate-200 px-8 pt-8 pb-6">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="relative h-16 w-56 max-w-[280px] sm:h-[4.5rem] sm:w-64">
+              <Image
+                src={INVOICE_BRANDING.logoPath}
+                alt={INVOICE_BRANDING.logoAlt}
+                fill
+                className="object-contain object-left"
+                sizes="256px"
+                priority
+              />
+            </div>
+
+            <div className="mt-4 space-y-0.5">
+              <p
+                className="text-lg font-bold tracking-tight sm:text-xl"
+                style={{ color: INVOICE_BRANDING.accentHex }}
+              >
+                {INVOICE_BRANDING.businessName}
+              </p>
+              <p className="text-sm text-slate-600">{INVOICE_BRANDING.businessSubtitle}</p>
+            </div>
+
+            <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50/90 px-3.5 py-3 text-left">
+              <p className="text-[11px] leading-relaxed text-slate-700">
+                <span className="font-semibold text-slate-800">RUC:</span>{' '}
+                <span className="font-semibold">{INVOICE_BRANDING.ruc}</span>
+              </p>
+              <p className="mt-2 text-[11px] leading-relaxed text-slate-600">
+                <span className="font-semibold text-slate-800">Ubicación:</span>
+                <br />
+                {INVOICE_BRANDING.addressLine1}
+                <br />
+                {INVOICE_BRANDING.addressLine2}
+                <br />
+                {INVOICE_BRANDING.country}
+              </p>
+              <p className="mt-2 border-t border-slate-200/80 pt-2 text-[11px] leading-relaxed text-slate-700">
+                <span className="font-semibold text-slate-800">
+                  {INVOICE_BRANDING.engineerTitle}:
+                </span>{' '}
+                {INVOICE_BRANDING.engineerInCharge}
+              </p>
+              <p className="mt-1 text-[11px] text-slate-600">{INVOICE_BRANDING.email}</p>
+              <p className="mt-0.5 text-[11px] text-slate-600">{INVOICE_BRANDING.website}</p>
+            </div>
           </div>
-          <div className="text-right">
-            <p className="text-lg font-bold leading-tight sm:text-xl" style={{ color: INVOICE_BRANDING.accentHex }}>
+
+          <div className="shrink-0 text-left sm:max-w-[240px] sm:text-right">
+            <p
+              className="text-base font-bold leading-tight sm:text-lg"
+              style={{ color: INVOICE_BRANDING.accentHex }}
+            >
               CONTRATO DE PRESTACIÓN
               <br />
               DE SERVICIOS TECNOLÓGICOS
             </p>
-            <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
-              {c.serviceSubtitle}
+            <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
+              Servicio
             </p>
-            <p className="mt-1 text-xs text-slate-500">
-              Contrato No.: <KeyField>{contract.contract_number}</KeyField>
+            <p className="mt-0.5 text-sm font-semibold text-slate-800">{c.serviceSubtitle}</p>
+            <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
+              Contrato No.
+            </p>
+            <p className="mt-0.5 font-mono text-sm font-bold text-slate-900 underline decoration-slate-800 underline-offset-2">
+              {contract.contract_number}
             </p>
           </div>
         </div>
@@ -105,6 +150,10 @@ export function ContractPrintView({ contract }: { contract: ServiceContractRecor
                 <KeyField>
                   {INVOICE_BRANDING.addressLine1}, {INVOICE_BRANDING.addressLine2}
                 </KeyField>
+              </p>
+              <p className="mt-1 text-xs text-slate-600">
+                {INVOICE_BRANDING.engineerTitle}:{' '}
+                <KeyField>{INVOICE_BRANDING.engineerInCharge}</KeyField>
               </p>
             </div>
             <div>
