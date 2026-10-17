@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
 import { CONTRACT_PAYMENT_BANK, CONTRACT_PAYMENT_YAPPY } from '@/lib/contract-payment'
+import { readCommercialSnapshot, commercialTermsReady } from '@/lib/contract-commercial'
 import { buildContractClauses, type ContractClauseBlock } from '@/lib/contracts'
 import type { ServiceContractRecord } from '@/lib/types/contract'
 
@@ -13,12 +14,20 @@ function KeyField({ children }: { children: React.ReactNode }) {
 export function ContractPrintView({ contract }: { contract: ServiceContractRecord }) {
   const c = buildContractClauses(contract)
   const clientTax = contract.client_tax_id?.trim() || ''
+  const commercial = readCommercialSnapshot(contract.terms_payload)
+  const ready = commercial ? commercialTermsReady(commercial) && contract.status !== 'draft' : contract.status === 'signed'
+  const draft = !ready
 
   return (
     <article
       id="contract-print-root"
       className="mx-auto w-full max-w-[210mm] bg-white text-slate-900 border border-slate-200 shadow-xl print:shadow-none print:border-0 print:max-w-none print:overflow-visible"
     >
+      {draft ? (
+        <p className="bg-amber-100 px-8 py-3 text-center text-sm font-bold uppercase tracking-wide text-amber-950">
+          Borrador. No está listo para firmar.
+        </p>
+      ) : null}
       <header className="border-b border-slate-200 px-8 pt-8 pb-6">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1">

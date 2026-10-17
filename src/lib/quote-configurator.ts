@@ -1,7 +1,23 @@
 /** Configurador de cotización — precios y reglas del wizard premium. */
 
-export type WebProjectTypeId = 'landing' | 'profesional' | 'tienda' | 'sistema'
+import {
+  MARKETING_PLANS,
+  WEB_PLANS,
+  getCatalogPlan,
+  isMarketingPlanId,
+  isWebPlanId,
+  priceCommercial,
+  type CommercialSnapshot,
+  type MarketingPlanId,
+  type SocialChannel,
+  type WebPlanId,
+} from '@/lib/service-catalog'
+
+export type { MarketingPlanId, SocialChannel, WebPlanId }
+
+export type WebProjectTypeId = WebPlanId | 'sistema'
 export type SocialMediaPlanId =
+  | MarketingPlanId
   | 'redes-emprendedor'
   | 'redes-profesional'
   | 'redes-corporativo'
@@ -40,10 +56,13 @@ export type QuoteLine = {
   id: string
   label: string
   amount: number
+  billing?: 'once' | 'monthly' | 'external'
 }
 
 export type ConfiguratorState = {
   projectType: ProjectTypeId | null
+  /** Plan mensual. Puede combinarse con un plan web en `projectType`. */
+  marketingPlan: MarketingPlanId | null
   business: BusinessId | null
   features: FeatureId[]
   hasDomain: YesNo
@@ -54,10 +73,38 @@ export type ConfiguratorState = {
   empresa: string
   correo: string
   whatsapp: string
+  extraPages: number
+  includeStories: boolean
+  storiesPerMonth: number
+  storiesUnitPrice: number
+  adBudgetAccepted: boolean
+  adBudgetUsd: number
+  adsSetupPrice: number
+  channels: SocialChannel[]
+  scopeNotes: string
+  productCount: number | null
+  serviceCount: number | null
+  revisionRounds: number | null
+  customizeVolume: boolean
+  customPosts: number | null
+  customReels: number | null
+  customCampaigns: number | null
+  /** Porcentaje de impuesto solo si se configuró. Null = no aplicar. */
+  taxRate: number | null
+  paymentMethod: string
+  advanceNote: string
+  balanceNote: string
+  paymentSchedule: string
+  termNote: string
+  renewalNote: string
+  terminationNote: string
+  startDate: string
+  deliveryDate: string
 }
 
 export const INITIAL_CONFIGURATOR_STATE: ConfiguratorState = {
   projectType: null,
+  marketingPlan: null,
   business: null,
   features: ['whatsapp'],
   hasDomain: '',
@@ -68,6 +115,32 @@ export const INITIAL_CONFIGURATOR_STATE: ConfiguratorState = {
   empresa: '',
   correo: '',
   whatsapp: '',
+  extraPages: 0,
+  includeStories: false,
+  storiesPerMonth: 0,
+  storiesUnitPrice: 0,
+  adBudgetAccepted: false,
+  adBudgetUsd: 0,
+  adsSetupPrice: 0,
+  channels: ['instagram', 'facebook'],
+  scopeNotes: '',
+  productCount: null,
+  serviceCount: null,
+  revisionRounds: null,
+  customizeVolume: false,
+  customPosts: null,
+  customReels: null,
+  customCampaigns: null,
+  taxRate: null,
+  paymentMethod: '',
+  advanceNote: '',
+  balanceNote: '',
+  paymentSchedule: '',
+  termNote: '',
+  renewalNote: '',
+  terminationNote: '',
+  startDate: '',
+  deliveryDate: '',
 }
 
 /** Incluidos en todos los planes de redes (admin). */
@@ -80,92 +153,71 @@ export const SOCIAL_MEDIA_GENERAL_INCLUDES = [
   'Soporte y comunicación constante',
 ] as const
 
-/** Servicios adicionales (no incluidos en los planes de redes). */
+/** Servicios que no forman parte de los planes base de marketing. */
 export const SOCIAL_MEDIA_ADDITIONAL_SERVICES = [
-  'Gestión de anuncios (Meta Ads): desde $150 USD / mes + inversión publicitaria',
-  'Sesión de fotos / video: cotización aparte',
-  'Grabación de reels: cotización aparte',
-  'Community management intensivo 24/7: costo adicional según volumen',
+  'Historias, salvo extra con cantidad mensual y precio definidos antes de firmar',
+  'Presupuesto publicitario pagado a la plataforma (no es honorario)',
+  'Producción presencial de fotografías o videos',
+  'Atención ilimitada de mensajes',
+  'Desarrollo de funcionalidades web',
+  'Configuración inicial de publicidad cuando no hay gestión mensual: se cotiza aparte',
 ] as const
 
-const WEB_PROJECT_TYPES = [
-  {
-    id: 'landing' as const,
-    label: 'Landing Page',
-    description: 'Una página para convertir visitas en contactos o ventas.',
-    basePrice: 90,
-    priceLabel: 'Precio base',
-    delivery: '3 a 5 días hábiles',
-    category: 'web' as const,
-    adminOnly: false as const,
-    monthly: false as const,
-    includes: [
-      'Una sola página enfocada en conversión',
-      'Mensaje comercial claro (beneficios + llamada a la acción)',
-      'Diseño responsive (móvil, tablet y escritorio)',
-      'Botón de WhatsApp o contacto visible',
-      'Estructura lista para campañas o promociones',
-    ],
-  },
-  {
-    id: 'profesional' as const,
-    label: 'Web Profesional',
-    description: 'Sitio completo para presentar tu negocio y captar clientes.',
-    basePrice: 150,
-    priceLabel: 'Precio base',
-    delivery: '5 a 7 días hábiles',
-    category: 'web' as const,
-    adminOnly: false as const,
-    monthly: false as const,
-    includes: [
-      'Varias secciones (inicio, servicios, nosotros, contacto)',
-      'Diseño profesional adaptable a todos los dispositivos',
-      'Formulario o contacto por WhatsApp',
-      'Navegación clara y llamada a la acción',
-      'Base lista para publicar y crecer tu presencia online',
-    ],
-  },
-  {
-    id: 'tienda' as const,
-    label: 'Tienda Online',
-    description: 'Catálogo, carrito y checkout para vender en línea.',
-    basePrice: 300,
-    priceLabel: 'Precio base',
-    delivery: '10 a 14 días hábiles',
-    category: 'web' as const,
-    adminOnly: false as const,
-    monthly: false as const,
-    includes: [
-      'Catálogo de productos con fichas',
-      'Carrito de compras y flujo de checkout',
-      'Diseño responsive orientado a ventas',
-      'Estructura para gestionar productos',
-      'Base lista para integrar pagos (según extras elegidos)',
-    ],
-  },
+const WEB_PROJECT_TYPES = WEB_PLANS.map((plan) => ({
+  id: plan.id,
+  label: plan.label,
+  description: plan.description,
+  basePrice: plan.basePrice,
+  priceLabel: 'Precio base por proyecto',
+  delivery: 'Por acordar en la cotización',
+  category: 'web' as const,
+  adminOnly: false as const,
+  monthly: false as const,
+  includes: plan.includes,
+  excludes: plan.excludes,
+}))
+
+/** Conservado solo para cotizaciones y contratos anteriores. */
+const LEGACY_WEB_TYPES = [
   {
     id: 'sistema' as const,
     label: 'Sistema a medida',
-    description: 'Software o plataforma según tus procesos internos.',
+    description: 'Plan anterior. Las propuestas nuevas usan los planes del catálogo vigente.',
     basePrice: 500,
     priceLabel: 'Desde',
-    delivery: '15 a 30 días hábiles',
+    delivery: 'Por acordar',
     fromPrice: true as const,
     category: 'web' as const,
-    adminOnly: false as const,
+    adminOnly: true as const,
+    legacy: true as const,
     monthly: false as const,
     includes: [
       'Análisis de procesos y alcance funcional',
-      'Desarrollo a medida según tus flujos',
-      'Accesos y roles según necesidad',
-      'Interfaz adaptada a tu operación',
-      'Entrega por fases con pruebas y ajustes',
+      'Desarrollo a medida según los flujos acordados',
+      'Interfaz adaptada a la operación',
     ],
   },
 ] as const
 
-/** Planes de manejo de redes — solo admin / clientes seleccionados. */
-const SOCIAL_MEDIA_PLANS = [
+/** Planes de marketing digital (mensuales). */
+const SOCIAL_MEDIA_PLANS = MARKETING_PLANS.map((plan) => ({
+  id: plan.id,
+  label: plan.label,
+  description: plan.description,
+  basePrice: plan.basePrice,
+  priceLabel: 'Mensual',
+  delivery: 'Por acordar en la cotización',
+  category: 'redes' as const,
+  adminOnly: false as const,
+  monthly: true as const,
+  badge: plan.recommended ? 'Recomendado' : undefined,
+  target: plan.recommended ? 'Plan recomendado' : 'Marketing digital mensual',
+  includes: plan.includes,
+  excludes: plan.excludes,
+}))
+
+/** Planes de redes anteriores. No se ofrecen en propuestas nuevas. */
+const LEGACY_SOCIAL_PLANS = [
   {
     id: 'redes-emprendedor' as const,
     label: 'Plan Emprendedor — Manejo de redes',
@@ -304,18 +356,24 @@ export const REDESIGN_EXCLUDES = [
   'Dominio, hosting o correos (se trabaja sobre el sitio y accesos existentes)',
 ] as const
 
-export const PROJECT_TYPES = [...WEB_PROJECT_TYPES, ...ADMIN_WEB_SERVICES, ...SOCIAL_MEDIA_PLANS] as const
+export const PROJECT_TYPES = [
+  ...WEB_PROJECT_TYPES,
+  ...LEGACY_WEB_TYPES,
+  ...ADMIN_WEB_SERVICES,
+  ...SOCIAL_MEDIA_PLANS,
+  ...LEGACY_SOCIAL_PLANS,
+]
 
-/** Tipos visibles en cotizador público (sin servicios solo-admin). */
+/** Tipos visibles en cotizador público. */
 export const PUBLIC_PROJECT_TYPES = WEB_PROJECT_TYPES
 
-/** Tipos disponibles en admin (web + rediseño + redes). */
-export const ADMIN_PROJECT_TYPES = PROJECT_TYPES
+/** Tipos disponibles en propuestas nuevas (sin planes heredados). */
+export const ADMIN_PROJECT_TYPES = [...WEB_PROJECT_TYPES, ...ADMIN_WEB_SERVICES, ...SOCIAL_MEDIA_PLANS]
 
 export function isSocialMediaProjectType(
   id: ProjectTypeId | string | null | undefined
 ): id is SocialMediaPlanId {
-  return typeof id === 'string' && id.startsWith('redes-')
+  return typeof id === 'string' && (id.startsWith('redes-') || id.startsWith('mkt-'))
 }
 
 export function isRedesignProjectType(
@@ -332,7 +390,7 @@ export function isFixedScopeAdminProject(
 }
 
 export function isWebProjectType(id: ProjectTypeId | string | null | undefined): id is WebProjectTypeId {
-  return id === 'landing' || id === 'profesional' || id === 'tienda' || id === 'sistema'
+  return isWebPlanId(id) || id === 'sistema'
 }
 
 export const BUSINESS_TYPES = [
@@ -405,7 +463,59 @@ export function getTimelineLabel(id: TimelineId | null) {
   return TIMELINES.find((item) => item.id === id)?.label ?? null
 }
 
+function activeMarketingId(state: ConfiguratorState): MarketingPlanId | null {
+  if (state.marketingPlan && isMarketingPlanId(state.marketingPlan)) return state.marketingPlan
+  if (isMarketingPlanId(state.projectType)) return state.projectType
+  return null
+}
+
+function activeWebId(state: ConfiguratorState): WebPlanId | null {
+  if (isWebPlanId(state.projectType)) return state.projectType
+  return null
+}
+
+export function planAlreadyIncludes(planId: string | null, featureId: FeatureId) {
+  const plan = getCatalogPlan(planId)
+  if (!plan) return false
+  if (featureId === 'whatsapp' || featureId === 'formulario' || featureId === 'seo') return plan.category === 'web'
+  if (featureId === 'panel') return plan.hasAdmin
+  if (featureId === 'pasarela') return plan.hasGateway
+  if (featureId === 'reservas') return plan.id === 'reservas'
+  if (featureId === 'catalogo') return plan.id === 'tienda'
+  return false
+}
+
 export function buildQuoteLines(state: ConfiguratorState): QuoteLine[] {
+  const webId = activeWebId(state)
+  const marketingId = activeMarketingId(state)
+  if (webId || marketingId) {
+    const totals = priceCommercial({
+      webPlanId: webId,
+      marketingPlanId: marketingId,
+      extraPages: state.extraPages,
+      featureLines: state.features.map((id) => {
+        const feature = getFeature(id)
+        return {
+          id,
+          label: feature?.label ?? id,
+          amount: feature?.price ?? 0,
+          includedInPlan: planAlreadyIncludes(webId, id),
+        }
+      }),
+      includeStories: state.includeStories,
+      storiesPerMonth: state.storiesPerMonth,
+      storiesUnitPrice: state.storiesUnitPrice,
+      adBudgetAccepted: state.adBudgetAccepted,
+      adBudgetUsd: state.adBudgetUsd,
+      adsSetupPrice: state.adsSetupPrice,
+      hasDomain: state.hasDomain,
+      hasHosting: state.hasHosting,
+      emailCount: state.emailCount,
+      taxRate: state.taxRate,
+    })
+    return totals.lines
+  }
+
   const lines: QuoteLine[] = []
   const project = getProjectType(state.projectType)
   if (project) {
@@ -413,10 +523,11 @@ export function buildQuoteLines(state: ConfiguratorState): QuoteLine[] {
       id: `project-${project.id}`,
       label: project.monthly ? `${project.label} (mensual)` : project.label,
       amount: project.basePrice,
+      billing: project.monthly ? 'monthly' : 'once',
     })
   }
 
-  // Planes de redes / rediseño: precio fijo del servicio, sin extras de web
+  // Planes heredados de redes / rediseño: precio fijo del servicio, sin extras de web
   if (isFixedScopeAdminProject(state.projectType)) {
     return lines
   }
@@ -453,21 +564,35 @@ export function buildQuoteLines(state: ConfiguratorState): QuoteLine[] {
 
 export function calculateQuote(state: ConfiguratorState) {
   const lines = buildQuoteLines(state)
-  const total = lines.reduce((sum, line) => sum + line.amount, 0)
+  const oneTime = lines.filter((line) => line.billing !== 'monthly' && line.billing !== 'external').reduce((sum, line) => sum + line.amount, 0)
+  const monthlyAmount = lines.filter((line) => line.billing === 'monthly').reduce((sum, line) => sum + line.amount, 0)
+  const external = lines.filter((line) => line.billing === 'external').reduce((sum, line) => sum + line.amount, 0)
+  const hasCatalog = Boolean(activeWebId(state) || activeMarketingId(state))
+  const total = hasCatalog ? oneTime + monthlyAmount : lines.reduce((sum, line) => sum + line.amount, 0)
+  const web = getCatalogPlan(activeWebId(state))
+  const marketing = getCatalogPlan(activeMarketingId(state))
   const project = getProjectType(state.projectType)
-  const isMonthly = Boolean(project && 'monthly' in project && project.monthly)
+  const projectLabel = [web?.label, marketing?.label].filter(Boolean).join(' + ') || project?.label || 'Tu proyecto'
+  const isMonthly = monthlyAmount > 0 && oneTime === 0
   return {
     lines,
     total,
-    delivery: project?.delivery ?? 'Por definir',
-    projectLabel: project?.label ?? 'Tu proyecto',
+    oneTime: hasCatalog ? oneTime : isMonthly ? 0 : total,
+    monthlyAmount,
+    external: hasCatalog ? external : 0,
+    initialTotal: hasCatalog ? oneTime + monthlyAmount : total,
+    nextMonthly: monthlyAmount,
+    delivery: project?.delivery ?? 'Por acordar en la cotización',
+    projectLabel,
     monthly: isMonthly,
-    includedZeroPriceFeatures: isFixedScopeAdminProject(state.projectType)
+    mixed: oneTime > 0 && monthlyAmount > 0,
+    storiesPending: state.includeStories && !(state.storiesPerMonth > 0 && state.storiesUnitPrice > 0),
+    includedZeroPriceFeatures: isFixedScopeAdminProject(state.projectType) && !activeWebId(state)
       ? []
       : state.features
           .map((id) => getFeature(id))
           .filter((item): item is NonNullable<typeof item> => Boolean(item))
-          .filter((item) => item.price === 0)
+          .filter((item) => item.price === 0 || planAlreadyIncludes(activeWebId(state), item.id))
           .map((item) => item.label),
   }
 }
@@ -475,26 +600,33 @@ export function calculateQuote(state: ConfiguratorState) {
 export function mapLegacyServiceToProject(serviceId: string | null): ProjectTypeId | null {
   if (!serviceId) return null
   const id = serviceId.toLowerCase()
-  if (isSocialMediaProjectType(id)) return id
+  if (isMarketingPlanId(id)) return id
+  if (id.startsWith('redes-')) return id as ProjectTypeId
   if (isRedesignProjectType(id)) return id
   if (id === 'landing') return 'landing'
+  if (id.includes('reserva')) return 'reservas'
+  if (id.includes('panel')) return 'web-panel'
+  if (id.includes('corporativ')) return 'corporativo'
   if (id.includes('tienda') || id.includes('productos') || id.includes('ecommerce') || id === 'tienda') {
     return 'tienda'
   }
-  if (
-    id.includes('sistema') ||
-    id.includes('software') ||
-    id === 'custom' ||
-    id === 'reservas'
-  ) {
-    return 'sistema'
-  }
-  // En cotizador público, rediseño legacy se trata como web profesional
-  if (id.includes('web') || id.includes('wordpress') || id.includes('rediseno') || id === 'profesional') {
+  if (id.includes('sistema') || id.includes('software') || id === 'custom') return 'reservas'
+  if (id.includes('web') || id.includes('wordpress') || id.includes('rediseno') || id === 'profesional' || id === 'web-negocio') {
     return 'profesional'
   }
-  if (id === 'pasarela' || id.includes('pasarela')) return 'tienda'
+  if (id === 'pasarela' || id.includes('pasarela')) return 'profesional'
+  if (id.includes('presencia') || id.includes('marketing') || id.includes('publicidad')) return 'mkt-crecimiento'
   return 'profesional'
+}
+
+export function mapLegacyServiceToMarketing(serviceId: string | null): MarketingPlanId | null {
+  if (!serviceId) return null
+  const id = serviceId.toLowerCase()
+  if (isMarketingPlanId(id)) return id
+  if (id.includes('presencia')) return 'mkt-presencia'
+  if (id.includes('integral')) return 'mkt-integral'
+  if (id.includes('publicidad') || id.includes('crecimiento') || id.includes('redes')) return 'mkt-crecimiento'
+  return null
 }
 
 /** Extras sugeridos al llegar desde el home con ?service= */
@@ -512,6 +644,73 @@ export function mapLegacyServiceToFeatures(serviceId: string | null): FeatureId[
     if (!base.includes('seo')) base.push('seo')
   }
   return base
+}
+
+export function buildCommercialSnapshot(state: ConfiguratorState): CommercialSnapshot | null {
+  const webId = activeWebId(state)
+  const marketingId = activeMarketingId(state)
+  const web = getCatalogPlan(webId)
+  const marketing = getCatalogPlan(marketingId)
+  if (!web && !marketing) return null
+  const quote = calculateQuote(state)
+  const posts = state.customizeVolume && state.customPosts != null ? state.customPosts : marketing?.postsPerMonth ?? null
+  const reels = state.customizeVolume && state.customReels != null ? state.customReels : marketing?.reelsPerMonth ?? null
+  const campaigns =
+    state.customizeVolume && state.customCampaigns != null ? state.customCampaigns : marketing?.campaignsIncluded ?? null
+  const includes = [...(web?.includes ?? []), ...(marketing?.includes ?? [])]
+  const excludes = [...(web?.excludes ?? []), ...(marketing?.excludes ?? [])]
+  if (!state.includeStories) excludes.push('Historias: no contratadas.')
+  return {
+    webPlanId: webId,
+    marketingPlanId: marketingId,
+    webLabel: web?.label ?? null,
+    marketingLabel: marketing?.label ?? null,
+    channels: marketing ? state.channels : [],
+    postsPerMonth: posts,
+    reelsPerMonth: reels,
+    campaigns,
+    storiesIncluded: state.includeStories && state.storiesPerMonth > 0 && state.storiesUnitPrice > 0,
+    storiesPerMonth: state.includeStories ? state.storiesPerMonth : 0,
+    storiesUnitPrice: state.includeStories ? state.storiesUnitPrice : 0,
+    pagesIncluded: web?.pagesIncluded ?? null,
+    extraPages: state.extraPages,
+    productsIncluded: state.productCount ?? web?.productsIncluded ?? null,
+    servicesIncluded: state.serviceCount ?? web?.servicesIncluded ?? null,
+    adminModulesNote: web?.hasAdmin
+      ? 'El cliente administra solo los contenidos o módulos descritos en el alcance. No incluye un CMS completo ni roles avanzados.'
+      : null,
+    scopeNotes: state.scopeNotes.trim(),
+    includes,
+    excludes,
+    totals: {
+      lines: quote.lines.map((line) => ({
+        id: line.id,
+        label: line.label,
+        amount: line.amount,
+        billing: line.billing ?? 'once',
+      })),
+      oneTime: quote.oneTime,
+      monthly: quote.monthlyAmount,
+      external: quote.external,
+      initialFees: quote.initialTotal,
+      nextMonthly: quote.nextMonthly,
+      taxRate: state.taxRate,
+      taxAmount: 0,
+      storiesPending: quote.storiesPending,
+    },
+    revisionRounds: state.revisionRounds,
+    startDate: state.startDate,
+    deliveryDate: state.deliveryDate,
+    paymentMethod: state.paymentMethod,
+    advanceNote: state.advanceNote,
+    balanceNote: state.balanceNote,
+    adBudgetUsd: state.adBudgetAccepted ? state.adBudgetUsd : 0,
+    adBudgetAccepted: state.adBudgetAccepted,
+    paymentSchedule: state.paymentSchedule.trim(),
+    termNote: state.termNote.trim(),
+    renewalNote: state.renewalNote.trim(),
+    terminationNote: state.terminationNote.trim(),
+  }
 }
 
 export function splitFullName(fullName: string) {

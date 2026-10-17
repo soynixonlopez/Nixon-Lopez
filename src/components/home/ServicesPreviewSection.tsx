@@ -22,14 +22,84 @@ import { SectionLabel } from '@/components/marketing/SectionLabel'
 import { SectionTitle } from '@/components/marketing/SectionTitle'
 import { useMessages } from '@/i18n/LocaleProvider'
 import { BRAND_ICON_TONES } from '@/lib/brand-icons'
-import { buildWhatsAppUrl, HOME_SERVICES, SERVICES_TRUST_PILLS, quoteUrl } from '@/lib/marketing'
+import { buildWhatsAppUrl, SERVICES_TRUST_PILLS, quoteUrl } from '@/lib/marketing'
+import { MARKETING_PLANS, WEB_PLANS, type CatalogPlan } from '@/lib/service-catalog'
 
-const SERVICE_ICONS = {
-  monitor: Monitor,
-  rocket: Rocket,
-  cart: ShoppingCart,
-  settings: Settings,
-} as const
+const PLAN_ICONS: Record<string, typeof Monitor> = {
+  landing: Rocket,
+  profesional: Monitor,
+  'web-panel': Settings,
+  corporativo: Monitor,
+  tienda: ShoppingCart,
+  reservas: Calendar,
+  'mkt-presencia': MessageCircle,
+  'mkt-crecimiento': Rocket,
+  'mkt-integral': Settings,
+}
+
+function PlanGrid({
+  plans,
+  monthly,
+  isInView,
+}: {
+  plans: readonly CatalogPlan[]
+  monthly?: boolean
+  isInView: boolean
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+      transition={{ duration: 0.5, delay: 0.08 }}
+      className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5"
+    >
+      {plans.map((plan) => {
+        const Icon = PLAN_ICONS[plan.id] ?? Monitor
+        const theme = BRAND_ICON_TONES[monthly ? 'orange' : 'blue']
+        return (
+          <article
+            key={plan.id}
+            className={`flex flex-col rounded-xl border px-5 py-6 sm:px-6 ${monthly ? 'border-amber-200 bg-amber-50/40' : theme.card} ${plan.recommended ? 'ring-2 ring-amber-400' : ''}`}
+          >
+            <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg ${monthly ? 'bg-amber-100 text-amber-800' : theme.wrap}`}>
+              <Icon className="h-6 w-6" aria-hidden />
+            </div>
+            {plan.recommended ? (
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-amber-800">Recomendado</p>
+            ) : null}
+            <h3 className="text-lg font-bold text-slate-900 leading-snug dark:text-slate-50">{plan.label}</h3>
+            <p className="mt-2 text-sm text-slate-600 leading-relaxed dark:text-slate-300">{plan.description}</p>
+            <ul className="mt-4 space-y-2.5 flex-1">
+              {plan.includes.slice(0, 4).map((feature) => (
+                <li key={feature} className="flex items-start gap-2 text-sm text-slate-700">
+                  <Check className={`mt-0.5 h-4 w-4 shrink-0 ${monthly ? 'text-amber-700' : theme.icon}`} strokeWidth={2.5} aria-hidden />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 text-xs text-slate-500">No incluye: {plan.excludes[0]}</p>
+            <p className="mt-3 text-sm text-slate-500">
+              Inversión:{' '}
+              <span className="font-bold text-slate-900">
+                ${plan.basePrice}
+                {monthly ? '/mes' : ''}
+              </span>
+            </p>
+            <div className="mt-4">
+              <Link
+                href={quoteUrl(plan.id)}
+                className={`inline-flex w-full items-center justify-center gap-2 rounded-md px-5 py-3.5 min-h-[48px] text-sm font-semibold text-white transition active:scale-[0.98] ${monthly ? 'bg-amber-700 hover:bg-amber-800' : theme.button}`}
+              >
+                Cotizar este plan
+                <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
+              </Link>
+            </div>
+          </article>
+        )
+      })}
+    </motion.div>
+  )
+}
 
 const PILL_ICONS = {
   clock: Clock,
@@ -37,22 +107,6 @@ const PILL_ICONS = {
   lock: Lock,
   headphones: Headphones,
 } as const
-
-function serviceWhatsAppMessage(
-  serviceId: string,
-  wa: ReturnType<typeof useMessages>['whatsappMessages'],
-) {
-  switch (serviceId) {
-    case 'landing':
-      return wa.serviceLanding
-    case 'wordpress-tienda-20':
-      return wa.serviceStore
-    case 'reservas':
-      return wa.customSoftware
-    default:
-      return wa.serviceWeb
-  }
-}
 
 export function ServicesPreviewSection() {
   const messages = useMessages()
@@ -90,70 +144,10 @@ export function ServicesPreviewSection() {
           <p className="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed">{s.subtitle}</p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          transition={{ duration: 0.5, delay: 0.08 }}
-          className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5"
-        >
-          {HOME_SERVICES.map((service) => {
-            const copy = s.items.find((item) => item.id === service.id)
-            if (!copy) return null
-            const Icon = SERVICE_ICONS[service.icon]
-            const isWhatsApp = 'whatsapp' in service && service.whatsapp
-
-            const theme = BRAND_ICON_TONES[service.color]
-
-            return (
-              <article
-                key={service.id}
-                className={`flex flex-col rounded-xl border px-5 py-6 sm:px-6 ${theme.card}`}
-              >
-                <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg ${theme.wrap}`}>
-                  <Icon className="h-6 w-6" aria-hidden />
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 leading-snug dark:text-slate-50">{copy.title}</h3>
-                <p className="mt-2 text-sm text-slate-600 leading-relaxed dark:text-slate-300">{copy.description}</p>
-
-                <ul className="mt-4 space-y-2.5 flex-1">
-                  {copy.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2 text-sm text-slate-700">
-                      <Check className={`mt-0.5 h-4 w-4 shrink-0 ${theme.icon}`} strokeWidth={2.5} aria-hidden />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                <p className="mt-5 text-sm text-slate-500">
-                  {s.investmentLabel}{' '}
-                  <span className="font-bold text-slate-900">{copy.priceLabel}</span>
-                </p>
-
-                <div className="mt-4">
-                  {isWhatsApp ? (
-                    <a
-                      href={buildWhatsAppUrl(serviceWhatsAppMessage(service.id, messages.whatsappMessages))}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`inline-flex w-full items-center justify-center gap-2 rounded-md px-5 py-3.5 min-h-[48px] text-sm font-semibold text-white transition active:scale-[0.98] ${theme.button}`}
-                    >
-                      {copy.ctaLabel}
-                      <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
-                    </a>
-                  ) : (
-                    <Link
-                      href={quoteUrl(service.id)}
-                      className={`inline-flex w-full items-center justify-center gap-2 rounded-md px-5 py-3.5 min-h-[48px] text-sm font-semibold text-white transition active:scale-[0.98] ${theme.button}`}
-                    >
-                      {copy.ctaLabel}
-                      <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
-                    </Link>
-                  )}
-                </div>
-              </article>
-            )
-          })}
-        </motion.div>
+        <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-slate-500">Desarrollo web · pago único</h3>
+        <PlanGrid plans={WEB_PLANS} isInView={isInView} />
+        <h3 className="mb-4 mt-10 text-sm font-bold uppercase tracking-wide text-amber-800">Marketing digital · mensual</h3>
+        <PlanGrid plans={MARKETING_PLANS} monthly isInView={isInView} />
 
         <motion.div
           initial={{ opacity: 0, y: 16 }}

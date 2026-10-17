@@ -14,6 +14,8 @@ export function buildSyntheticContractRecordForQuotePdf(params: {
   tipoServicio: string | null
   totalNumeric: number
   selectedServices?: QuoteServiceSnapshot[]
+  commercial?: unknown
+  configurator?: unknown
 }): ServiceContractRecord {
   const now = new Date().toISOString()
   return {
@@ -35,10 +37,13 @@ export function buildSyntheticContractRecordForQuotePdf(params: {
     signed_date: null,
     custom_notes:
       'Borrador generado desde tu cotización en línea. Completa cédula o RUC y domicilio donde aplique, imprime, firma y envía el PDF por WhatsApp siguiendo el enlace del correo.',
-    terms_payload:
-      params.selectedServices && params.selectedServices.length > 0
+    terms_payload: {
+      ...(params.selectedServices && params.selectedServices.length > 0
         ? { selected_services: params.selectedServices }
-        : null,
+        : {}),
+      ...(params.commercial && typeof params.commercial === 'object' ? { commercial: params.commercial } : {}),
+      ...(params.configurator && typeof params.configurator === 'object' ? { configurator: params.configurator } : {}),
+    },
   }
 }
 

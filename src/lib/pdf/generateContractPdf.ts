@@ -3,6 +3,7 @@ import path from 'path'
 import { PDFDocument, PDFPage, StandardFonts, rgb } from 'pdf-lib'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
 import { CONTRACT_PAYMENT_BANK, CONTRACT_PAYMENT_YAPPY } from '@/lib/contract-payment'
+import { commercialTermsReady, readCommercialSnapshot } from '@/lib/contract-commercial'
 import { buildContractClauses, buildContractIntroSegments, type ContractIntroSegment } from '@/lib/contracts'
 import type { ServiceContractRecord } from '@/lib/types/contract'
 
@@ -150,6 +151,8 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
   const text = rgb(0.12, 0.15, 0.2)
   const muted = rgb(0.38, 0.42, 0.48)
   const clauses = buildContractClauses(contract)
+  const commercial = readCommercialSnapshot(contract.terms_payload)
+  const ready = commercial ? commercialTermsReady(commercial) && contract.status !== 'draft' : contract.status === 'signed'
   const introWords = introSegmentsToWords(buildContractIntroSegments(contract))
 
   let page = pdf.addPage([W, H])
@@ -190,7 +193,19 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
     font: bold,
     color: accent,
   })
-  y -= 18
+  y -= 14
+  if (!ready) {
+    const draftLabel = 'BORRADOR - NO LISTO PARA FIRMAR'
+    page.drawText(draftLabel, {
+      x: W - M - bold.widthOfTextAtSize(draftLabel, 8),
+      y,
+      size: 8,
+      font: bold,
+      color: rgb(0.6, 0.25, 0.05),
+    })
+    y -= 12
+  }
+  y -= 6
   const serviceLine = pdfSafe(clauses.serviceSubtitle)
   page.drawText('SERVICIO', {
     x: W - M - bold.widthOfTextAtSize('SERVICIO', 8),

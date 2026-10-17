@@ -44,7 +44,7 @@ type Props = {
 export function AdminConfiguratorEditor({ state, onChange }: Props) {
   const quote = calculateQuote(state)
   const selectedProject = ADMIN_PROJECT_TYPES.find((p) => p.id === state.projectType) ?? null
-  const isRedes = isSocialMediaProjectType(state.projectType)
+  const isRedes = isSocialMediaProjectType(state.marketingPlan) || isSocialMediaProjectType(state.projectType)
   const isRediseno = isRedesignProjectType(state.projectType)
   const isFixedScope = isFixedScopeAdminProject(state.projectType)
 
@@ -53,10 +53,19 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
   }
 
   function selectProject(id: ProjectTypeId) {
+    if (isSocialMediaProjectType(id) && id.startsWith('mkt-')) {
+      onChange({
+        ...state,
+        marketingPlan: state.marketingPlan === id ? null : (id as ConfiguratorState['marketingPlan']),
+        projectType: isSocialMediaProjectType(state.projectType) ? null : state.projectType,
+      })
+      return
+    }
     if (isFixedScopeAdminProject(id)) {
       onChange({
         ...state,
         projectType: id,
+        marketingPlan: null,
         features: [],
         hasDomain: 'si',
         hasHosting: 'si',
@@ -80,12 +89,15 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
           </p>
           <p className="text-sm text-slate-700">{quote.projectLabel}</p>
         </div>
-        <p className="text-2xl font-bold tabular-nums text-brand">
-          ${quote.total}
-          <span className="ml-1 text-sm font-semibold text-slate-500">
-            USD{quote.monthly ? ' / mes' : ''}
-          </span>
-        </p>
+        <div className="text-right">
+          <p className="text-2xl font-bold tabular-nums text-brand">
+            ${quote.initialTotal}
+            <span className="ml-1 text-sm font-semibold text-slate-500">USD iniciales</span>
+          </p>
+          <p className="text-xs text-slate-500">
+            Único ${quote.oneTime} · Mensual ${quote.monthlyAmount} · Externos ${quote.external}
+          </p>
+        </div>
       </div>
 
       <section>
@@ -214,17 +226,17 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
 
       <section>
         <div className="mb-2 flex flex-wrap items-center gap-2">
-          <p className="text-sm font-bold text-slate-900">Manejo de redes sociales</p>
+          <p className="text-sm font-bold text-slate-900">Marketing digital (mensual)</p>
           <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">
-            Solo admin
+            Puede combinarse con web
           </span>
         </div>
         <p className="mb-3 text-xs text-slate-500">
-          Servicio personalizado para clientes seleccionados. No aparece en el cotizador público.
+          Honorario mensual. La inversión en anuncios no se suma sola.
         </p>
         <div className="grid gap-2 sm:grid-cols-2">
           {REDES_TYPES.map((project) => {
-            const active = state.projectType === project.id
+            const active = state.marketingPlan === project.id || state.projectType === project.id
             return (
               <button
                 key={project.id}

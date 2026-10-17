@@ -6,12 +6,14 @@ import {
   ArrowRight,
   Building2,
   Calculator,
+  CalendarDays,
   Check,
-  Code2,
   Download,
   Layout,
   Lock,
+  Megaphone,
   MessageCircle,
+  Sparkles,
   Store,
   WalletCards,
 } from 'lucide-react'
@@ -32,26 +34,38 @@ import { buildWhatsAppUrl } from '@/lib/marketing'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
 import { rateLimitFriendlyMessage } from '@/lib/utils'
 import {
-  getProjectType,
+  buildCommercialSnapshot,
   INITIAL_CONFIGURATOR_STATE,
   TOTAL_STEPS,
+  planAlreadyIncludes,
   type BusinessId,
   type ConfiguratorState,
   type EmailCount,
   type FeatureId,
-  type ProjectTypeId,
   type TimelineId,
-  type WebProjectTypeId,
   mapLegacyServiceToFeatures,
+  mapLegacyServiceToMarketing,
   mapLegacyServiceToProject,
   splitFullName,
 } from '@/lib/quote-configurator'
+import {
+  MARKETING_PLANS,
+  WEB_PLANS,
+  getCatalogPlan,
+  isWebPlanId,
+  type MarketingPlanId,
+} from '@/lib/service-catalog'
 
-const PROJECT_ICONS: Record<WebProjectTypeId, typeof Layout> = {
+const PROJECT_ICONS: Record<string, typeof Layout> = {
   landing: Layout,
   profesional: Building2,
+  'web-panel': WalletCards,
+  corporativo: Building2,
   tienda: Store,
-  sistema: Code2,
+  reservas: CalendarDays,
+  'mkt-presencia': MessageCircle,
+  'mkt-crecimiento': Megaphone,
+  'mkt-integral': Sparkles,
 }
 
 const fieldClass =
@@ -60,11 +74,18 @@ const labelClass = 'mb-1.5 block text-sm font-medium text-slate-700'
 const choiceOn = 'border-brand/30 bg-slate-50 ring-2 ring-brand/20'
 const choiceOff = 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
 
+function hasWebSelection(state: ConfiguratorState) {
+  return isWebPlanId(state.projectType)
+}
+
 function canContinue(step: number, state: ConfiguratorState) {
-  if (step === 1) return Boolean(state.projectType)
+  if (step === 1) return Boolean(hasWebSelection(state) || state.marketingPlan)
   if (step === 2) return Boolean(state.business)
-  if (step === 3) return true
-  if (step === 4) return state.hasDomain !== '' && state.hasHosting !== ''
+  if (step === 3) return !state.includeStories || (state.storiesPerMonth > 0 && state.storiesUnitPrice > 0)
+  if (step === 4) {
+    if (!hasWebSelection(state)) return true
+    return state.hasDomain !== '' && state.hasHosting !== ''
+  }
   if (step === 5) return Boolean(state.timeline)
   if (step === 6) {
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.correo.trim())
@@ -79,14 +100,17 @@ function buildWhatsAppMessage(
 ) {
   const q = catalog.quote
   const quote = calculateLocalizedQuote(state, catalog)
-  const lines = quote.lines.map((line) => `• ${line.label}: $${line.amount}`).join('\n')
+    const lines = quote.lines.map((line) => `• ${line.label}: $${line.amount}`).join('\n')
   const business = getLocalizedBusinessLabel(catalog, state.business) ?? '—'
   return (
     `${q.whatsappQuoteIntro}\n\n` +
     `${q.whatsappQuoteProject}: ${quote.projectLabel}\n` +
     `${q.whatsappQuoteBusiness}: ${business}\n` +
     `${lines}\n\n` +
-    `${q.whatsappQuoteTotal}: $${quote.total} USD\n` +
+    `Pago único: $${quote.oneTime} USD\n` +
+    `Mensual (honorarios): $${quote.monthlyAmount} USD\n` +
+    `Gastos externos estimados: $${quote.external} USD\n` +
+    `${q.whatsappQuoteTotal}: $${quote.initialTotal} USD (honorarios iniciales)\n` +
     `${q.whatsappQuoteDelivery}: ${quote.delivery}\n` +
     `${q.whatsappQuoteName}: ${state.nombre}\n` +
     `${q.whatsappQuoteCompany}: ${state.empresa || '—'}\n` +
@@ -103,13 +127,20 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
   const messages = useMessages()
   const q = messages.quote
   const catalog = useMemo(() => buildLocalizedQuoteCatalog(q), [q])
-  const preselected = Boolean(initialServiceId && mapLegacyServiceToProject(initialServiceId))
+  const preselected = Boolean(initialServiceId && (mapLegacyServiceToProject(initialServiceId) || mapLegacyServiceToMarketing(initialServiceId)))
   const [step, setStep] = useState(1)
-  const [state, setState] = useState<ConfiguratorState>(() => ({
-    ...INITIAL_CONFIGURATOR_STATE,
-    projectType: mapLegacyServiceToProject(initialServiceId),
-    features: mapLegacyServiceToFeatures(initialServiceId),
-  }))
+  const [state, setState] = useState<ConfiguratorState>(() => {
+    const mapped = mapLegacyServiceToProject(initialServiceId)
+    const marketing = mapLegacyServiceToMarketing(initialServiceId)
+    return {
+      ...INITIAL_CONFIGURATOR_STATE,
+      projectType: mapped && isWebPlanId(mapped) ? mapped : null,
+      marketingPlan: marketing,
+      features: mapLegacyServiceToFeatures(initialServiceId),
+      productCount: mapped && isWebPlanId(mapped) ? getCatalogPlan(mapped)?.productsIncluded ?? null : null,
+      serviceCount: mapped && isWebPlanId(mapped) ? getCatalogPlan(mapped)?.servicesIncluded ?? null : null,
+    }
+  })
   const [done, setDone] = useState(false)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
@@ -120,12 +151,16 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
   useEffect(() => {
     if (!initialServiceId) return
     const mapped = mapLegacyServiceToProject(initialServiceId)
-    if (!mapped) return
+    const marketing = mapLegacyServiceToMarketing(initialServiceId)
+    if (!mapped && !marketing) return
     setFromHome(true)
     setState((current) => ({
       ...current,
-      projectType: mapped,
+      projectType: mapped && isWebPlanId(mapped) ? mapped : current.projectType,
+      marketingPlan: marketing ?? current.marketingPlan,
       features: mapLegacyServiceToFeatures(initialServiceId),
+      productCount: mapped && isWebPlanId(mapped) ? getCatalogPlan(mapped)?.productsIncluded ?? null : current.productCount,
+      serviceCount: mapped && isWebPlanId(mapped) ? getCatalogPlan(mapped)?.servicesIncluded ?? null : current.serviceCount,
     }))
     setStep(2)
   }, [initialServiceId])
@@ -160,7 +195,7 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
   }
 
   async function handleGenerate() {
-    if (!canContinue(6, state) || !state.projectType) return
+    if (!canContinue(6, state) || (!hasWebSelection(state) && !state.marketingPlan)) return
     setSending(true)
     setError('')
     const { nombre, apellido } = splitFullName(state.nombre)
@@ -174,9 +209,33 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
       `Hosting propio: ${state.hasHosting === 'si' ? 'Sí' : 'No'}`,
       `Correos: ${state.emailCount >= 6 ? '6+' : state.emailCount}`,
       `Extras: ${state.features.join(', ') || '—'}`,
+      state.scopeNotes.trim() ? `Alcance: ${state.scopeNotes.trim()}` : null,
+      state.marketingPlan ? `Canales: ${state.channels.join(', ')}` : null,
+      state.includeStories ? `Historias: ${state.storiesPerMonth}/mes a $${state.storiesUnitPrice}` : 'Historias: no contratadas',
+      state.adBudgetAccepted ? `Inversión publicitaria (cliente): $${state.adBudgetUsd}/mes` : 'Inversión publicitaria: no incluida',
     ]
       .filter(Boolean)
       .join('\n')
+
+    const commercial = buildCommercialSnapshot(state)
+    const web = isWebPlanId(state.projectType) ? getCatalogPlan(state.projectType) : null
+    const marketing = state.marketingPlan ? getCatalogPlan(state.marketingPlan) : null
+    const selectedServices = [web, marketing].filter(Boolean).map((plan) => ({
+      serviceId: plan!.id,
+      kind: 'catalog' as const,
+      label: plan!.label,
+      baseAmount: plan!.basePrice,
+      total: plan!.basePrice,
+      monthly: plan!.billing === 'monthly',
+      quantityPages: plan!.pagesIncluded,
+      offerPoints: plan!.includes.slice(0, 5),
+      lines: quote.lines
+        .filter((line) => line.id === `project-${plan!.id}` || (plan!.billing === 'once' && line.billing === 'once' && line.id !== `project-${marketing?.id}`))
+        .map((line) => ({ label: line.label, amount: line.amount })),
+      hasDomain: state.hasDomain,
+      hasProfessionalEmail: state.emailCount > 0 ? 'no' : 'si',
+      hasHosting: state.hasHosting,
+    }))
 
     try {
       const response = await fetch('/api/quote', {
@@ -188,37 +247,23 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
           correo: state.correo.trim(),
           empresa: state.empresa.trim() || undefined,
           whatsapp: state.whatsapp.trim() || undefined,
-          tipoServicio: state.projectType,
+          tipoServicio: state.marketingPlan && !web ? state.marketingPlan : state.projectType,
           servicio: quote.projectLabel,
-          total: `$${quote.total} USD`,
-          totalNumeric: quote.total,
-          monthly: false,
+          total: `$${quote.initialTotal} USD`,
+          totalNumeric: quote.initialTotal,
+          monthly: quote.monthly,
           comentarios: comments,
+          configurator: state,
+          commercial,
           incluyeDominioHostingCorreo:
             state.hasDomain === 'no' || state.hasHosting === 'no' || state.emailCount > 0
-              ? 'Incluye ítems en presupuesto (dominio/hosting/correos según selección)'
+              ? 'Gastos externos estimados, no forman parte de los honorarios'
               : 'Cliente ya cuenta con dominio/hosting',
-          pasarelaPagos: hasPasarela ? 'Sí — Integración pasarela de pagos (+$100)' : 'No',
-          breakdown: { lines: quote.lines.map((line) => ({ label: line.label, amount: line.amount })) },
-          selected_services: [
-            {
-              serviceId: state.projectType,
-              kind: 'manual',
-              label: quote.projectLabel,
-              baseAmount: getProjectType(state.projectType)?.basePrice ?? quote.total,
-              total: quote.total,
-              monthly: false,
-              quantityPages: null,
-              offerPoints: [
-                ...quote.includedZeroPriceFeatures,
-                ...quote.lines.filter((line) => !line.id.startsWith('project-')).map((line) => line.label),
-              ].slice(0, 5),
-              lines: quote.lines.map((line) => ({ label: line.label, amount: line.amount })),
-              hasDomain: state.hasDomain === 'si' ? 'si' : state.hasDomain === 'no' ? 'no' : '',
-              hasProfessionalEmail: state.emailCount > 0 ? 'no' : state.emailCount === 0 ? 'si' : '',
-              hasHosting: state.hasHosting === 'si' ? 'si' : state.hasHosting === 'no' ? 'no' : '',
-            },
-          ],
+          pasarelaPagos: web?.hasGateway || hasPasarela
+            ? 'Sí — pasarela sujeta a la cuenta del cliente. Comisiones no incluidas.'
+            : 'No',
+          breakdown: { lines: quote.lines.map((line) => ({ label: line.label, amount: line.amount, billing: line.billing })) },
+          selected_services: selectedServices,
         }),
       })
 
@@ -265,7 +310,8 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
         <p><strong>Tiempo estimado:</strong> ${quote.delivery}</p>
         <p style="margin-top:16px"><strong>Precio base y extras</strong></p>
         ${quote.lines.map((line) => `<div class="row"><span>${line.label}</span><strong>$${line.amount} USD</strong></div>`).join('')}
-        <p class="total">Total: $${quote.total} USD</p>
+        <p class="total">Honorarios iniciales: $${quote.initialTotal} USD</p>
+        <p>Pago único: $${quote.oneTime} · Mensual: $${quote.monthlyAmount} · Gastos externos: $${quote.external}</p>
         <p><strong>Servicios incluidos</strong></p>
         <ul>${includes.map((item) => `<li>${item}</li>`).join('') || '<li>Alcance base del proyecto</li>'}</ul>
         <p style="margin-top:20px"><strong>Forma de pago</strong></p>
@@ -326,7 +372,8 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                   {q.doneInvestmentLabel}
                 </p>
-                <p className="mt-1 text-3xl font-bold tabular-nums text-brand">${quote.total} USD</p>
+                <p className="mt-1 text-3xl font-bold tabular-nums text-brand">${quote.initialTotal} USD</p>
+                <p className="mt-1 text-xs text-slate-500">Único ${quote.oneTime} · Mensual ${quote.monthlyAmount} · Externos ${quote.external}</p>
               </div>
             </div>
             <p className="mt-5 text-center text-xs leading-relaxed text-slate-500">{q.doneDisclaimer}</p>
@@ -439,42 +486,94 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                 transition={{ duration: 0.25 }}
               >
                 {step === 1 ? (
-                  <div>
-                    <p className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-900">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs font-bold text-white">
-                        1
-                      </span>
-                      {q.step1Question}
-                    </p>
-                    <div className="space-y-3">
-                      {catalog.projectTypes.map((project) => {
-                        const Icon = PROJECT_ICONS[project.id as WebProjectTypeId]
-                        const active = state.projectType === project.id
-                        return (
-                          <button
-                            key={project.id}
-                            type="button"
-                            onClick={() => update('projectType', project.id as ProjectTypeId)}
-                            className={`flex w-full cursor-pointer items-center gap-3 rounded-xl border p-3.5 text-left transition ${
-                              active ? choiceOn : choiceOff
-                            }`}
-                          >
-                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${BRAND_ICON_TONES.blue.wrap}`}>
-                              <Icon className="h-5 w-5" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-baseline justify-between gap-2">
-                                <p className="font-semibold text-slate-900">{project.label}</p>
-                                <p className="shrink-0 text-sm font-bold tabular-nums text-brand">
-                                  ${project.basePrice}
-                                  {project.fromPrice ? '+' : ''}
-                                </p>
+                  <div className="space-y-6">
+                    <div>
+                      <p className="mb-1 flex items-center gap-2 text-sm font-bold text-slate-900">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand text-xs font-bold text-white">
+                          1
+                        </span>
+                        Desarrollo web
+                      </p>
+                      <p className="mb-3 text-xs text-slate-500">
+                        Precio base por proyecto, en USD. Los requerimientos adicionales se cotizan aparte.
+                      </p>
+                      <div className="max-h-[22rem] space-y-2 overflow-y-auto pr-1">
+                        {WEB_PLANS.map((project) => {
+                          const Icon = PROJECT_ICONS[project.id] ?? Layout
+                          const active = state.projectType === project.id
+                          return (
+                            <button
+                              key={project.id}
+                              type="button"
+                              onClick={() =>
+                                setState((current) => ({
+                                  ...current,
+                                  projectType: current.projectType === project.id ? null : project.id,
+                                  productCount: project.productsIncluded,
+                                  serviceCount: project.servicesIncluded,
+                                }))
+                              }
+                              className={`flex w-full cursor-pointer items-center gap-3 rounded-xl border p-3.5 text-left transition ${
+                                active ? choiceOn : choiceOff
+                              }`}
+                            >
+                              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${BRAND_ICON_TONES.blue.wrap}`}>
+                                <Icon className="h-5 w-5" />
                               </div>
-                              <p className="text-xs text-slate-500 sm:text-sm">{project.description}</p>
-                            </div>
-                          </button>
-                        )
-                      })}
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-baseline justify-between gap-2">
+                                  <p className="font-semibold text-slate-900">{project.label}</p>
+                                  <p className="shrink-0 text-sm font-bold tabular-nums text-brand">${project.basePrice}</p>
+                                </div>
+                                <p className="text-xs text-slate-500 sm:text-sm">{project.description}</p>
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="mb-1 text-sm font-bold text-slate-900">Marketing digital</p>
+                      <p className="mb-3 text-xs text-slate-500">
+                        Planes mensuales. La inversión en anuncios no se suma a los honorarios.
+                      </p>
+                      <div className="space-y-2">
+                        {MARKETING_PLANS.map((project) => {
+                          const Icon = PROJECT_ICONS[project.id] ?? MessageCircle
+                          const active = state.marketingPlan === project.id
+                          return (
+                            <button
+                              key={project.id}
+                              type="button"
+                              onClick={() =>
+                                update('marketingPlan', active ? null : (project.id as MarketingPlanId))
+                              }
+                              className={`flex w-full cursor-pointer items-center gap-3 rounded-xl border p-3.5 text-left transition ${
+                                active ? 'border-amber-400 bg-amber-50 ring-2 ring-amber-200' : choiceOff
+                              }`}
+                            >
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-800">
+                                <Icon className="h-5 w-5" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-baseline justify-between gap-2">
+                                  <p className="font-semibold text-slate-900">
+                                    {project.label}
+                                    {project.recommended ? (
+                                      <span className="ml-2 rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                                        Recomendado
+                                      </span>
+                                    ) : null}
+                                  </p>
+                                  <p className="shrink-0 text-sm font-bold tabular-nums text-amber-800">${project.basePrice}/mes</p>
+                                </div>
+                                <p className="text-xs text-slate-500 sm:text-sm">{project.description}</p>
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
                     </div>
                   </div>
                 ) : null}
@@ -524,6 +623,10 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                       <div className="flex flex-col gap-2">
                         {catalog.features.map((feature) => {
                           const active = state.features.includes(feature.id)
+                          const included = planAlreadyIncludes(
+                            isWebPlanId(state.projectType) ? state.projectType : null,
+                            feature.id as FeatureId,
+                          )
                           return (
                             <button
                               key={feature.id}
@@ -544,7 +647,7 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                                 <span className="flex items-center justify-between gap-2">
                                   <span className="text-sm font-semibold text-slate-900">{feature.label}</span>
                                   <span className="shrink-0 text-sm font-bold tabular-nums text-brand">
-                                    {feature.price === 0 ? '+$0' : `+$${feature.price}`}
+                                    {included || feature.price === 0 ? 'Incluido' : `+$${feature.price}`}
                                   </span>
                                 </span>
                                 <span className="block text-xs text-slate-500">{feature.description}</span>
@@ -554,6 +657,113 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                         })}
                       </div>
                     </div>
+                    {isWebPlanId(state.projectType) && getCatalogPlan(state.projectType)?.pagesIncluded ? (
+                      <label className="mt-4 block">
+                        <span className={labelClass}>Páginas adicionales (${25} c/u)</span>
+                        <input
+                          type="number"
+                          min={0}
+                          value={state.extraPages}
+                          onChange={(event) => update('extraPages', Math.max(0, Number(event.target.value) || 0))}
+                          className={fieldClass}
+                        />
+                      </label>
+                    ) : null}
+                    {state.projectType === 'tienda' ? (
+                      <label className="mt-4 block">
+                        <span className={labelClass}>Productos incluidos en la carga inicial</span>
+                        <input
+                          type="number"
+                          min={1}
+                          value={state.productCount ?? ''}
+                          onChange={(event) => update('productCount', Math.max(1, Number(event.target.value) || 1))}
+                          className={fieldClass}
+                        />
+                      </label>
+                    ) : null}
+                    {state.marketingPlan ? (
+                      <div className="mt-4 space-y-3 rounded-xl border border-amber-200 bg-amber-50/60 p-3">
+                        <p className="text-sm font-semibold text-slate-800">Canales y personalización</p>
+                        <div className="flex gap-2">
+                          {(['instagram', 'facebook'] as const).map((channel) => {
+                            const active = state.channels.includes(channel)
+                            return (
+                              <button
+                                key={channel}
+                                type="button"
+                                onClick={() =>
+                                  setState((current) => ({
+                                    ...current,
+                                    channels: active
+                                      ? current.channels.filter((item) => item !== channel)
+                                      : [...current.channels, channel],
+                                  }))
+                                }
+                                className={`rounded-lg border px-3 py-2 text-sm font-semibold capitalize ${active ? choiceOn : choiceOff}`}
+                              >
+                                {channel}
+                              </button>
+                            )
+                          })}
+                        </div>
+                        <label className="flex items-center gap-2 text-sm text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={state.includeStories}
+                            onChange={(event) => update('includeStories', event.target.checked)}
+                          />
+                          Contratar historias (extra, no van en el plan base)
+                        </label>
+                        {state.includeStories ? (
+                          <div className="grid grid-cols-2 gap-2">
+                            <input
+                              type="number"
+                              min={1}
+                              placeholder="Cantidad / mes"
+                              value={state.storiesPerMonth || ''}
+                              onChange={(event) => update('storiesPerMonth', Math.max(0, Number(event.target.value) || 0))}
+                              className={fieldClass}
+                            />
+                            <input
+                              type="number"
+                              min={1}
+                              placeholder="Precio c/u USD"
+                              value={state.storiesUnitPrice || ''}
+                              onChange={(event) => update('storiesUnitPrice', Math.max(0, Number(event.target.value) || 0))}
+                              className={fieldClass}
+                            />
+                          </div>
+                        ) : null}
+                        <label className="flex items-center gap-2 text-sm text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={state.adBudgetAccepted}
+                            onChange={(event) => update('adBudgetAccepted', event.target.checked)}
+                          />
+                          Indicar inversión publicitaria (la paga el cliente, no se suma a honorarios)
+                        </label>
+                        {state.adBudgetAccepted ? (
+                          <input
+                            type="number"
+                            min={0}
+                            placeholder="Presupuesto mensual USD"
+                            value={state.adBudgetUsd || ''}
+                            onChange={(event) => update('adBudgetUsd', Math.max(0, Number(event.target.value) || 0))}
+                            className={fieldClass}
+                          />
+                        ) : null}
+                      </div>
+                    ) : null}
+                    <label className="mt-4 block">
+                      <span className={labelClass}>Necesidades particulares</span>
+                      <textarea
+                        value={state.scopeNotes}
+                        onChange={(event) => update('scopeNotes', event.target.value)}
+                        className={fieldClass}
+                        rows={3}
+                        placeholder="Páginas, módulos, integraciones o materiales que quieras dejar por escrito."
+                      />
+                    </label>
                   </div>
                 ) : null}
 

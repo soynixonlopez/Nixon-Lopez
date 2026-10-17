@@ -8,6 +8,7 @@ import {
   PROJECT_TYPES,
   SOCIAL_MEDIA_GENERAL_INCLUDES,
   TIMELINES,
+  buildCommercialSnapshot,
   calculateQuote,
   isFixedScopeAdminProject,
   isRedesignProjectType,
@@ -194,8 +195,19 @@ function normalizeConfiguratorState(value: Record<string, unknown>): Configurato
     ? (value.timeline as TimelineId)
     : null
 
+  const marketingPlan =
+    typeof value.marketingPlan === 'string' && isSocialMediaProjectType(value.marketingPlan) && value.marketingPlan.startsWith('mkt-')
+      ? (value.marketingPlan as ConfiguratorState['marketingPlan'])
+      : null
+
   return {
-    projectType,
+    ...INITIAL_CONFIGURATOR_STATE,
+    projectType: isSocialMediaProjectType(projectType) && projectType.startsWith('mkt-') ? null : projectType,
+    marketingPlan:
+      marketingPlan ??
+      (isSocialMediaProjectType(projectType) && projectType.startsWith('mkt-')
+        ? (projectType as ConfiguratorState['marketingPlan'])
+        : null),
     business,
     features: fixedScope ? [] : featureIds.length > 0 ? featureIds : (['whatsapp'] as FeatureId[]),
     hasDomain,
@@ -206,6 +218,27 @@ function normalizeConfiguratorState(value: Record<string, unknown>): Configurato
     empresa: typeof value.empresa === 'string' ? value.empresa : '',
     correo: typeof value.correo === 'string' ? value.correo : '',
     whatsapp: typeof value.whatsapp === 'string' ? value.whatsapp : '',
+    extraPages: Number.isFinite(Number(value.extraPages)) ? Math.max(0, Number(value.extraPages)) : 0,
+    includeStories: value.includeStories === true,
+    storiesPerMonth: Number.isFinite(Number(value.storiesPerMonth)) ? Number(value.storiesPerMonth) : 0,
+    storiesUnitPrice: Number.isFinite(Number(value.storiesUnitPrice)) ? Number(value.storiesUnitPrice) : 0,
+    adBudgetAccepted: value.adBudgetAccepted === true,
+    adBudgetUsd: Number.isFinite(Number(value.adBudgetUsd)) ? Number(value.adBudgetUsd) : 0,
+    adsSetupPrice: Number.isFinite(Number(value.adsSetupPrice)) ? Number(value.adsSetupPrice) : 0,
+    channels: Array.isArray(value.channels)
+      ? value.channels.filter((item): item is 'instagram' | 'facebook' => item === 'instagram' || item === 'facebook')
+      : ['instagram', 'facebook'],
+    scopeNotes: typeof value.scopeNotes === 'string' ? value.scopeNotes : '',
+    revisionRounds: Number.isFinite(Number(value.revisionRounds)) ? Number(value.revisionRounds) : null,
+    paymentMethod: typeof value.paymentMethod === 'string' ? value.paymentMethod : '',
+    advanceNote: typeof value.advanceNote === 'string' ? value.advanceNote : '',
+    balanceNote: typeof value.balanceNote === 'string' ? value.balanceNote : '',
+    paymentSchedule: typeof value.paymentSchedule === 'string' ? value.paymentSchedule : '',
+    termNote: typeof value.termNote === 'string' ? value.termNote : '',
+    renewalNote: typeof value.renewalNote === 'string' ? value.renewalNote : '',
+    terminationNote: typeof value.terminationNote === 'string' ? value.terminationNote : '',
+    startDate: typeof value.startDate === 'string' ? value.startDate : '',
+    deliveryDate: typeof value.deliveryDate === 'string' ? value.deliveryDate : '',
   }
 }
 
@@ -252,9 +285,10 @@ export function buildConfiguratorPayload(
           ? 'Incluye ítems en presupuesto (dominio/hosting/correos según selección)'
           : 'Cliente ya cuenta con dominio/hosting',
     breakdown: { lines },
+    commercial: buildCommercialSnapshot(state),
     selected_services: [
       {
-        serviceId: state.projectType ?? 'profesional',
+        serviceId: state.projectType ?? state.marketingPlan ?? 'profesional',
         kind: 'manual',
         label: quote.projectLabel,
         baseAmount: project?.basePrice ?? quote.total,

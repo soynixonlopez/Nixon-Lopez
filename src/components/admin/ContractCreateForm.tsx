@@ -32,6 +32,16 @@ export function ContractCreateForm({
   const [clientAddress, setClientAddress] = useState('')
   const [city, setCity] = useState('Panama')
   const [customNotes, setCustomNotes] = useState('')
+  const [revisionRounds, setRevisionRounds] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState('')
+  const [advanceNote, setAdvanceNote] = useState('')
+  const [balanceNote, setBalanceNote] = useState('')
+  const [paymentSchedule, setPaymentSchedule] = useState('')
+  const [startDate, setStartDate] = useState('')
+  const [deliveryDate, setDeliveryDate] = useState('')
+  const [termNote, setTermNote] = useState('')
+  const [renewalNote, setRenewalNote] = useState('')
+  const [terminationNote, setTerminationNote] = useState('')
 
   useEffect(() => {
     if (!selected?.raw_payload) return
@@ -44,6 +54,23 @@ export function ContractCreateForm({
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     if (!selected) return
+    const rounds = Number(revisionRounds)
+    if (
+      !Number.isFinite(rounds) ||
+      rounds < 0 ||
+      !paymentMethod.trim() ||
+      !advanceNote.trim() ||
+      !balanceNote.trim() ||
+      !paymentSchedule.trim() ||
+      !startDate.trim() ||
+      !deliveryDate.trim() ||
+      !termNote.trim() ||
+      !renewalNote.trim() ||
+      !terminationNote.trim()
+    ) {
+      alert('Completa revisión, pago, anticipo, saldo, calendario, fechas, vigencia, renovación y terminación. Sin esos datos el documento queda como borrador y no se crea la versión final.')
+      return
+    }
     setLoading(true)
     const supabase = createClient()
     const { data: numberData, error: numErr } = await supabase.rpc('next_contract_number')
@@ -70,6 +97,19 @@ export function ContractCreateForm({
         selected.raw_payload && typeof selected.raw_payload === 'object' && !Array.isArray(selected.raw_payload)
           ? {
               ...(selected.raw_payload as Record<string, unknown>),
+              commercial: {
+                ...((selected.raw_payload as { commercial?: Record<string, unknown> }).commercial ?? {}),
+                revisionRounds: rounds,
+                paymentMethod: paymentMethod.trim(),
+                advanceNote: advanceNote.trim(),
+                balanceNote: balanceNote.trim(),
+                paymentSchedule: paymentSchedule.trim(),
+                startDate: startDate.trim(),
+                deliveryDate: deliveryDate.trim(),
+                termNote: termNote.trim(),
+                renewalNote: renewalNote.trim(),
+                terminationNote: terminationNote.trim(),
+              },
               selected_services:
                 extractQuoteServiceSnapshots(selected.raw_payload).length > 0
                   ? extractQuoteServiceSnapshots(selected.raw_payload)
@@ -152,6 +192,99 @@ export function ContractCreateForm({
           className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
         />
       </label>
+      <div className="grid sm:grid-cols-2 gap-4">
+        <label>
+          <span className="text-xs text-slate-400">Rondas de revisión</span>
+          <input
+            value={revisionRounds}
+            onChange={(e) => setRevisionRounds(e.target.value)}
+            inputMode="numeric"
+            required
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+          />
+        </label>
+        <label>
+          <span className="text-xs text-slate-400">Forma de pago</span>
+          <input
+            value={paymentMethod}
+            onChange={(e) => setPaymentMethod(e.target.value)}
+            required
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+          />
+        </label>
+        <label>
+          <span className="text-xs text-slate-400">Anticipo acordado</span>
+          <input
+            value={advanceNote}
+            onChange={(e) => setAdvanceNote(e.target.value)}
+            required
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+          />
+        </label>
+        <label>
+          <span className="text-xs text-slate-400">Saldo acordado</span>
+          <input
+            value={balanceNote}
+            onChange={(e) => setBalanceNote(e.target.value)}
+            required
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+          />
+        </label>
+        <label className="sm:col-span-2">
+          <span className="text-xs text-slate-400">Calendario de pagos</span>
+          <input
+            value={paymentSchedule}
+            onChange={(e) => setPaymentSchedule(e.target.value)}
+            required
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+          />
+        </label>
+        <label>
+          <span className="text-xs text-slate-400">Fecha de inicio</span>
+          <input
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            required
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+          />
+        </label>
+        <label>
+          <span className="text-xs text-slate-400">Plazo de entrega</span>
+          <input
+            value={deliveryDate}
+            onChange={(e) => setDeliveryDate(e.target.value)}
+            required
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+          />
+        </label>
+        <label>
+          <span className="text-xs text-slate-400">Vigencia</span>
+          <input
+            value={termNote}
+            onChange={(e) => setTermNote(e.target.value)}
+            required
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+          />
+        </label>
+        <label>
+          <span className="text-xs text-slate-400">Renovación</span>
+          <input
+            value={renewalNote}
+            onChange={(e) => setRenewalNote(e.target.value)}
+            required
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+          />
+        </label>
+        <label className="sm:col-span-2">
+          <span className="text-xs text-slate-400">Terminación</span>
+          <input
+            value={terminationNote}
+            onChange={(e) => setTerminationNote(e.target.value)}
+            required
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+          />
+        </label>
+      </div>
       <label className="block">
         <span className="text-xs text-slate-400">Observaciones adicionales</span>
         <textarea

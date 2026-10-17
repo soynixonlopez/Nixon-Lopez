@@ -17,6 +17,7 @@ import {
   type ProjectTypeId,
 } from '@/lib/quote-configurator'
 import { extractQuoteServiceSnapshots, getServiceOfferPoints, summarizeQuoteServiceLabels } from '@/lib/quote-pricing'
+import { buildCommercialContractClauses, readCommercialSnapshot } from '@/lib/contract-commercial'
 import type { ServiceContractRecord } from '@/lib/types/contract'
 
 export type ContractTemplate = {
@@ -238,10 +239,6 @@ function money(amount: number) {
   return `USD $${amount.toFixed(2)}`
 }
 
-function half(amount: number) {
-  return money(Number((amount / 2).toFixed(2)))
-}
-
 function projectObjectNarrative(
   projectType: ProjectTypeId | null,
   businessLabel: string | null,
@@ -332,11 +329,14 @@ function buildSocialMediaContractClauses(
   const businessLabel = getBusinessLabel(businessId)
   const amount = Number(contract.total_amount || 0)
   const amountTxt = money(amount)
-  const planLabel = project?.label || contract.service_label || 'Plan de manejo de redes'
+  const planLabel = contract.service_label || project?.label || 'Plan de manejo de redes'
   const delivery = project?.delivery ?? 'Según plan contratado'
-  const includes = project?.includes?.length
-    ? [...project.includes]
-    : [...SOCIAL_MEDIA_GENERAL_INCLUDES]
+  const storedIncludes = extractQuoteServiceSnapshots(terms).flatMap((service) => service.offerPoints ?? [])
+  const includes = storedIncludes.length
+    ? storedIncludes
+    : project?.includes?.length
+      ? [...project.includes]
+      : [...SOCIAL_MEDIA_GENERAL_INCLUDES]
   const excludes = [
     ...SOCIAL_MEDIA_ADDITIONAL_SERVICES,
     'Presupuesto publicitario (inversión en anuncios)',
@@ -589,9 +589,8 @@ function buildRedesignContractClauses(
       {
         heading: 'Forma de pago',
         bullets: [
-          `50% para iniciar el servicio: ${half(amount)}`,
-          `50% contra entrega y aprobación final: ${half(amount)}`,
-          'El servicio no iniciará hasta recibir el pago inicial.',
+          'El anticipo y el saldo deben constar por escrito. Si no constan, este contrato no fija un porcentaje.',
+          'El servicio no inicia hasta el pago que las partes hayan acordado.',
         ],
       },
       {
@@ -656,7 +655,7 @@ function buildRedesignContractClauses(
     segundaNoIncluye: excludes,
     tercera: [
       `El valor total del rediseño será de ${amountTxt}.`,
-      `Forma de pago: 50% anticipo (${half(amount)}) y 50% contra entrega (${half(amount)}).`,
+      'Forma de pago: anticipo y saldo según lo escrito por las partes. Sin porcentaje fijo si no consta.',
       'El servicio no iniciará hasta recibir el pago inicial.',
       'Métodos de pago: Transferencia/ACH, Yappy u otro método previamente acordado.',
     ],
@@ -671,6 +670,11 @@ function buildRedesignContractClauses(
 
 export function buildContractClauses(contract: ServiceContractRecord): BuiltContractClauses {
   const terms = contract.terms_payload
+  const commercial = readCommercialSnapshot(terms)
+  if (commercial) {
+    const introSegments = buildContractIntroSegments(contract)
+    return buildCommercialContractClauses(contract, commercial, introSegments)
+  }
   const selectedServices = extractQuoteServiceSnapshots(terms)
   const configurator = parseConfiguratorFromTerms(terms)
   const projectType =
@@ -722,19 +726,22 @@ export function buildContractClauses(contract: ServiceContractRecord): BuiltCont
   const amountTxt = money(amount)
   const delivery = project?.delivery ?? template.timeline
   const serviceSubtitle = (
-    project?.label ||
     contract.service_label ||
+    project?.label ||
     'SERVICIO TECNOLÓGICO'
   ).toUpperCase()
 
-  const includesFromProject = project?.includes?.length
-    ? [...project.includes]
-    : contractServices[0]?.offerPoints?.length
-      ? contractServices[0].offerPoints
+  const storedIncludes = contractServices.flatMap((service) => service.offerPoints ?? [])
+  const includesFromProject = storedIncludes.length
+    ? storedIncludes
+    : project?.includes?.length
+      ? [...project.includes]
       : template.includes
 
-  const includesFromFeatures = featureLabels.map(
-    (f) => `${f.label}${f.price > 0 ? ` (+$${f.price})` : ''}: ${f.description}`
+  const includesFromFeatures = featureLabels.map((f) =>
+    selectedServices.length > 0
+      ? `${f.label}: ${f.description}`
+      : `${f.label}${f.price > 0 ? ` (+$${f.price})` : ''}: ${f.description}`
   )
 
   const hasDomainNo = configurator?.hasDomain === 'no'
@@ -990,9 +997,9 @@ export function buildContractClauses(contract: ServiceContractRecord): BuiltCont
       {
         heading: 'Forma de pago',
         bullets: [
-          `50% para iniciar el proyecto: ${half(amount)}`,
-          `50% contra entrega y aprobación final: ${half(amount)}`,
-          'El proyecto no iniciará hasta recibir el pago inicial.',
+          'El anticipo y el saldo deben constar por escrito en la cotización aceptada.',
+          'Si esos importes no están escritos, el contrato no fija un porcentaje ni una fecha.',
+          'El trabajo de desarrollo no inicia hasta el pago que las partes hayan acordado.',
         ],
       },
       {
@@ -1017,7 +1024,7 @@ export function buildContractClauses(contract: ServiceContractRecord): BuiltCont
   blocks.push({
     title: titled(i++, 'GARANTÍA TÉCNICA'),
     paragraphs: [
-      'EL PRESTADOR otorgará una garantía técnica de 7 días calendario posteriores a la entrega final.',
+      'Cualquier garantía técnica debe estar escrita en la cotización. Si no consta un plazo, este contrato no crea uno.',
     ],
     bullets: [
       'Errores de programación',
@@ -1033,18 +1040,16 @@ export function buildContractClauses(contract: ServiceContractRecord): BuiltCont
   blocks.push({
     title: titled(i++, 'ACOMPAÑAMIENTO INICIAL'),
     paragraphs: [
-      'EL PRESTADOR brindará un período de acompañamiento de 30 días calendario posteriores a la entrega, para resolución de dudas puntuales, orientación sobre el uso de la solución y corrección de errores relacionados con el desarrollo.',
-      'El tiempo estimado de respuesta será de 24 a 48 horas hábiles.',
-      'Este acompañamiento no incluye capacitaciones ilimitadas, reuniones recurrentes, nuevas funcionalidades ni administración diaria del contenido.',
+      'El acompañamiento posterior a la entrega solo existe si quedó escrito en la cotización.',
+      'No incluye soporte ilimitado, reuniones recurrentes, nuevas funcionalidades ni administración diaria del contenido.',
     ],
   })
 
   blocks.push({
     title: titled(i++, 'MANTENIMIENTO Y SOPORTE OPCIONAL'),
     paragraphs: [
-      'Una vez finalizado el período de acompañamiento inicial, EL CLIENTE podrá contratar voluntariamente un plan de mantenimiento y soporte.',
-      'Como referencia, el mantenimiento básico tendrá un costo desde USD $20 mensuales e incluye actualizaciones técnicas menores, supervisión básica y soporte preventivo, según el plan acordado.',
-      'Los planes no incluyen nuevas funcionalidades, rediseños completos, costos de infraestructura ni presupuesto publicitario.',
+      'El mantenimiento no está incluido en el precio base. Si se contrata después, se cotiza por separado.',
+      'No incluye funcionalidades nuevas, costos de infraestructura ni presupuesto publicitario.',
     ],
   })
 
@@ -1119,7 +1124,7 @@ export function buildContractClauses(contract: ServiceContractRecord): BuiltCont
     segundaNoIncluye: excludes,
     tercera: [
       `El valor total del proyecto será de ${amountTxt}.`,
-      `Forma de pago: 50% anticipo (${half(amount)}) y 50% contra entrega (${half(amount)}).`,
+      'Forma de pago: anticipo y saldo según lo escrito por las partes. Sin porcentaje fijo si no consta.',
       'El proyecto no iniciará hasta recibir el pago inicial.',
       'Métodos de pago: Transferencia/ACH, Yappy u otro método previamente acordado.',
     ],

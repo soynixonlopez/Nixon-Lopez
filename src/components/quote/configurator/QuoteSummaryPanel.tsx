@@ -32,13 +32,13 @@ export function QuoteSummaryPanel({ state, compact = false, overlay = false }: P
           <p className="truncate text-sm font-semibold text-slate-800">{quote.projectLabel}</p>
         </div>
         <motion.p
-          key={quote.total}
+          key={quote.initialTotal}
           initial={{ opacity: 0.4, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
           className="text-xl font-bold tabular-nums text-brand"
         >
-          {formatMoney(quote.total)}
+          {formatMoney(quote.initialTotal)}
           <span className="ml-1 text-xs font-medium text-slate-500">{s.usd}</span>
         </motion.p>
       </div>
@@ -58,13 +58,13 @@ export function QuoteSummaryPanel({ state, compact = false, overlay = false }: P
             <p className="mt-0.5 truncate text-sm font-bold text-slate-900">{quote.projectLabel}</p>
           </div>
           <motion.p
-            key={quote.total}
+            key={quote.initialTotal}
             initial={{ opacity: 0.35, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
             className="shrink-0 text-lg font-bold tabular-nums text-brand"
           >
-            {formatMoney(quote.total)}
+            {formatMoney(quote.initialTotal)}
             <span className="ml-0.5 text-[10px] font-semibold text-slate-500">{s.usd}</span>
           </motion.p>
         </div>
@@ -123,13 +123,13 @@ export function QuoteSummaryPanel({ state, compact = false, overlay = false }: P
           <p className="mt-1 text-base font-bold text-slate-900">{quote.projectLabel}</p>
         </div>
         <motion.p
-          key={quote.total}
+          key={quote.initialTotal}
           initial={{ opacity: 0.35, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
           className="shrink-0 text-2xl font-bold tabular-nums text-brand"
         >
-          {formatMoney(quote.total)}
+          {formatMoney(quote.initialTotal)}
           <span className="ml-0.5 text-xs font-semibold text-slate-500">{s.usd}</span>
         </motion.p>
       </div>
@@ -169,7 +169,15 @@ export function QuoteSummaryPanel({ state, compact = false, overlay = false }: P
         ))}
       </div>
 
-      <p className="mt-4 border-t border-slate-100 pt-3 text-sm text-slate-600">
+      <dl className="mt-4 space-y-1 border-t border-slate-100 pt-3 text-sm text-slate-600">
+        <div className="flex justify-between gap-3"><dt>Pago único</dt><dd className="font-semibold text-slate-900">{formatMoney(quote.oneTime)}</dd></div>
+        <div className="flex justify-between gap-3"><dt>Honorarios mensuales</dt><dd className="font-semibold text-slate-900">{formatMoney(quote.monthlyAmount)}</dd></div>
+        <div className="flex justify-between gap-3"><dt>Gastos externos (no honorarios)</dt><dd className="font-semibold text-slate-900">{formatMoney(quote.external)}</dd></div>
+        <div className="flex justify-between gap-3"><dt>Inicial a Nixon Lopez</dt><dd className="font-semibold text-slate-900">{formatMoney(quote.initialTotal)}</dd></div>
+        <div className="flex justify-between gap-3"><dt>Mensual siguiente</dt><dd className="font-semibold text-slate-900">{formatMoney(quote.nextMonthly)}</dd></div>
+      </dl>
+      <p className="mt-3 text-xs text-slate-500">Precios base. Lo adicional se cotiza aparte. Los gastos de terceros los paga el cliente.</p>
+      <p className="mt-2 text-sm text-slate-600">
         {s.deliveryPrefix}{' '}
         <span className="font-semibold text-slate-900">{quote.delivery}</span>
       </p>

@@ -5,6 +5,7 @@ import {
   PRICE_EMAIL_USD,
   PRICE_HOSTING_USD,
   PROJECT_TYPES,
+  calculateQuote,
   type BusinessId,
   type ConfiguratorState,
   type EmailCount,
@@ -43,20 +44,20 @@ export type LocalizedQuoteCatalog = {
 const EMAIL_COUNTS: EmailCount[] = [0, 1, 2, 3, 4, 5, 6]
 
 export function buildLocalizedQuoteCatalog(quote: Messages['quote']): LocalizedQuoteCatalog {
-  const projectTypes = quote.projectTypes.map((msg) => {
+  const projectTypes = quote.projectTypes.flatMap((msg) => {
     const base = PROJECT_TYPES.find((p) => p.id === msg.id)
-    if (!base || ('adminOnly' in base && base.adminOnly)) {
-      throw new Error(`Tipo de proyecto público inválido: ${msg.id}`)
-    }
-    return {
-      id: msg.id,
-      label: msg.label,
-      description: msg.description,
-      basePrice: base.basePrice,
-      fromPrice: 'fromPrice' in base && Boolean(base.fromPrice),
-      delivery: msg.delivery,
-      includes: msg.includes,
-    }
+    if (!base || ('adminOnly' in base && base.adminOnly) || ('legacy' in base && base.legacy)) return []
+    return [
+      {
+        id: msg.id,
+        label: msg.label,
+        description: msg.description,
+        basePrice: base.basePrice,
+        fromPrice: 'fromPrice' in base && Boolean(base.fromPrice),
+        delivery: msg.delivery,
+        includes: msg.includes,
+      },
+    ]
   })
 
   const features = quote.features.map((msg) => {
@@ -164,18 +165,11 @@ export function buildLocalizedQuoteLines(
 }
 
 export function calculateLocalizedQuote(state: ConfiguratorState, catalog: LocalizedQuoteCatalog) {
-  const lines = buildLocalizedQuoteLines(state, catalog)
-  const total = lines.reduce((sum, line) => sum + line.amount, 0)
+  const priced = calculateQuote(state)
   const project = getLocalizedProjectType(catalog, state.projectType)
   return {
-    lines,
-    total,
-    delivery: project?.delivery ?? catalog.quote.deliveryFallback,
-    projectLabel: project?.label ?? catalog.quote.projectFallback,
-    includedZeroPriceFeatures: state.features
-      .map((id) => getLocalizedFeature(catalog, id))
-      .filter((item): item is LocalizedFeature => Boolean(item))
-      .filter((item) => item.price === 0)
-      .map((item) => item.label),
+    ...priced,
+    delivery: priced.delivery || project?.delivery || catalog.quote.deliveryFallback,
+    projectLabel: priced.projectLabel || project?.label || catalog.quote.projectFallback,
   }
 }

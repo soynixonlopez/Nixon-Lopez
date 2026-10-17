@@ -1,5 +1,7 @@
 /** Catálogo y reglas de cotización pública (Nixon Lopez Services) + opciones del panel admin. */
 
+import { CATALOG_PLANS, getCatalogPlan } from '@/lib/service-catalog'
+
 export const MAX_INCLUDED_PAGES = 5
 export const PRICE_EXTRA_PAGE_USD = 25
 export const PRICE_DOMAIN_USD = 15
@@ -30,7 +32,7 @@ export type ServiceDef = {
   monthly?: boolean
 }
 
-export const QUOTE_SERVICES: ServiceDef[] = [
+const LEGACY_QUOTE_SERVICES: ServiceDef[] = [
   {
     id: 'web-negocio-panel',
     label: 'Desarrollo web para negocios de servicios profesionales con panel administrativo',
@@ -321,8 +323,34 @@ export function getQuoteAddonIfMissing(service: ServiceDef | undefined): {
   }
 }
 
+const REPLACED_SERVICE_IDS = new Set([
+  'web-negocio-panel',
+  'web-productos-panel',
+  'web-negocio',
+  'landing',
+  'wordpress',
+  'reservas',
+  'ads-meta-google',
+  'wordpress-tienda-20',
+  'marketplace-10',
+  'marketplace-30',
+])
+
+export const QUOTE_SERVICES: ServiceDef[] = [
+  ...CATALOG_PLANS.map((plan) => ({
+    id: plan.id,
+    label: plan.billing === 'monthly' ? `${plan.label} (mensual)` : plan.label,
+    price: plan.basePrice,
+    offerPoints: [...plan.includes].slice(0, 5),
+    needsPages: plan.pagesIncluded != null,
+    needsDomainEmail: plan.category === 'web',
+    monthly: plan.billing === 'monthly',
+  })),
+  ...LEGACY_QUOTE_SERVICES.filter((service) => !REPLACED_SERVICE_IDS.has(service.id)),
+]
+
 export function getService(id: string): ServiceDef | undefined {
-  return QUOTE_SERVICES.find((s) => s.id === id)
+  return QUOTE_SERVICES.find((s) => s.id === id) ?? LEGACY_QUOTE_SERVICES.find((s) => s.id === id)
 }
 
 export type QuoteLine = { label: string; amount: number }
@@ -373,15 +401,16 @@ export function buildCatalogQuoteServiceSnapshot(input: {
   const s = getService(input.serviceId)
   if (!s) return null
 
+  const includedPages = getCatalogPlan(s.id)?.pagesIncluded ?? MAX_INCLUDED_PAGES
   const pages = s.needsPages
-    ? Math.max(1, Math.min(50, Number(input.cantidadPaginas) || MAX_INCLUDED_PAGES))
-    : MAX_INCLUDED_PAGES
+    ? Math.max(1, Math.min(50, Number(input.cantidadPaginas) || includedPages))
+    : includedPages
 
   const lines: QuoteLine[] = [{ label: s.label, amount: s.price }]
   let total = s.price
 
-  if (s.needsPages && pages > MAX_INCLUDED_PAGES) {
-    const extra = pages - MAX_INCLUDED_PAGES
+  if (s.needsPages && pages > includedPages) {
+    const extra = pages - includedPages
     const amt = extra * PRICE_EXTRA_PAGE_USD
     lines.push({
       label: `Páginas adicionales (${extra} × $${PRICE_EXTRA_PAGE_USD})`,

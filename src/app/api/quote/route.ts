@@ -195,6 +195,8 @@ export async function POST(request: NextRequest) {
         tipoServicio: typeof tipoServicio === 'string' ? tipoServicio : null,
         totalNumeric: typeof totalNumeric === 'number' && Number.isFinite(totalNumeric) ? totalNumeric : 0,
         selectedServices,
+        commercial: body.commercial,
+        configurator: body.configurator,
       })
 
       const [quotePdf, contractPdf] = await Promise.all([
