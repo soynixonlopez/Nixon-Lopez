@@ -238,6 +238,32 @@ function ClauseBlockView({ block }: { block: ContractClauseBlock }) {
           {p}
         </p>
       ))}
+      {block.table ? (
+        <div className="mb-3 overflow-x-auto print:overflow-visible">
+          <table className="w-full min-w-[640px] border-collapse border border-slate-300 text-xs">
+            <thead>
+              <tr className="bg-slate-100">
+                {block.table.headers.map((h) => (
+                  <th key={h} className="border border-slate-300 px-2 py-1.5 text-left font-semibold text-slate-800">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {block.table.rows.map((row, rowIdx) => (
+                <tr key={rowIdx}>
+                  {row.map((cell, cellIdx) => (
+                    <td key={cellIdx} className="border border-slate-300 px-2 py-1.5 align-top text-slate-800">
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
       {block.subsections?.map((sub) => (
         <div key={sub.heading} className="mt-2">
           <p className="font-semibold text-slate-800">{sub.heading}</p>

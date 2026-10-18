@@ -87,6 +87,16 @@ function LoginForm() {
             </p>
           )}
 
+          {err === 'config' && (
+            <p className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-left text-sm text-amber-950">
+              Falta configurar Supabase en el entorno local. Crea un archivo <strong>.env.local</strong> en la raíz
+              del proyecto con <strong>NEXT_PUBLIC_SUPABASE_URL</strong> y{' '}
+              <strong>NEXT_PUBLIC_SUPABASE_ANON_KEY</strong> (Dashboard → Settings → API). Reinicia{' '}
+              <code className="text-xs">npm run dev</code> después de guardar. No compartas la service role en el
+              cliente.
+            </p>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="admin-email" className="mb-2 block text-xs font-medium text-slate-600">

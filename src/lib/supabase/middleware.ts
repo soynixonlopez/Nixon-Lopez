@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { isSupabaseConfigured } from '@/lib/supabase/public-config'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'info@nixonlopez.com'
 
@@ -23,9 +24,23 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  const isAdminLogin = request.nextUrl.pathname.startsWith('/admin/login')
+  const isAdminPanel = request.nextUrl.pathname.startsWith('/admin')
+
+  if (isAdminPanel && !isSupabaseConfigured()) {
+    if (!isAdminLogin) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/admin/login'
+      url.searchParams.set('error', 'config')
+      url.searchParams.set('next', request.nextUrl.pathname)
+      return NextResponse.redirect(url)
+    }
+    return supabaseResponse
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!.trim(),
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!.trim(),
     {
       cookies: {
         getAll() {
@@ -43,9 +58,6 @@ export async function updateSession(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-
-  const isAdminLogin = request.nextUrl.pathname.startsWith('/admin/login')
-  const isAdminPanel = request.nextUrl.pathname.startsWith('/admin')
 
   if (isAdminPanel && !isAdminLogin) {
     if (!user) {

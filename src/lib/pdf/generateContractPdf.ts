@@ -323,6 +323,14 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
     for (const it of items) drawParagraph(`- ${it}`, 10, 17)
   }
 
+  const drawTable = (headers: string[], rows: string[][]) => {
+    drawParagraph(headers.join(' | '), 8, 12)
+    for (const row of rows) {
+      drawParagraph(row.join(' | '), 8, 12)
+    }
+    y -= 6
+  }
+
   const drawPaymentBlock = (title: string, rows: { label: string; value: string; key?: boolean }[]) => {
     if (y < M + 120) {
       page = pdf.addPage([W, H])
@@ -376,6 +384,7 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
   for (const block of clauses.blocks) {
     drawTitle(block.title)
     for (const p of block.paragraphs ?? []) drawParagraph(p)
+    if (block.table?.headers?.length) drawTable(block.table.headers, block.table.rows ?? [])
     if (block.bullets?.length) drawBullets(block.bullets)
     for (const p of block.afterBullets ?? []) drawParagraph(p)
     for (const sub of block.subsections ?? []) {

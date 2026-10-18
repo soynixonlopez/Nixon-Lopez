@@ -1,15 +1,17 @@
 import { adBudgetRecommendationCopy } from '@/lib/commercial-settings'
+import {
+  appendMarketingTerminationSection,
+  appendStandardWebSections,
+} from '@/lib/contract-commercial-sections'
+import { buildEconomicSummaryRows, buildEconomicTotalsFootnotes } from '@/lib/contract-economic-summary'
+import { isCourtesyAddonId } from '@/lib/courtesy-addons'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
 import type { CommercialSnapshot } from '@/lib/service-catalog'
 import type { ServiceContractRecord } from '@/lib/types/contract'
+import type { ContractClauseBlock } from '@/lib/contracts'
 
 type IntroSegment = { kind: 'text' | 'key'; value: string }
-type ClauseBlock = {
-  title: string
-  paragraphs?: string[]
-  bullets?: string[]
-  afterBullets?: string[]
-}
+type ClauseBlock = ContractClauseBlock
 
 const ROMAN = [
   'PRIMERA',
@@ -54,21 +56,50 @@ function text(value: string | null | undefined) {
 }
 
 export function commercialTermsReady(snapshot: CommercialSnapshot) {
-  return Boolean(
-    snapshot.revisionRounds != null &&
-      snapshot.revisionRounds >= 0 &&
-      text(snapshot.paymentMethod) &&
-      text(snapshot.advanceNote) &&
-      text(snapshot.balanceNote) &&
-      text(snapshot.paymentSchedule) &&
-      text(snapshot.startDate) &&
-      text(snapshot.deliveryDate) &&
-      text(snapshot.termNote) &&
-      text(snapshot.renewalNote) &&
-      text(snapshot.terminationNote) &&
-      (!snapshot.marketingPlanId || (text(snapshot.marketingStartDate) && text(snapshot.marketingFirstPayment))),
-  )
+  const hasWeb = Boolean(snapshot.webPlanId || (snapshot.webPlans?.length ?? 0) > 0)
+  const hasMarketing = Boolean(snapshot.marketingPlanId)
+  const shared =
+    text(snapshot.paymentMethod) &&
+    text(snapshot.paymentSchedule) &&
+    text(snapshot.termNote) &&
+    text(snapshot.renewalNote) &&
+    text(snapshot.terminationNote)
+
+  if (!shared) return false
+  if (hasWeb) {
+    if (
+      snapshot.revisionRounds == null ||
+      snapshot.revisionRounds < 0 ||
+      !text(snapshot.advanceNote) ||
+      !text(snapshot.balanceNote) ||
+      !text(snapshot.startDate) ||
+      !text(snapshot.deliveryDate)
+    ) {
+      return false
+    }
+  }
+  if (hasMarketing) {
+    if (!text(snapshot.marketingStartDate) || !text(snapshot.marketingFirstPayment)) return false
+    if (!hasWeb && !text(snapshot.advanceNote)) return false
+  }
+  return true
 }
+
+function annexLines(snapshot: CommercialSnapshot, moneyFn: (n: number) => string) {
+  return snapshot.totals.lines
+    .filter((line) => {
+      if (line.id.startsWith('feature-') && isCourtesyAddonId(line.id.slice('feature-'.length))) return false
+      if (line.amount <= 0 && line.billing !== 'external') return false
+      return true
+    })
+    .map((line) => {
+      const kind =
+        line.billing === 'monthly' ? 'honorario mensual' : line.billing === 'external' ? 'gasto externo' : 'pago único'
+      return `${line.label}: ${moneyFn(line.amount)} (${kind})`
+    })
+}
+
+const WEB_REVISION_DEFAULT = 2
 
 export function contractIsReadyToSign(contract: ServiceContractRecord) {
   const snapshot = readCommercialSnapshot(contract.terms_payload)
@@ -138,10 +169,21 @@ export function buildCommercialContractClauses(
         ),
       })
     }
+    const sectionIndex = { value: index }
+    appendStandardWebSections(
+      blocks,
+      sectionIndex,
+      titled,
+      snapshot,
+      contract.terms_payload,
+      money,
+    )
+    index = sectionIndex.value
   }
 
   if (snapshot.marketingPlanId) {
-    const recommended = snapshot.recommendedAdBudgetUsd ?? 0
+    const managesAds = (snapshot.campaigns ?? 0) > 0
+    const recommended = managesAds ? snapshot.recommendedAdBudgetUsd ?? 150 : 0
     const approved = snapshot.approvedAdBudgetUsd ?? (snapshot.adBudgetAccepted ? snapshot.adBudgetUsd : 0)
     blocks.push({
       title: titled(index++, 'APARTADO B. MARKETING DIGITAL'),
@@ -154,11 +196,15 @@ export function buildCommercialContractClauses(
         snapshot.marketingFirstPayment
           ? `Primer pago mensual: ${snapshot.marketingFirstPayment}.`
           : 'Primer pago mensual: pendiente de acordar.',
-        recommended > 0 ? adBudgetRecommendationCopy(recommended) : 'Este plan no incluye gestión de campañas publicitarias.',
+        managesAds && recommended > 0
+          ? adBudgetRecommendationCopy(recommended)
+          : 'Este plan no incluye gestión de campañas publicitarias.',
         approved > 0
           ? `Presupuesto publicitario aprobado: ${money(approved)} al mes. Lo paga el cliente directamente a Meta desde su cuenta publicitaria, salvo que las partes escriban otro mecanismo.`
-          : 'Presupuesto publicitario: pendiente de definición. No es un gasto autorizado y no se suma a los honorarios.',
-      ],
+          : managesAds
+            ? 'Presupuesto publicitario: pendiente de definición o no aprobado. No es un gasto autorizado y no se suma a los honorarios.'
+            : '',
+      ].filter(Boolean),
       bullets: [
         `Plataformas: ${snapshot.channels.length ? snapshot.channels.join(', ') : 'por definir'}.`,
         `Publicaciones de feed al mes (total de los canales, no por cada red): ${snapshot.postsPerMonth ?? 'según plan'}.`,
@@ -253,28 +299,56 @@ export function buildCommercialContractClauses(
     )
   }
 
+  if (hasWeb) {
+    blocks.push({
+      title: titled(index++, 'PLAZO DE ENTREGA'),
+      paragraphs: [
+        snapshot.deliveryDate
+          ? `Plazo acordado: ${snapshot.deliveryDate}.`
+          : 'Plazo: debe acordarse antes del contrato definitivo; no se inventa una cantidad de días.',
+        snapshot.startDate ? `Inicio del cómputo: ${snapshot.startDate}.` : 'Inicio: pendiente de acordar.',
+        'El plazo depende del anticipo, materiales del cliente y aprobaciones oportunas.',
+        'La entrega definitiva queda condicionada al saldo final y demás condiciones de pago.',
+      ],
+    })
+
+    const rounds = snapshot.revisionRounds ?? WEB_REVISION_DEFAULT
+    blocks.push({
+      title: titled(index++, 'RONDAS DE REVISIÓN'),
+      paragraphs: [
+        `El desarrollo web incluye ${rounds} rondas de revisión.`,
+        'Cada ronda permite un conjunto consolidado de observaciones sobre el trabajo entregado, dentro del alcance contratado.',
+        'Las revisiones no equivalen a rediseños completos ni a proyectos nuevos.',
+        'Nuevas páginas, módulos, integraciones o funcionalidades fuera del alcance se cotizan por separado.',
+        'El cliente presentará comentarios dentro del procedimiento y plazos acordados.',
+      ],
+    })
+  }
+
   blocks.push({
-    title: titled(index++, 'PRECIO Y PAGO'),
-    paragraphs: ['Los montos son los de la cotización aceptada.'],
+    title: titled(index++, 'PRECIO Y FORMA DE PAGO'),
+    paragraphs: [
+      'Los montos provienen de la cotización aceptada. El proyecto web no inicia hasta recibir el anticipo y la información necesaria.',
+    ],
     bullets: paymentBullets,
   })
 
+  const economicRows = buildEconomicSummaryRows(snapshot)
   blocks.push({
-    title: titled(index++, 'PLAZOS'),
-    paragraphs: [
-      snapshot.startDate ? `Inicio: ${snapshot.startDate}.` : 'Fecha de inicio: pendiente de acordar.',
-      snapshot.deliveryDate ? `Entrega estimada: ${snapshot.deliveryDate}.` : 'Fecha estimada de entrega: pendiente de acordar.',
-      'Los plazos dependen de que el cliente entregue contenidos, credenciales y aprobaciones. Este contrato no inventa un calendario si las partes no lo escribieron.',
-    ],
-  })
-
-  blocks.push({
-    title: titled(index++, 'REVISIONES'),
-    paragraphs: [
-      snapshot.revisionRounds != null
-        ? `Rondas de revisión incluidas: ${snapshot.revisionRounds}. Lo que exceda ese alcance se cotiza aparte.`
-        : 'La cantidad de rondas de revisión no está definida. Debe acordarse antes de firmar. No se asumen revisiones ilimitadas.',
-    ],
+    title: titled(index++, 'RESUMEN ECONÓMICO'),
+    paragraphs: ['Desglose de servicios, tipo de facturación y condiciones. Los gastos externos no son honorarios del prestador.'],
+    table: {
+      headers: ['Servicio', 'Tipo', 'Precio', 'Frecuencia', 'Condición de pago', 'Vencimiento'],
+      rows: economicRows.map((row) => [
+        row.service,
+        row.billingType,
+        row.price,
+        row.frequency,
+        row.paymentCondition,
+        row.dueDate,
+      ]),
+    },
+    bullets: buildEconomicTotalsFootnotes(snapshot),
   })
 
   blocks.push({
@@ -288,22 +362,32 @@ export function buildCommercialContractClauses(
   })
 
   blocks.push({
-    title: titled(index++, 'VIGENCIA, RENOVACIÓN Y TERMINACIÓN'),
+    title: titled(index++, 'SERVICIOS ADICIONALES'),
     paragraphs: [
-      text(snapshot.termNote) ? `Vigencia: ${text(snapshot.termNote)}.` : 'Vigencia: pendiente de acordar.',
-      text(snapshot.renewalNote)
-        ? `Renovación: ${text(snapshot.renewalNote)}.`
-        : 'Renovación: pendiente de acordar. Este documento no establece una renovación automática.',
-      text(snapshot.terminationNote)
-        ? `Terminación: ${text(snapshot.terminationNote)}.`
-        : 'Terminación: pendiente de acordar. Este documento no fija preaviso ni penalización.',
+      'Funcionalidades fuera del alcance requieren cotización y aprobación previa. Los agregados de cortesía no son extras facturables.',
     ],
   })
 
-  const annex = totals.lines.map((line) => {
-    const kind = line.billing === 'monthly' ? 'honorario mensual' : line.billing === 'external' ? 'gasto externo' : 'pago único'
-    return `${line.label}: ${money(line.amount)} (${kind})`
-  })
+  if (snapshot.marketingPlanId) {
+    const termIndex = { value: index }
+    appendMarketingTerminationSection(blocks, termIndex, titled, snapshot, text)
+    index = termIndex.value
+  } else {
+    blocks.push({
+      title: titled(index++, 'VIGENCIA'),
+      paragraphs: [
+        text(snapshot.termNote) ? `Vigencia: ${text(snapshot.termNote)}.` : 'Vigencia: según cotización aceptada.',
+        text(snapshot.renewalNote)
+          ? `Renovación: ${text(snapshot.renewalNote)}.`
+          : 'Renovación: no aplica renovación automática del desarrollo web.',
+        text(snapshot.terminationNote)
+          ? `Terminación: ${text(snapshot.terminationNote)}.`
+          : 'Terminación: conforme a incumplimientos y cláusulas generales.',
+      ],
+    })
+  }
+
+  const annex = annexLines(snapshot, money)
   blocks.push({
     title: titled(index++, 'ANEXO: COTIZACIÓN ACEPTADA'),
     paragraphs: ['Estos importes quedan congelados con la cotización. No siguen los precios futuros del catálogo.'],
@@ -311,10 +395,17 @@ export function buildCommercialContractClauses(
   })
 
   blocks.push({
+    title: titled(index++, 'LEGISLACIÓN APLICABLE'),
+    paragraphs: [
+      'El presente contrato se rige por las leyes de la República de Panamá. Cualquier disputa será resuelta ante los tribunales competentes de Panamá, sujeto a revisión legal.',
+    ],
+  })
+
+  blocks.push({
     title: titled(index++, 'ACEPTACIÓN Y FIRMAS'),
     paragraphs: [
       ready
-        ? 'Las partes aceptan este alcance y los importes del anexo. La firma va al final del documento.'
+        ? 'Las partes aceptan este alcance y los importes del anexo. Generar o descargar el PDF no equivale a firmar.'
         : 'BORRADOR. Faltan condiciones obligatorias. No está listo para firmar.',
     ],
   })

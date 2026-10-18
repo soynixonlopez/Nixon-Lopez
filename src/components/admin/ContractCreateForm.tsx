@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { parseClientExtraFromPayload } from '@/lib/admin-configurator-quote'
 import {
+  assessQuoteForContract,
   deriveContractTermsFromQuote,
   enrichQuotePayloadForContract,
   quotePayloadHasMarketing,
+  quotePayloadHasWeb,
 } from '@/lib/contract-terms-from-quote'
 import { extractQuoteServiceSnapshots } from '@/lib/quote-pricing'
 
@@ -60,9 +62,14 @@ export function ContractCreateForm({
   const [marketingFirstPayment, setMarketingFirstPayment] = useState('')
   const [termsError, setTermsError] = useState('')
 
+  const quoteAssessment = useMemo(() => {
+    if (!selected?.raw_payload) return null
+    return assessQuoteForContract(selected.raw_payload, quoteMeta(selected))
+  }, [selected])
+
   const enrichedPayload = useMemo(() => {
     if (!selected?.raw_payload) return null
-    return enrichQuotePayloadForContract(selected.raw_payload)
+    return enrichQuotePayloadForContract(selected.raw_payload, quoteMeta(selected))
   }, [selected])
 
   const hasMarketing = Boolean(enrichedPayload && quotePayloadHasMarketing(enrichedPayload))
@@ -70,8 +77,9 @@ export function ContractCreateForm({
   const applyTermsFromQuote = useCallback(
     (quote: QuoteOpt) => {
       setTermsError('')
-      const enriched = enrichQuotePayloadForContract(quote.raw_payload)
-      const derived = deriveContractTermsFromQuote(enriched ?? quote.raw_payload, quoteMeta(quote))
+      const meta = quoteMeta(quote)
+      const enriched = enrichQuotePayloadForContract(quote.raw_payload, meta)
+      const derived = deriveContractTermsFromQuote(enriched ?? quote.raw_payload, meta)
       if (!derived) {
         setTermsError(
           'No se pudieron calcular los términos desde esta cotización. Revisa que tenga servicios y montos guardados.',
@@ -136,27 +144,43 @@ export function ContractCreateForm({
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     if (!selected) return
+    const assessment = assessQuoteForContract(selected.raw_payload, quoteMeta(selected))
+    if (assessment.incomplete || !assessment.aligned) {
+      alert(
+        assessment.warnings.join('\n') ||
+          'Esta cotización está incompleta. Complétala o elige otra antes de crear el contrato.',
+      )
+      return
+    }
     const terms = resolveTermsForSubmit(selected)
     if (!terms) {
       alert(termsError || 'No se pudieron generar los términos del contrato desde la cotización.')
       return
     }
+    const rawForFlags = enrichedPayload ?? selected.raw_payload
+    const hasWeb = quotePayloadHasWeb(rawForFlags)
+    const marketing = quotePayloadHasMarketing(rawForFlags)
     const rounds = Number(terms.revisionRounds)
-    const marketing = Boolean(enrichedPayload && quotePayloadHasMarketing(enrichedPayload))
-    if (
-      !Number.isFinite(rounds) ||
-      rounds < 0 ||
-      !terms.paymentMethod.trim() ||
-      !terms.advanceNote.trim() ||
-      !terms.balanceNote.trim() ||
-      !terms.paymentSchedule.trim() ||
-      !terms.startDate.trim() ||
-      !terms.deliveryDate.trim() ||
-      !terms.termNote.trim() ||
-      !terms.renewalNote.trim() ||
-      !terms.terminationNote.trim() ||
-      (marketing && (!terms.marketingStartDate.trim() || !terms.marketingFirstPayment.trim()))
-    ) {
+    const sharedOk =
+      terms.paymentMethod.trim() &&
+      terms.paymentSchedule.trim() &&
+      terms.termNote.trim() &&
+      terms.renewalNote.trim() &&
+      terms.terminationNote.trim()
+    const webOk =
+      !hasWeb ||
+      (Number.isFinite(rounds) &&
+        rounds >= 0 &&
+        terms.advanceNote.trim() &&
+        terms.balanceNote.trim() &&
+        terms.startDate.trim() &&
+        terms.deliveryDate.trim())
+    const mktOk =
+      !marketing ||
+      (terms.marketingStartDate.trim() &&
+        terms.marketingFirstPayment.trim() &&
+        (!hasWeb ? terms.advanceNote.trim() : true))
+    if (!sharedOk || !webOk || !mktOk) {
       alert('Los términos no se completaron. Usa «Regenerar desde cotización» o revisa la cotización base.')
       return
     }
@@ -169,7 +193,8 @@ export function ContractCreateForm({
       return
     }
     const clientName = `${selected.client_first_name} ${selected.client_last_name}`.trim()
-    const enriched = enrichQuotePayloadForContract(selected.raw_payload) ?? selected.raw_payload
+    const meta = quoteMeta(selected)
+    const enriched = enrichQuotePayloadForContract(selected.raw_payload, meta) ?? selected.raw_payload
     const payload = {
       contract_number: numberData as string,
       quote_id: selected.id,
@@ -180,7 +205,8 @@ export function ContractCreateForm({
       city: city || null,
       service_type: selected.service_id,
       service_label: selected.service_label || 'Servicio tecnológico',
-      total_amount: selected.total_amount ?? 0,
+      total_amount:
+        assessment.displayInitialFees > 0 ? assessment.displayInitialFees : (selected.total_amount ?? 0),
       currency: 'USD',
       custom_notes: terms.customNotes || null,
       terms_payload:
@@ -238,7 +264,19 @@ export function ContractCreateForm({
     router.refresh()
   }
 
-  const termsReady = Boolean(paymentSchedule && !termsError)
+  const termsReady = Boolean(paymentSchedule && !termsError && quoteAssessment && !quoteAssessment.incomplete)
+
+  function formatQuoteMoney(q: QuoteOpt) {
+    const a = assessQuoteForContract(q.raw_payload, quoteMeta(q))
+    if (!a.aligned || a.incomplete) {
+      return q.total_amount != null ? `$${Number(q.total_amount).toFixed(2)} (revisar)` : 'incompleta'
+    }
+    if (a.displayWebOnce > 0 && a.displayMonthly > 0) {
+      return `web $${a.displayWebOnce.toFixed(2)} + $${a.displayMonthly.toFixed(2)}/mes`
+    }
+    if (a.displayMonthly > 0) return `$${a.displayMonthly.toFixed(2)}/mes`
+    return `$${a.displayWebOnce.toFixed(2)}`
+  }
 
   return (
     <form onSubmit={submit} className="mx-auto w-full max-w-xl space-y-6">
@@ -255,8 +293,7 @@ export function ContractCreateForm({
         >
           {quotes.map((q) => (
             <option key={q.id} value={q.id}>
-              {q.client_first_name} {q.client_last_name} — {q.service_label || 'Servicio'} ($
-              {Number(q.total_amount || 0).toFixed(2)})
+              {q.client_first_name} {q.client_last_name} — {q.service_label || 'Servicio'} ({formatQuoteMoney(q)})
             </option>
           ))}
         </select>
@@ -292,9 +329,31 @@ export function ContractCreateForm({
 
       {termsError ? (
         <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{termsError}</p>
+      ) : quoteAssessment?.incomplete ? (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          <p className="font-medium">Cotización incompleta para contrato</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            {quoteAssessment.warnings.map((w) => (
+              <li key={w}>{w}</li>
+            ))}
+          </ul>
+          <p className="mt-2 text-amber-900/90">
+            No se creará un contrato con plantilla legacy. Corrige la cotización en el panel.
+          </p>
+        </div>
       ) : termsReady ? (
         <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
           Pagos, plazos y cláusulas se completan solos desde la cotización. El trabajo inicia al firmar el contrato.
+          {quoteAssessment?.displayWebOnce ? (
+            <>
+              {' '}
+              Web: ${quoteAssessment.displayWebOnce.toFixed(2)} (anticipo 50%: $
+              {(quoteAssessment.displayWebOnce / 2).toFixed(2)}).
+            </>
+          ) : null}
+          {quoteAssessment?.displayMonthly ? (
+            <> Honorarios: ${quoteAssessment.displayMonthly.toFixed(2)}/mes.</>
+          ) : null}
         </p>
       ) : null}
       {!termsError ? (
@@ -435,7 +494,7 @@ export function ContractCreateForm({
 
       <button
         type="submit"
-        disabled={loading || !selected}
+        disabled={loading || !selected || Boolean(quoteAssessment?.incomplete)}
         className="px-6 py-3 rounded-xl bg-brand text-white font-medium disabled:opacity-50"
       >
         {loading ? 'Creando…' : 'Crear contrato'}

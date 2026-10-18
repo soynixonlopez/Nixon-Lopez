@@ -17,7 +17,10 @@
     "generate-email-icons": "node scripts/generate-email-icons.mjs",
     "optimize-home-images": "node scripts/optimize-home-images.mjs",
     "optimize-site-assets": "node scripts/optimize-site-assets.mjs",
-    "lighthouse:mobile-batch": "node scripts/lighthouse-mobile-batch.mjs"
+    "lighthouse:mobile-batch": "node scripts/lighthouse-mobile-batch.mjs",
+    "verify:contracts": "npx tsx scripts/verify-contract-scenarios.ts",
+    "audit:quotes-commercial": "npx tsx scripts/audit-quotes-commercial.ts",
+    "samples:contract-pdf": "npx tsx scripts/generate-contract-pdf-samples.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",

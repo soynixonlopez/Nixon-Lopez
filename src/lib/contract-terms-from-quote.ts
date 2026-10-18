@@ -1,6 +1,10 @@
 import { CONTRACT_PAYMENT_BANK, CONTRACT_PAYMENT_YAPPY } from '@/lib/contract-payment'
+import {
+  alignCommercialSnapshotToQuote,
+  refreshExternalTotalsFromConfigurator,
+} from '@/lib/quote-commercial-align'
 import { parseConfiguratorFromPayload } from '@/lib/admin-configurator-quote'
-import { mergeCourtesyCatalog } from '@/lib/courtesy-addons'
+import { mergeCourtesyCatalog, resolveCourtesyAddonsForWebPlans } from '@/lib/courtesy-addons'
 import { extractQuoteServiceSnapshots } from '@/lib/quote-pricing'
 import {
   buildCommercialSnapshot,
@@ -198,9 +202,20 @@ function synthesizeCommercialFromLegacyPayload(raw: unknown): CommercialSnapshot
   const marketing = marketingPlanId ? getCatalogPlan(marketingPlanId) : null
   const cfg = parseConfiguratorFromPayload(raw)
 
+  const courtesyCatalog = mergeCourtesyCatalog([])
+  const courtesyAddons =
+    webPlanId != null
+      ? resolveCourtesyAddonsForWebPlans([webPlanId], courtesyCatalog).map((item) => ({
+          id: item.id,
+          name: item.name,
+          description: item.description,
+        }))
+      : []
+
   return {
     webPlanId,
     marketingPlanId,
+    courtesyAddons,
     webPlans: webPlanId
       ? [{ id: webPlanId, label: getCatalogPlan(webPlanId)?.label ?? webPlanId, basePrice: getCatalogPlan(webPlanId)?.basePrice ?? oneTime }]
       : undefined,
@@ -255,7 +270,18 @@ function synthesizeCommercialFromLegacyPayload(raw: unknown): CommercialSnapshot
   }
 }
 
-export function resolveCommercialSnapshotForContract(raw: unknown): CommercialSnapshot | null {
+export type QuoteCommercialAssessment = {
+  aligned: CommercialSnapshot | null
+  hasCommercialSnapshot: boolean
+  incomplete: boolean
+  legacyTemplateRisk: boolean
+  warnings: string[]
+  displayWebOnce: number
+  displayMonthly: number
+  displayInitialFees: number
+}
+
+function resolveCommercialSnapshotBase(raw: unknown): CommercialSnapshot | null {
   const existing = parseCommercialFromQuotePayload(raw)
   if (existing) return existing
 
@@ -268,16 +294,121 @@ export function resolveCommercialSnapshotForContract(raw: unknown): CommercialSn
   return synthesizeCommercialFromLegacyPayload(raw)
 }
 
-export function enrichQuotePayloadForContract(raw: unknown): Record<string, unknown> | null {
+export function resolveCommercialSnapshotForContract(
+  raw: unknown,
+  meta?: QuoteContractMeta,
+  options?: { skipAlign?: boolean },
+): CommercialSnapshot | null {
+  const base = resolveCommercialSnapshotBase(raw)
+  if (!base) return null
+  if (options?.skipAlign) return base
+  let aligned = alignCommercialSnapshotToQuote(base, raw, meta)
+  aligned = refreshExternalTotalsFromConfigurator(aligned, raw)
+  return aligned
+}
+
+export function assessQuoteForContract(raw: unknown, meta?: QuoteContractMeta): QuoteCommercialAssessment {
+  const warnings: string[] = []
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return {
+      aligned: null,
+      hasCommercialSnapshot: false,
+      incomplete: true,
+      legacyTemplateRisk: true,
+      warnings: ['La cotización no tiene datos estructurados (raw_payload vacío).'],
+      displayWebOnce: 0,
+      displayMonthly: 0,
+      displayInitialFees: 0,
+    }
+  }
+
+  const payload = raw as Record<string, unknown>
+  const hadCommercial = Boolean(
+    payload.commercial && typeof payload.commercial === 'object' && !Array.isArray(payload.commercial),
+  )
+
+  const aligned = resolveCommercialSnapshotForContract(raw, meta)
+  if (!aligned) {
+    return {
+      aligned: null,
+      hasCommercialSnapshot: false,
+      incomplete: true,
+      legacyTemplateRisk: true,
+      warnings: ['No se pudo derivar un snapshot comercial fiable desde esta cotización.'],
+      displayWebOnce: 0,
+      displayMonthly: 0,
+      displayInitialFees: 0,
+    }
+  }
+
+  const totals = aligned.totals
+  const hasWeb = Boolean(aligned.webPlanId || aligned.webPlans?.length)
+  const hasMarketing = Boolean(aligned.marketingPlanId)
+
+  if (!hadCommercial) {
+    warnings.push('Cotización sin bloque comercial guardado: se normalizó desde breakdown/configurador.')
+  }
+
+  if (hasWeb && totals.oneTime <= 0) warnings.push('Falta el importe de pago único del desarrollo web.')
+  if (hasMarketing && totals.monthly <= 0) warnings.push('Faltan honorarios mensuales de marketing.')
+  if (totals.lines.length === 0) warnings.push('No hay líneas económicas en la cotización.')
+
+  const dbTotal = meta?.totalAmount
+  if (dbTotal != null && dbTotal > 0 && totals.lines.length > 0) {
+    const matches =
+      Math.abs(dbTotal - totals.initialFees) < 0.02 ||
+      Math.abs(dbTotal - totals.oneTime) < 0.02 ||
+      Math.abs(dbTotal - totals.monthly) < 0.02
+    if (!matches) {
+      warnings.push(
+        `Total en cotización USD ${dbTotal.toFixed(2)} ≠ desglose (web ${totals.oneTime.toFixed(2)}, mensual ${totals.monthly.toFixed(2)}). Se usa el desglose aceptado.`,
+      )
+    }
+  }
+
+  if (hasWeb && aligned.webPlanId) {
+    const catalog = getCatalogPlan(aligned.webPlanId)
+    const webLine = totals.lines.find((line) => line.id === `project-${aligned.webPlanId}` && line.billing === 'once')
+    const webPay = webLine?.amount ?? totals.oneTime
+    if (catalog && Math.abs(catalog.basePrice - webPay) > 0.01) {
+      warnings.push(
+        `Web contratada USD ${webPay.toFixed(2)}; catálogo actual USD ${catalog.basePrice.toFixed(2)} — se conserva la aceptada.`,
+      )
+    }
+  }
+
+  const incomplete =
+    totals.lines.length === 0 ||
+    (hasWeb && totals.oneTime <= 0) ||
+    (hasMarketing && totals.monthly <= 0) ||
+    (!hasWeb && !hasMarketing)
+
+  return {
+    aligned,
+    hasCommercialSnapshot: hadCommercial || totals.lines.length > 0,
+    incomplete,
+    legacyTemplateRisk: !hadCommercial && incomplete,
+    warnings,
+    displayWebOnce: totals.oneTime,
+    displayMonthly: totals.monthly,
+    displayInitialFees: totals.initialFees,
+  }
+}
+
+export function enrichQuotePayloadForContract(
+  raw: unknown,
+  meta?: QuoteContractMeta,
+): Record<string, unknown> | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
   const base = { ...(raw as Record<string, unknown>) }
-  const commercial = resolveCommercialSnapshotForContract(raw)
-  if (commercial) {
-    base.commercial = {
-      ...(typeof base.commercial === 'object' && base.commercial != null && !Array.isArray(base.commercial)
-        ? (base.commercial as Record<string, unknown>)
-        : {}),
-      ...commercial,
+  const assessment = assessQuoteForContract(raw, meta)
+  if (assessment.aligned) {
+    base.commercial = assessment.aligned
+    base.commercial_contract_meta = {
+      incomplete: assessment.incomplete,
+      legacyTemplateRisk: assessment.legacyTemplateRisk,
+      warnings: assessment.warnings,
+      normalizedAt: new Date().toISOString(),
     }
   }
   return base
@@ -315,7 +446,7 @@ export function deriveContractTermsFromQuote(
   raw: unknown,
   meta?: QuoteContractMeta,
 ): DerivedContractTerms | null {
-  let commercial = resolveCommercialSnapshotForContract(raw)
+  let commercial = resolveCommercialSnapshotForContract(raw, meta)
   if (!commercial && meta?.totalAmount != null && meta.totalAmount > 0) {
     const syntheticRaw = {
       ...(raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}),
@@ -325,6 +456,7 @@ export function deriveContractTermsFromQuote(
       monthly: isMarketingPlanId(meta.serviceId ?? ''),
     }
     commercial = synthesizeCommercialFromLegacyPayload(syntheticRaw)
+    if (commercial) commercial = alignCommercialSnapshotToQuote(commercial, syntheticRaw, meta)
   }
   if (!commercial) return null
 
@@ -378,7 +510,7 @@ export function deriveContractTermsFromQuote(
       ? scheduleLines.join('\n')
       : 'Calendario según montos de la cotización aceptada (ver anexo económico).'
 
-  const derivedRounds = hasWeb ? '2' : hasMarketing ? '1' : '2'
+  const derivedRounds = hasWeb ? '2' : '0'
 
   const derivedMktFirst =
     hasMarketing && monthly > 0

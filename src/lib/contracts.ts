@@ -41,6 +41,10 @@ export type ContractClauseBlock = {
     paragraphs?: string[]
     bullets?: string[]
   }>
+  table?: {
+    headers: string[]
+    rows: string[][]
+  }
 }
 
 export type BuiltContractClauses = {

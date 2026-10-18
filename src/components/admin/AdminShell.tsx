@@ -106,29 +106,20 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <div
           className={clsx(
             'flex min-h-[3.75rem] shrink-0 items-center justify-between gap-2 px-3 py-2.5',
+            collapsed && 'lg:justify-center lg:px-2',
             adminUi.sidebarHeader
           )}
         >
           <Link
             href="/admin/cotizaciones"
-            className={clsx(
-              'flex min-w-0 flex-1 items-center',
-              collapsed && 'lg:justify-center'
-            )}
+            className={clsx('flex min-w-0 flex-1 items-center', collapsed && 'lg:hidden')}
             onClick={() => setOpen(false)}
             title="Cotizaciones"
             aria-label="Nixon Lopez Services — administración"
           >
-            <BrandLogo
-              variant="official"
-              alt="Nixon Lopez Services"
-              sizes="200px"
-              priority
-              markOnly={collapsed}
-              className={clsx(collapsed ? 'lg:justify-center' : '')}
-            />
+            <BrandLogo variant="official" alt="Nixon Lopez Services" sizes="200px" priority />
           </Link>
-          <div className="flex shrink-0 items-center gap-0.5">
+          <div className={clsx('flex shrink-0 items-center gap-0.5', collapsed && 'lg:w-full lg:justify-center')}>
             <button
               type="button"
               className={clsx(
