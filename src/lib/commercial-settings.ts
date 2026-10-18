@@ -1,3 +1,5 @@
+import { mergeCourtesyCatalog, type CourtesyAddonDefinition } from '@/lib/courtesy-addons'
+
 export type CommercialOfferSettings = {
   storiesPriceUsd: number | null
   storiesQuantity: number | null
@@ -7,6 +9,7 @@ export type CommercialOfferSettings = {
   storiesIncludesCopy: boolean
   storiesIncludesScheduling: boolean
   recommendedAdBudgetUsd: number
+  courtesyCatalog: CourtesyAddonDefinition[]
 }
 
 export const DEFAULT_COMMERCIAL_OFFER: CommercialOfferSettings = {
@@ -18,6 +21,7 @@ export const DEFAULT_COMMERCIAL_OFFER: CommercialOfferSettings = {
   storiesIncludesCopy: true,
   storiesIncludesScheduling: true,
   recommendedAdBudgetUsd: 150,
+  courtesyCatalog: mergeCourtesyCatalog([]),
 }
 
 export function adBudgetRecommendationCopy(amount: number) {
@@ -49,5 +53,6 @@ export function parseCommercialOffer(value: unknown): CommercialOfferSettings {
       Number.isFinite(recommended) && recommended > 0
         ? recommended
         : DEFAULT_COMMERCIAL_OFFER.recommendedAdBudgetUsd,
+    courtesyCatalog: mergeCourtesyCatalog(row.courtesy_addons),
   }
 }

@@ -22,6 +22,7 @@ import {
   type TimelineId,
   type YesNo,
 } from '@/lib/quote-configurator'
+import { isCourtesyAddonId, type CourtesyAddonDefinition } from '@/lib/courtesy-addons'
 import { extractQuoteServiceSnapshots } from '@/lib/quote-pricing'
 
 export {
@@ -41,7 +42,7 @@ export {
 }
 
 export function emptyConfiguratorState(): ConfiguratorState {
-  return { ...INITIAL_CONFIGURATOR_STATE, features: ['whatsapp'] }
+  return { ...INITIAL_CONFIGURATOR_STATE, features: [] }
 }
 
 export function parseClientExtraFromPayload(raw: unknown): {
@@ -128,7 +129,7 @@ export function parseConfiguratorFromPayload(raw: unknown): ConfiguratorState | 
   return {
     ...emptyConfiguratorState(),
     projectType,
-    features: featureIds.length > 0 ? featureIds : (['whatsapp'] as FeatureId[]),
+    features: featureIds.filter((id) => !isCourtesyAddonId(id)),
     hasDomain,
     hasHosting,
     emailCount: 0,
@@ -209,7 +210,9 @@ function normalizeConfiguratorState(value: Record<string, unknown>): Configurato
         ? (projectType as ConfiguratorState['marketingPlan'])
         : null),
     business,
-    features: fixedScope ? [] : featureIds.length > 0 ? featureIds : (['whatsapp'] as FeatureId[]),
+    features: fixedScope
+      ? []
+      : featureIds.filter((id) => !isCourtesyAddonId(id)),
     hasDomain,
     hasHosting,
     emailCount,
@@ -261,9 +264,14 @@ function normalizeConfiguratorState(value: Record<string, unknown>): Configurato
 
 export function buildConfiguratorPayload(
   state: ConfiguratorState,
-  options?: { priceOverride?: number | null; customDecision?: string | null }
+  options?: {
+    priceOverride?: number | null
+    customDecision?: string | null
+    courtesyCatalog?: CourtesyAddonDefinition[]
+  },
 ) {
-  const quote = calculateQuote(state)
+  const pricingCtx = options?.courtesyCatalog ? { courtesyCatalog: options.courtesyCatalog } : undefined
+  const quote = calculateQuote(state, pricingCtx)
   const project = PROJECT_TYPES.find((p) => p.id === state.projectType)
   const override =
     typeof options?.priceOverride === 'number' && Number.isFinite(options.priceOverride)
@@ -302,7 +310,7 @@ export function buildConfiguratorPayload(
           ? 'Incluye ítems en presupuesto (dominio/hosting/correos según selección)'
           : 'Cliente ya cuenta con dominio/hosting',
     breakdown: { lines },
-    commercial: buildCommercialSnapshot(state),
+    commercial: buildCommercialSnapshot(state, pricingCtx),
     selected_services: [
       {
         serviceId: state.projectType ?? state.marketingPlan ?? 'profesional',

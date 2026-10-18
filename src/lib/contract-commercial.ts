@@ -129,6 +129,15 @@ export function buildCommercialContractClauses(
         snapshot.adminModulesNote ?? '',
       ].filter(Boolean),
     })
+    if ((snapshot.courtesyAddons?.length ?? 0) > 0) {
+      blocks.push({
+        title: titled(index++, 'FUNCIONALIDADES COMPLEMENTARIAS INCLUIDAS SIN COSTO ADICIONAL'),
+        paragraphs: ['Forman parte del alcance del paquete web. No generan líneas de cobro individuales.'],
+        bullets: snapshot.courtesyAddons!.map((item) =>
+          item.description ? `${item.name}: ${item.description}` : item.name,
+        ),
+      })
+    }
   }
 
   if (snapshot.marketingPlanId) {
@@ -153,7 +162,9 @@ export function buildCommercialContractClauses(
       bullets: [
         `Plataformas: ${snapshot.channels.length ? snapshot.channels.join(', ') : 'por definir'}.`,
         `Publicaciones de feed al mes (total de los canales, no por cada red): ${snapshot.postsPerMonth ?? 'según plan'}.`,
-        `Reels al mes: ${snapshot.reelsPerMonth ?? 0}. Si hay reels, se editan con material del cliente.`,
+        ...(snapshot.reelsPerMonth != null && snapshot.reelsPerMonth > 0
+          ? [`Reels al mes: ${snapshot.reelsPerMonth}. Editados con material proporcionado por el cliente.`]
+          : []),
         snapshot.storiesIncluded
           ? `Historias: ${snapshot.storiesPerWeek ?? 3} por semana incluidas (aprox. ${snapshot.storiesPerMonth || (snapshot.storiesPerWeek ?? 3) * 4} en cuatro semanas; obligación semanal). Diseñadas y publicadas con material del cliente; sin grabaciones presenciales salvo acuerdo expreso.`
           : 'Historias: no aplican a este servicio.',

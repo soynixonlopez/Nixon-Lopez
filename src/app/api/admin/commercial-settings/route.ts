@@ -30,6 +30,7 @@ export async function POST(request: Request) {
     stories_includes_copy: row.storiesIncludesCopy !== false,
     stories_includes_scheduling: row.storiesIncludesScheduling !== false,
     recommended_ad_budget_usd: recommended,
+    courtesy_addons: Array.isArray(row.courtesyCatalog) ? row.courtesyCatalog : [],
   }
 
   const { data, error } = await auth.supabase

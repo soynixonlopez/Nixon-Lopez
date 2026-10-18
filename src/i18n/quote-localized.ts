@@ -1,4 +1,5 @@
 import type { Messages } from '@/i18n/messages'
+import { publicBillableFeatures } from '@/lib/courtesy-addons'
 import {
   FEATURES,
   PRICE_DOMAIN_USD,
@@ -12,6 +13,7 @@ import {
   type FeatureId,
   type ProjectTypeId,
   type QuoteLine,
+  type QuotePricingContext,
   type TimelineId,
 } from '@/lib/quote-configurator'
 
@@ -60,15 +62,18 @@ export function buildLocalizedQuoteCatalog(quote: Messages['quote']): LocalizedQ
     ]
   })
 
-  const features = quote.features.map((msg) => {
-    const base = FEATURES.find((f) => f.id === msg.id)!
-    return {
-      id: msg.id as FeatureId,
-      label: msg.label,
-      description: msg.description,
-      price: base.price,
-    }
-  })
+  const billableIds = new Set(publicBillableFeatures().map((item) => item.id))
+  const features = quote.features
+    .filter((msg) => billableIds.has(msg.id))
+    .map((msg) => {
+      const base = FEATURES.find((f) => f.id === msg.id)!
+      return {
+        id: msg.id as FeatureId,
+        label: msg.label,
+        description: msg.description,
+        price: base.price,
+      }
+    })
 
   const businessTypes = quote.businessTypes.map((msg) => ({
     id: msg.id as BusinessId,
@@ -164,8 +169,12 @@ export function buildLocalizedQuoteLines(
   return lines
 }
 
-export function calculateLocalizedQuote(state: ConfiguratorState, catalog: LocalizedQuoteCatalog) {
-  const priced = calculateQuote(state)
+export function calculateLocalizedQuote(
+  state: ConfiguratorState,
+  catalog: LocalizedQuoteCatalog,
+  ctx?: QuotePricingContext,
+) {
+  const priced = calculateQuote(state, ctx)
   const project = getLocalizedProjectType(catalog, state.projectType)
   return {
     ...priced,

@@ -17,9 +17,17 @@ import {
   type ProjectTypeId,
 } from '@/lib/admin-configurator-quote'
 import {
+  getBillableFeatureDef,
+  isCourtesyAddonId,
+  mergeCourtesyCatalog,
+  resolveCourtesyAddonsForWebPlans,
+} from '@/lib/courtesy-addons'
+import {
   REDESIGN_EXCLUDES,
   SOCIAL_MEDIA_ADDITIONAL_SERVICES,
   SOCIAL_MEDIA_GENERAL_INCLUDES,
+  activeWebIds,
+  planAlreadyIncludes,
 } from '@/lib/quote-configurator'
 
 const EMAIL_OPTIONS: Array<{ value: EmailCount; label: string }> = [
@@ -43,6 +51,7 @@ type Props = {
 
 export function AdminConfiguratorEditor({ state, onChange }: Props) {
   const quote = calculateQuote(state)
+  const courtesyIncluded = resolveCourtesyAddonsForWebPlans(activeWebIds(state), mergeCourtesyCatalog([]))
   const selectedProject = ADMIN_PROJECT_TYPES.find((p) => p.id === state.projectType) ?? null
   const isRedes = isSocialMediaProjectType(state.marketingPlan) || isSocialMediaProjectType(state.projectType)
   const isRediseno = isRedesignProjectType(state.projectType)
@@ -81,7 +90,7 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
       ...state,
       webPlanIds: nextIds,
       projectType: nextIds[0] ?? null,
-      features: state.features.length > 0 ? state.features : (['whatsapp'] as FeatureId[]),
+      features: state.features.filter((id) => !isCourtesyAddonId(id)),
     })
   }
 
@@ -340,19 +349,44 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
       {!isFixedScope ? (
         <>
           <section>
-            <p className="mb-2 text-sm font-bold text-slate-900">Funcionalidades</p>
+            {courtesyIncluded.length > 0 ? (
+              <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800">
+                  Cortesía incluida (USD 0)
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {courtesyIncluded.map((item) => (
+                    <li key={item.id} className="text-sm text-emerald-950">
+                      · {item.name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            <p className="mb-2 text-sm font-bold text-slate-900">Extras facturables / módulos</p>
             <div className="max-h-64 space-y-1.5 overflow-y-auto rounded-xl border border-slate-200 p-2">
-              {FEATURES.map((feature) => {
+              {FEATURES.filter((feature) => !isCourtesyAddonId(feature.id)).map((feature) => {
                 const active = state.features.includes(feature.id)
+                const webId = activeWebIds(state)[0] ?? null
+                const inPlan = planAlreadyIncludes(webId, feature.id as FeatureId)
+                const billable = getBillableFeatureDef(feature.id)
+                const priceLabel =
+                  inPlan || billable?.publicPrice == null
+                    ? inPlan
+                      ? 'En paquete'
+                      : 'Cotización'
+                    : `+$${billable.publicPrice}`
                 return (
                   <button
                     key={feature.id}
                     type="button"
-                    onClick={() =>
+                    disabled={inPlan || isCourtesyAddonId(feature.id)}
+                    onClick={() => {
+                      if (isCourtesyAddonId(feature.id)) return
                       patch('features', toggleFeature(state.features, feature.id as FeatureId))
-                    }
+                    }}
                     className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left ${
-                      active ? 'bg-brand/[0.06]' : 'hover:bg-slate-50'
+                      inPlan ? 'cursor-not-allowed opacity-60' : active ? 'bg-brand/[0.06]' : 'hover:bg-slate-50'
                     }`}
                   >
                     <span
@@ -366,9 +400,7 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
                       <span className="block text-sm font-medium text-slate-900">{feature.label}</span>
                       <span className="block text-xs text-slate-500">{feature.description}</span>
                     </span>
-                    <span className="text-sm font-semibold text-brand">
-                      {feature.price === 0 ? '+$0' : `+$${feature.price}`}
-                    </span>
+                    <span className="text-sm font-semibold text-brand">{priceLabel}</span>
                   </button>
                 )
               })}

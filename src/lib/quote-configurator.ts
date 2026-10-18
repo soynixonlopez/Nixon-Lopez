@@ -1,6 +1,15 @@
 /** Configurador de cotización — precios y reglas del wizard premium. */
 
 import {
+  BILLABLE_FEATURE_CATALOG,
+  getBillableFeatureDef,
+  isBillableFeatureId,
+  isCourtesyAddonId,
+  mergeCourtesyCatalog,
+  resolveCourtesyAddonsForWebPlans,
+  type CourtesyAddonDefinition,
+} from '@/lib/courtesy-addons'
+import {
   MARKETING_PLANS,
   MARKETING_STORIES_PER_WEEK,
   WEB_PLANS,
@@ -39,6 +48,10 @@ export type BusinessId =
 export type FeatureId =
   | 'whatsapp'
   | 'formulario'
+  | 'cta'
+  | 'social-links'
+  | 'email-link'
+  | 'mapa'
   | 'galeria'
   | 'blog'
   | 'seo'
@@ -47,9 +60,12 @@ export type FeatureId =
   | 'multiidioma'
   | 'pasarela'
   | 'catalogo'
-  | 'mapa'
   | 'chat-ia'
   | 'panel'
+
+export type QuotePricingContext = {
+  courtesyCatalog?: CourtesyAddonDefinition[]
+}
 export type TimelineId = 'urgente' | 'este-mes' | 'sin-prisa'
 export type YesNo = 'si' | 'no' | ''
 export type EmailCount = 0 | 1 | 2 | 3 | 4 | 5 | 6
@@ -115,7 +131,7 @@ export const INITIAL_CONFIGURATOR_STATE: ConfiguratorState = {
   projectType: null,
   marketingPlan: null,
   business: null,
-  features: ['whatsapp'],
+  features: [],
   hasDomain: '',
   hasHosting: '',
   emailCount: 0,
@@ -418,20 +434,20 @@ export const BUSINESS_TYPES = [
   { id: 'otro' as const, label: 'Otro' },
 ] as const
 
+/** Compatibilidad con contratos antiguos y admin. Preferir catálogos de cortesía / facturables. */
 export const FEATURES = [
-  { id: 'whatsapp' as const, label: 'WhatsApp', price: 0, description: 'Botón de contacto directo' },
-  { id: 'formulario' as const, label: 'Formulario avanzado', price: 20, description: 'Captura leads con validación' },
-  { id: 'galeria' as const, label: 'Galería', price: 20, description: 'Fotos o portafolio' },
-  { id: 'mapa' as const, label: 'Mapa / ubicación', price: 25, description: 'Google Maps en tu web' },
-  { id: 'animaciones' as const, label: 'Animaciones Premium', price: 30, description: 'Movimiento elegante' },
-  { id: 'blog' as const, label: 'Blog', price: 40, description: 'Contenido para SEO' },
-  { id: 'catalogo' as const, label: 'Catálogo de productos', price: 40, description: 'Sin carrito de compra' },
-  { id: 'seo' as const, label: 'SEO Avanzado', price: 50, description: 'Mejor presencia en Google' },
-  { id: 'multiidioma' as const, label: 'Multi idioma', price: 60, description: 'Español + otro idioma' },
-  { id: 'reservas' as const, label: 'Reservas / citas', price: 80, description: 'Agenda online' },
-  { id: 'pasarela' as const, label: 'Pasarela de pago', price: 100, description: 'Cobros online (Yappy, tarjeta…)' },
-  { id: 'panel' as const, label: 'Panel administrativo', price: 100, description: 'Gestiona contenido tú mismo' },
-  { id: 'chat-ia' as const, label: 'Chat IA', price: 150, description: 'Asistente automático' },
+  ...mergeCourtesyCatalog([]).map((item) => ({
+    id: item.id as FeatureId,
+    label: item.name,
+    price: 0,
+    description: item.description,
+  })),
+  ...BILLABLE_FEATURE_CATALOG.map((item) => ({
+    id: item.id as FeatureId,
+    label: item.label,
+    price: item.publicPrice ?? 0,
+    description: item.description,
+  })),
 ] as const
 
 export const TIMELINES = [
@@ -483,7 +499,7 @@ function activeMarketingId(state: ConfiguratorState): MarketingPlanId | null {
   return null
 }
 
-function activeWebIds(state: ConfiguratorState): WebPlanId[] {
+export function activeWebIds(state: ConfiguratorState): WebPlanId[] {
   const fromList = state.webPlanIds.filter(isWebPlanId)
   if (fromList.length > 0) return fromList
   return isWebPlanId(state.projectType) ? [state.projectType] : []
@@ -496,7 +512,8 @@ function activeWebId(state: ConfiguratorState): WebPlanId | null {
 export function planAlreadyIncludes(planId: string | null, featureId: FeatureId) {
   const plan = getCatalogPlan(planId)
   if (!plan) return false
-  if (featureId === 'whatsapp' || featureId === 'formulario' || featureId === 'seo') return plan.category === 'web'
+  if (isCourtesyAddonId(featureId)) return plan.category === 'web'
+  if (featureId === 'seo') return plan.category === 'web'
   if (featureId === 'panel') return plan.hasAdmin
   if (featureId === 'pasarela') return plan.hasGateway
   if (featureId === 'reservas') return plan.id === 'reservas'
@@ -504,7 +521,28 @@ export function planAlreadyIncludes(planId: string | null, featureId: FeatureId)
   return false
 }
 
-export function buildQuoteLines(state: ConfiguratorState): QuoteLine[] {
+function pricingCourtesyCatalog(ctx?: QuotePricingContext) {
+  return ctx?.courtesyCatalog ?? mergeCourtesyCatalog([])
+}
+
+function buildBillableFeatureLines(state: ConfiguratorState, webIds: WebPlanId[]) {
+  return state.features
+    .filter((id): id is FeatureId => isBillableFeatureId(id))
+    .map((id) => {
+      const def = getBillableFeatureDef(id)!
+      const included = webIds.some((planId) => planAlreadyIncludes(planId, id))
+      const amount =
+        included || def.publicPrice == null || def.publicPrice <= 0 ? 0 : def.publicPrice
+      return {
+        id,
+        label: def.label,
+        amount,
+        includedInPlan: included || amount === 0,
+      }
+    })
+}
+
+export function buildQuoteLines(state: ConfiguratorState, ctx?: QuotePricingContext): QuoteLine[] {
   const webId = activeWebId(state)
   const marketingId = activeMarketingId(state)
   if (webId || marketingId) {
@@ -514,15 +552,7 @@ export function buildQuoteLines(state: ConfiguratorState): QuoteLine[] {
       webPlanIds: webIds,
       marketingPlanId: marketingId,
       extraPages: state.extraPages,
-      featureLines: state.features.map((id) => {
-        const feature = getFeature(id)
-        return {
-          id,
-          label: feature?.label ?? id,
-          amount: feature?.price ?? 0,
-          includedInPlan: webIds.some((planId) => planAlreadyIncludes(planId, id)),
-        }
-      }),
+      featureLines: buildBillableFeatureLines(state, webIds),
       includeStories: false,
       storiesPerMonth: 0,
       storiesUnitPrice: 0,
@@ -556,12 +586,14 @@ export function buildQuoteLines(state: ConfiguratorState): QuoteLine[] {
   }
 
   for (const featureId of state.features) {
-    const feature = getFeature(featureId)
-    if (!feature || feature.price <= 0) continue
+    if (!isBillableFeatureId(featureId)) continue
+    const def = getBillableFeatureDef(featureId)
+    if (!def || def.publicPrice == null || def.publicPrice <= 0) continue
+    if (webId && planAlreadyIncludes(webId, featureId)) continue
     lines.push({
-      id: `feature-${feature.id}`,
-      label: feature.label,
-      amount: feature.price,
+      id: `feature-${def.id}`,
+      label: def.label,
+      amount: def.publicPrice,
     })
   }
 
@@ -585,8 +617,8 @@ export function buildQuoteLines(state: ConfiguratorState): QuoteLine[] {
   return lines
 }
 
-export function calculateQuote(state: ConfiguratorState) {
-  const lines = buildQuoteLines(state)
+export function calculateQuote(state: ConfiguratorState, ctx?: QuotePricingContext) {
+  const lines = buildQuoteLines(state, ctx)
   const oneTime = lines.filter((line) => line.billing !== 'monthly' && line.billing !== 'external').reduce((sum, line) => sum + line.amount, 0)
   const monthlyAmount = lines.filter((line) => line.billing === 'monthly').reduce((sum, line) => sum + line.amount, 0)
   const external = lines.filter((line) => line.billing === 'external').reduce((sum, line) => sum + line.amount, 0)
@@ -628,11 +660,7 @@ export function calculateQuote(state: ConfiguratorState) {
     storiesPending: false,
     includedZeroPriceFeatures: isFixedScopeAdminProject(state.projectType) && !activeWebId(state)
       ? []
-      : state.features
-          .map((id) => getFeature(id))
-          .filter((item): item is NonNullable<typeof item> => Boolean(item))
-          .filter((item) => item.price === 0 || planAlreadyIncludes(activeWebId(state), item.id))
-          .map((item) => item.label),
+      : resolveCourtesyAddonsForWebPlans(activeWebIds(state), pricingCourtesyCatalog(ctx)).map((item) => item.name),
   }
 }
 
@@ -669,23 +697,14 @@ export function mapLegacyServiceToMarketing(serviceId: string | null): Marketing
 }
 
 /** Extras sugeridos al llegar desde el home con ?service= */
-export function mapLegacyServiceToFeatures(serviceId: string | null): FeatureId[] {
-  const base: FeatureId[] = ['whatsapp']
-  if (!serviceId) return base
-  const id = serviceId.toLowerCase()
-  if (id === 'pasarela' || id.includes('pasarela')) {
-    if (!base.includes('pasarela')) base.push('pasarela')
-  }
-  if (id === 'reservas' || id.includes('reserva')) {
-    if (!base.includes('reservas')) base.push('reservas')
-  }
-  if (id.includes('seo')) {
-    if (!base.includes('seo')) base.push('seo')
-  }
-  return base
+export function mapLegacyServiceToFeatures(_serviceId: string | null): FeatureId[] {
+  return []
 }
 
-export function buildCommercialSnapshot(state: ConfiguratorState): CommercialSnapshot | null {
+export function buildCommercialSnapshot(
+  state: ConfiguratorState,
+  ctx?: QuotePricingContext,
+): CommercialSnapshot | null {
   const webIds = activeWebIds(state)
   const webId = webIds[0] ?? null
   const marketingId = activeMarketingId(state)
@@ -693,7 +712,13 @@ export function buildCommercialSnapshot(state: ConfiguratorState): CommercialSna
   const web = webs[0] ?? null
   const marketing = getCatalogPlan(marketingId)
   if (!web && !marketing) return null
-  const quote = calculateQuote(state)
+  const quote = calculateQuote(state, ctx)
+  const courtesyCatalog = pricingCourtesyCatalog(ctx)
+  const courtesyAddons = resolveCourtesyAddonsForWebPlans(webIds, courtesyCatalog).map((item) => ({
+    id: item.id,
+    name: item.name,
+    description: item.description,
+  }))
   const posts = state.customizeVolume && state.customPosts != null ? state.customPosts : marketing?.postsPerMonth ?? null
   const reels = state.customizeVolume && state.customReels != null ? state.customReels : marketing?.reelsPerMonth ?? null
   const campaigns =
@@ -771,6 +796,7 @@ export function buildCommercialSnapshot(state: ConfiguratorState): CommercialSna
     termNote: state.termNote.trim(),
     renewalNote: state.renewalNote.trim(),
     terminationNote: state.terminationNote.trim(),
+    courtesyAddons,
   }
 }
 

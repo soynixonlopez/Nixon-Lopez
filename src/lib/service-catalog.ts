@@ -616,6 +616,7 @@ export type CommercialSnapshot = {
   termNote: string
   renewalNote: string
   terminationNote: string
+  courtesyAddons?: Array<{ id: string; name: string; description: string }>
 }
 
 export function emptyCommercialTerms() {

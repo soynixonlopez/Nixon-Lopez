@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Check, Clock } from 'lucide-react'
 import { useMessages } from '@/i18n/LocaleProvider'
 import { buildLocalizedQuoteCatalog, calculateLocalizedQuote } from '@/i18n/quote-localized'
-import type { ConfiguratorState } from '@/lib/quote-configurator'
+import type { ConfiguratorState, QuotePricingContext } from '@/lib/quote-configurator'
 
 function formatMoney(amount: number) {
   return `$${amount.toLocaleString('en-US')}`
@@ -13,15 +13,16 @@ function formatMoney(amount: number) {
 
 type Props = {
   state: ConfiguratorState
+  pricingCtx?: QuotePricingContext
   compact?: boolean
   /** Card flotante sobre la imagen del cotizador */
   overlay?: boolean
 }
 
-export function QuoteSummaryPanel({ state, compact = false, overlay = false }: Props) {
+export function QuoteSummaryPanel({ state, pricingCtx, compact = false, overlay = false }: Props) {
   const messages = useMessages()
   const catalog = useMemo(() => buildLocalizedQuoteCatalog(messages.quote), [messages.quote])
-  const quote = useMemo(() => calculateLocalizedQuote(state, catalog), [state, catalog])
+  const quote = useMemo(() => calculateLocalizedQuote(state, catalog, pricingCtx), [state, catalog, pricingCtx])
   const s = messages.quote.summary
 
   if (compact) {

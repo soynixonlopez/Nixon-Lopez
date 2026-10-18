@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { CommercialOfferSettings } from '@/lib/commercial-settings'
 import { adBudgetRecommendationCopy } from '@/lib/commercial-settings'
+import { CourtesyAddonsEditor } from '@/components/admin/CourtesyAddonsEditor'
 import { MARKETING_STORIES_PER_WEEK } from '@/lib/service-catalog'
 
 const fieldClass =
@@ -39,6 +40,19 @@ export function CommercialSettingsForm({ initial }: { initial: CommercialOfferSe
 
   return (
     <form onSubmit={save} className="space-y-8">
+      <section className="rounded-2xl border border-emerald-200 bg-emerald-50/30 p-5">
+        <h2 className="text-lg font-bold text-slate-900">Agregados de cortesía (web)</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Incluidos en el alcance sin precio individual. No aparecen como líneas facturables en cotización ni contrato.
+        </p>
+        <div className="mt-4">
+          <CourtesyAddonsEditor
+            items={form.courtesyCatalog}
+            onChange={(courtesyCatalog) => setForm((current) => ({ ...current, courtesyCatalog }))}
+          />
+        </div>
+      </section>
+
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
         <h2 className="text-lg font-bold text-slate-900">Historias en planes de redes</h2>
         <p className="mt-1 text-sm text-slate-500">

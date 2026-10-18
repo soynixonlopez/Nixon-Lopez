@@ -42,6 +42,7 @@ import {
   type ConfiguratorState,
   type EmailCount,
   type FeatureId,
+  type QuotePricingContext,
   type TimelineId,
   mapLegacyServiceToFeatures,
   mapLegacyServiceToMarketing,
@@ -50,6 +51,10 @@ import {
 } from '@/lib/quote-configurator'
 import type { CommercialOfferSettings } from '@/lib/commercial-settings'
 import { adBudgetRecommendationCopy, DEFAULT_COMMERCIAL_OFFER } from '@/lib/commercial-settings'
+import {
+  isCourtesyAddonId,
+  resolveCourtesyAddonsForWebPlans,
+} from '@/lib/courtesy-addons'
 import {
   MARKETING_PLANS,
   WEB_PLANS,
@@ -104,9 +109,10 @@ function canContinue(step: number, state: ConfiguratorState) {
 function buildWhatsAppMessage(
   state: ConfiguratorState,
   catalog: ReturnType<typeof buildLocalizedQuoteCatalog>,
+  pricingCtx: QuotePricingContext,
 ) {
   const q = catalog.quote
-  const quote = calculateLocalizedQuote(state, catalog)
+  const quote = calculateLocalizedQuote(state, catalog, pricingCtx)
     const lines = quote.lines.map((line) => `• ${line.label}: $${line.amount}`).join('\n')
   const business = getLocalizedBusinessLabel(catalog, state.business) ?? '—'
   return (
@@ -156,7 +162,19 @@ export function QuoteConfigurator({ initialServiceId = null, offer = DEFAULT_COM
   const [error, setError] = useState('')
   const [fromHome, setFromHome] = useState(preselected)
   const [pending, startTransition] = useTransition()
-  const quote = useMemo(() => calculateLocalizedQuote(state, catalog), [state, catalog])
+  const pricingCtx = useMemo(
+    (): QuotePricingContext => ({ courtesyCatalog: offer.courtesyCatalog }),
+    [offer.courtesyCatalog],
+  )
+  const webIdsKey = state.webPlanIds.join(',') || state.projectType || ''
+  const courtesyIncluded = useMemo(
+    () => resolveCourtesyAddonsForWebPlans(selectedWebIds(state), offer.courtesyCatalog),
+    [webIdsKey, offer.courtesyCatalog, state],
+  )
+  const quote = useMemo(
+    () => calculateLocalizedQuote(state, catalog, pricingCtx),
+    [state, catalog, pricingCtx],
+  )
 
   useEffect(() => {
     if (!initialServiceId) return
@@ -184,6 +202,7 @@ export function QuoteConfigurator({ initialServiceId = null, offer = DEFAULT_COM
   }
 
   function toggleFeature(id: FeatureId) {
+    if (isCourtesyAddonId(id)) return
     startTransition(() => {
       setState((current) => {
         const exists = current.features.includes(id)
@@ -220,7 +239,10 @@ export function QuoteConfigurator({ initialServiceId = null, offer = DEFAULT_COM
       `Dominio propio: ${state.hasDomain === 'si' ? 'Sí' : 'No'}`,
       `Hosting propio: ${state.hasHosting === 'si' ? 'Sí' : 'No'}`,
       `Correos: ${state.emailCount >= 6 ? '6+' : state.emailCount}`,
-      `Extras: ${state.features.join(', ') || '—'}`,
+      courtesyIncluded.length
+        ? `Cortesía incluida: ${courtesyIncluded.map((item) => item.name).join(', ')}`
+        : null,
+      state.features.length ? `Extras cotizados: ${state.features.join(', ')}` : null,
       state.scopeNotes.trim() ? `Alcance: ${state.scopeNotes.trim()}` : null,
       state.marketingPlan ? `Canales: ${state.channels.join(', ')}` : null,
       state.marketingPlan ? 'Historias: 3 por semana incluidas en el plan' : '',
@@ -235,7 +257,7 @@ export function QuoteConfigurator({ initialServiceId = null, offer = DEFAULT_COM
       .filter(Boolean)
       .join('\n')
 
-    const commercial = buildCommercialSnapshot(state)
+    const commercial = buildCommercialSnapshot(state, pricingCtx)
     const webs = selectedWebIds(state).map((id) => getCatalogPlan(id)).filter((plan) => Boolean(plan))
     const web = webs[0] ?? null
     const marketing = state.marketingPlan ? getCatalogPlan(state.marketingPlan) : null
@@ -408,7 +430,7 @@ export function QuoteConfigurator({ initialServiceId = null, offer = DEFAULT_COM
               {q.downloadPdf}
             </button>
             <a
-              href={buildWhatsAppUrl(buildWhatsAppMessage(state, catalog))}
+              href={buildWhatsAppUrl(buildWhatsAppMessage(state, catalog, pricingCtx))}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-5 py-3.5 font-semibold text-emerald-800 transition hover:bg-emerald-100"
@@ -418,7 +440,7 @@ export function QuoteConfigurator({ initialServiceId = null, offer = DEFAULT_COM
             </a>
           </div>
           <a
-            href={`mailto:${INVOICE_BRANDING.email}?subject=${encodeURIComponent(`${q.formalProposalSubject} — ${quote.projectLabel}`)}&body=${encodeURIComponent(buildWhatsAppMessage(state, catalog))}`}
+            href={`mailto:${INVOICE_BRANDING.email}?subject=${encodeURIComponent(`${q.formalProposalSubject} — ${quote.projectLabel}`)}&body=${encodeURIComponent(buildWhatsAppMessage(state, catalog, pricingCtx))}`}
             className="mt-3 inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-brand px-5 py-3.5 font-semibold text-white shadow-md transition hover:bg-brand-light"
           >
             {q.requestFormalProposal}
@@ -462,7 +484,7 @@ export function QuoteConfigurator({ initialServiceId = null, offer = DEFAULT_COM
             />
             <div className="absolute bottom-3 left-3 right-3 z-10 flex justify-end sm:bottom-5 sm:left-auto sm:right-5 lg:bottom-6 lg:right-6">
               <div className="origin-bottom-right sm:rotate-1">
-                <QuoteSummaryPanel state={state} overlay />
+                <QuoteSummaryPanel state={state} pricingCtx={pricingCtx} overlay />
               </div>
             </div>
           </div>
@@ -659,47 +681,82 @@ export function QuoteConfigurator({ initialServiceId = null, offer = DEFAULT_COM
                       {q.step3Question}
                     </p>
                     <p className="mb-3 text-sm text-slate-500">{q.step3Hint}</p>
-                    <div
-                      className="quote-features-scroll rounded-xl border border-slate-200 bg-slate-50/50 p-2"
-                      style={{ height: 252, maxHeight: 252, overflowY: 'scroll', overscrollBehavior: 'contain' }}
-                    >
-                      <div className="flex flex-col gap-2">
-                        {catalog.features.map((feature) => {
-                          const active = state.features.includes(feature.id)
-                          const included = planAlreadyIncludes(
-                            isWebPlanId(state.projectType) ? state.projectType : null,
-                            feature.id as FeatureId,
-                          )
-                          return (
-                            <button
-                              key={feature.id}
-                              type="button"
-                              onClick={() => toggleFeature(feature.id as FeatureId)}
-                              className={`flex w-full shrink-0 items-center gap-3 rounded-xl border bg-white px-3 py-2.5 text-left transition ${
-                                active ? choiceOn : choiceOff
-                              }`}
-                            >
-                              <span
-                                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
-                                  active ? 'border-brand bg-brand text-white' : 'border-slate-300 bg-white'
-                                }`}
-                              >
-                                {active ? <Check className="h-3 w-3" strokeWidth={2.5} /> : null}
+                    {hasWebSelection(state) && courtesyIncluded.length > 0 ? (
+                      <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50/70 p-3">
+                        <p className="text-sm font-semibold text-emerald-950">
+                          Funcionalidades complementarias incluidas sin costo adicional
+                        </p>
+                        <ul className="mt-2 space-y-1.5">
+                          {courtesyIncluded.map((item) => (
+                            <li key={item.id} className="flex items-start gap-2 text-sm text-emerald-900">
+                              <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" strokeWidth={2.5} />
+                              <span>
+                                <span className="font-medium">{item.name}</span>
+                                {item.description ? (
+                                  <span className="block text-xs text-emerald-800/80">{item.description}</span>
+                                ) : null}
                               </span>
-                              <span className="min-w-0 flex-1">
-                                <span className="flex items-center justify-between gap-2">
-                                  <span className="text-sm font-semibold text-slate-900">{feature.label}</span>
-                                  <span className="shrink-0 text-sm font-bold tabular-nums text-brand">
-                                    {included || feature.price === 0 ? 'Incluido' : `+$${feature.price}`}
-                                  </span>
-                                </span>
-                                <span className="block text-xs text-slate-500">{feature.description}</span>
-                              </span>
-                            </button>
-                          )
-                        })}
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-                    </div>
+                    ) : null}
+                    {hasWebSelection(state) ? (
+                      <>
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          Extras opcionales con tarifa publicada
+                        </p>
+                        <div
+                          className="quote-features-scroll rounded-xl border border-slate-200 bg-slate-50/50 p-2"
+                          style={{ height: 220, maxHeight: 220, overflowY: 'scroll', overscrollBehavior: 'contain' }}
+                        >
+                          <div className="flex flex-col gap-2">
+                            {catalog.features.map((feature) => {
+                              const active = state.features.includes(feature.id)
+                              const webId = selectedWebIds(state)[0] ?? null
+                              const included = planAlreadyIncludes(webId, feature.id as FeatureId)
+                              return (
+                                <button
+                                  key={feature.id}
+                                  type="button"
+                                  onClick={() => toggleFeature(feature.id as FeatureId)}
+                                  disabled={included}
+                                  className={`flex w-full shrink-0 items-center gap-3 rounded-xl border bg-white px-3 py-2.5 text-left transition ${
+                                    included ? 'cursor-not-allowed opacity-60' : active ? choiceOn : choiceOff
+                                  }`}
+                                >
+                                  <span
+                                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
+                                      active ? 'border-brand bg-brand text-white' : 'border-slate-300 bg-white'
+                                    }`}
+                                  >
+                                    {active ? <Check className="h-3 w-3" strokeWidth={2.5} /> : null}
+                                  </span>
+                                  <span className="min-w-0 flex-1">
+                                    <span className="flex items-center justify-between gap-2">
+                                      <span className="text-sm font-semibold text-slate-900">{feature.label}</span>
+                                      <span className="shrink-0 text-sm font-bold tabular-nums text-brand">
+                                        {included ? 'En paquete' : `+$${feature.price}`}
+                                      </span>
+                                    </span>
+                                    <span className="block text-xs text-slate-500">{feature.description}</span>
+                                  </span>
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                        <p className="mt-2 text-xs text-slate-500">
+                          Módulos como tienda, reservas o pasarela requieren el paquete correspondiente o una cotización
+                          personalizada en admin.
+                        </p>
+                      </>
+                    ) : (
+                      <p className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-600">
+                        Selecciona un paquete web para ver las cortesías incluidas. Si solo contratas marketing, este paso
+                        no aplica extras web.
+                      </p>
+                    )}
                     {isWebPlanId(state.projectType) && getCatalogPlan(state.projectType)?.pagesIncluded ? (
                       <label className="mt-4 block">
                         <span className={labelClass}>Páginas adicionales (${25} c/u)</span>
@@ -1026,7 +1083,7 @@ export function QuoteConfigurator({ initialServiceId = null, offer = DEFAULT_COM
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-8px_30px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden">
         <div className="mx-auto max-w-6xl">
-          <QuoteSummaryPanel state={state} compact />
+          <QuoteSummaryPanel state={state} pricingCtx={pricingCtx} compact />
         </div>
       </div>
     </main>
