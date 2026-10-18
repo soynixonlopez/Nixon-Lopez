@@ -18,6 +18,7 @@ import {
   Newspaper,
   PanelsTopLeft,
   ScrollText,
+  Settings2,
 } from 'lucide-react'
 import { BrandLogo } from '@/components/BrandLogo'
 import { createClient } from '@/lib/supabase/client'
@@ -35,6 +36,7 @@ const navSections = [
       { href: '/admin/contratos', label: 'Contratos', icon: ScrollText },
       { href: '/admin/proyectos', label: 'Proyectos', icon: FolderKanban },
       { href: '/admin/facturas', label: 'Facturas', icon: Receipt },
+      { href: '/admin/comercial', label: 'Comercial', icon: Settings2 },
     ],
   },
   {

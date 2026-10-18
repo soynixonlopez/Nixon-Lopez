@@ -15,7 +15,8 @@ export function ContractPrintView({ contract }: { contract: ServiceContractRecor
   const c = buildContractClauses(contract)
   const clientTax = contract.client_tax_id?.trim() || ''
   const commercial = readCommercialSnapshot(contract.terms_payload)
-  const ready = commercial ? commercialTermsReady(commercial) && contract.status !== 'draft' : contract.status === 'signed'
+  const termsReady = commercial ? commercialTermsReady(commercial) : false
+  const ready = contract.status === 'signed' && (commercial ? termsReady : true)
   const draft = !ready
 
   return (
@@ -25,7 +26,9 @@ export function ContractPrintView({ contract }: { contract: ServiceContractRecor
     >
       {draft ? (
         <p className="bg-amber-100 px-8 py-3 text-center text-sm font-bold uppercase tracking-wide text-amber-950">
-          Borrador. No está listo para firmar.
+          {termsReady
+            ? 'Pendiente de aceptación. Descargar el PDF no equivale a firmar.'
+            : 'Borrador. Faltan datos obligatorios y no está listo para firmar.'}
         </p>
       ) : null}
       <header className="border-b border-slate-200 px-8 pt-8 pb-6">

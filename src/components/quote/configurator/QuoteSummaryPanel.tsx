@@ -68,7 +68,11 @@ export function QuoteSummaryPanel({ state, compact = false, overlay = false }: P
             <span className="ml-0.5 text-[10px] font-semibold text-slate-500">{s.usd}</span>
           </motion.p>
         </div>
-
+        <p className="mt-1 text-[11px] leading-snug text-slate-500">
+          {`Honorarios ${formatMoney(quote.initialTotal)}.`}
+          {quote.approvedAdBudget > 0 ? ` Con pauta aprobada: ${formatMoney(quote.projectedInitial)}.` : ''}
+          {quote.pendingAdBudget > 0 ? ` Pauta de ${formatMoney(quote.pendingAdBudget)} pendiente, no autorizada.` : ''}
+        </p>
         <div className="mt-2.5 max-h-[7.5rem] space-y-1.5 overflow-y-auto border-t border-slate-100/90 pt-2.5 pr-0.5">
           <AnimatePresence initial={false} mode="popLayout">
             {quote.lines.length === 0 ? (
@@ -172,9 +176,14 @@ export function QuoteSummaryPanel({ state, compact = false, overlay = false }: P
       <dl className="mt-4 space-y-1 border-t border-slate-100 pt-3 text-sm text-slate-600">
         <div className="flex justify-between gap-3"><dt>Pago único</dt><dd className="font-semibold text-slate-900">{formatMoney(quote.oneTime)}</dd></div>
         <div className="flex justify-between gap-3"><dt>Honorarios mensuales</dt><dd className="font-semibold text-slate-900">{formatMoney(quote.monthlyAmount)}</dd></div>
-        <div className="flex justify-between gap-3"><dt>Gastos externos (no honorarios)</dt><dd className="font-semibold text-slate-900">{formatMoney(quote.external)}</dd></div>
-        <div className="flex justify-between gap-3"><dt>Inicial a Nixon Lopez</dt><dd className="font-semibold text-slate-900">{formatMoney(quote.initialTotal)}</dd></div>
-        <div className="flex justify-between gap-3"><dt>Mensual siguiente</dt><dd className="font-semibold text-slate-900">{formatMoney(quote.nextMonthly)}</dd></div>
+        <div className="flex justify-between gap-3"><dt>Pauta recomendada</dt><dd className="font-semibold text-slate-900">{formatMoney(quote.recommendedAdBudget)}</dd></div>
+        <div className="flex justify-between gap-3"><dt>Pauta aprobada</dt><dd className="font-semibold text-slate-900">{formatMoney(quote.approvedAdBudget)}</dd></div>
+        <div className="flex justify-between gap-3"><dt>Pauta pendiente</dt><dd className="font-semibold text-amber-800">{formatMoney(quote.pendingAdBudget)}</dd></div>
+        <div className="flex justify-between gap-3"><dt>Otros gastos externos</dt><dd className="font-semibold text-slate-900">{formatMoney(Math.max(0, quote.external - quote.approvedAdBudget))}</dd></div>
+        <div className="flex justify-between gap-3"><dt>Honorarios iniciales</dt><dd className="font-semibold text-slate-900">{formatMoney(quote.initialTotal)}</dd></div>
+        <div className="flex justify-between gap-3"><dt>Total inicial previsto</dt><dd className="font-semibold text-slate-900">{formatMoney(quote.projectedInitial)}</dd></div>
+        <div className="flex justify-between gap-3"><dt>Mensual de honorarios</dt><dd className="font-semibold text-slate-900">{formatMoney(quote.nextMonthly)}</dd></div>
+        <div className="flex justify-between gap-3"><dt>Mensual posterior con pauta aprobada</dt><dd className="font-semibold text-slate-900">{formatMoney(quote.projectedMonthly)}</dd></div>
       </dl>
       <p className="mt-3 text-xs text-slate-500">Precios base. Lo adicional se cotiza aparte. Los gastos de terceros los paga el cliente.</p>
       <p className="mt-2 text-sm text-slate-600">

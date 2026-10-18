@@ -73,9 +73,14 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
       })
       return
     }
+    const currentIds = state.webPlanIds
+    const nextIds = currentIds.includes(id as ConfiguratorState['webPlanIds'][number])
+      ? currentIds.filter((item) => item !== id)
+      : [...currentIds, id as ConfiguratorState['webPlanIds'][number]]
     onChange({
       ...state,
-      projectType: id,
+      webPlanIds: nextIds,
+      projectType: nextIds[0] ?? null,
       features: state.features.length > 0 ? state.features : (['whatsapp'] as FeatureId[]),
     })
   }
@@ -95,7 +100,7 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
             <span className="ml-1 text-sm font-semibold text-slate-500">USD iniciales</span>
           </p>
           <p className="text-xs text-slate-500">
-            Único ${quote.oneTime} · Mensual ${quote.monthlyAmount} · Externos ${quote.external}
+            Único ${quote.oneTime} · Honorarios ${quote.monthlyAmount}/mes · Pauta aprobada ${quote.approvedAdBudget} · Previsto ${quote.projectedInitial}
           </p>
         </div>
       </div>
@@ -104,7 +109,7 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
         <p className="mb-2 text-sm font-bold text-slate-900">Desarrollo web</p>
         <div className="grid gap-2 sm:grid-cols-2">
           {WEB_TYPES.map((project) => {
-            const active = state.projectType === project.id
+            const active = state.webPlanIds.includes(project.id as ConfiguratorState['webPlanIds'][number]) || state.projectType === project.id
             return (
               <button
                 key={project.id}

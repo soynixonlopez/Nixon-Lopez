@@ -222,8 +222,22 @@ function normalizeConfiguratorState(value: Record<string, unknown>): Configurato
     includeStories: value.includeStories === true,
     storiesPerMonth: Number.isFinite(Number(value.storiesPerMonth)) ? Number(value.storiesPerMonth) : 0,
     storiesUnitPrice: Number.isFinite(Number(value.storiesUnitPrice)) ? Number(value.storiesUnitPrice) : 0,
+    webPlanIds: Array.isArray(value.webPlanIds)
+      ? value.webPlanIds.filter((item): item is ConfiguratorState['webPlanIds'][number] => typeof item === 'string')
+      : [],
+    adBudgetChoice:
+      value.adBudgetChoice === 'accepted' || value.adBudgetChoice === 'custom' || value.adBudgetChoice === 'pending'
+        ? value.adBudgetChoice
+        : value.adBudgetAccepted === true
+          ? 'custom'
+          : 'none',
+    recommendedAdBudgetUsd: Number.isFinite(Number(value.recommendedAdBudgetUsd))
+      ? Number(value.recommendedAdBudgetUsd)
+      : 150,
     adBudgetAccepted: value.adBudgetAccepted === true,
     adBudgetUsd: Number.isFinite(Number(value.adBudgetUsd)) ? Number(value.adBudgetUsd) : 0,
+    marketingStartDate: typeof value.marketingStartDate === 'string' ? value.marketingStartDate : '',
+    marketingFirstPayment: typeof value.marketingFirstPayment === 'string' ? value.marketingFirstPayment : '',
     adsSetupPrice: Number.isFinite(Number(value.adsSetupPrice)) ? Number(value.adsSetupPrice) : 0,
     channels: Array.isArray(value.channels)
       ? value.channels.filter((item): item is 'instagram' | 'facebook' => item === 'instagram' || item === 'facebook')

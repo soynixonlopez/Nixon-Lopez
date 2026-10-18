@@ -1,4 +1,10 @@
-export type ContractStatus = 'draft' | 'sent' | 'signed' | 'cancelled'
+export type ContractStatus =
+  | 'draft'
+  | 'pending_review'
+  | 'pending_acceptance'
+  | 'sent'
+  | 'signed'
+  | 'cancelled'
 
 export type ServiceContractRecord = {
   id: string

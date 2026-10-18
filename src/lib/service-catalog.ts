@@ -377,6 +377,8 @@ export type CommercialExtraLine = {
   payer: 'proveedor' | 'cliente' | 'tercero'
 }
 
+export type AdBudgetChoice = 'none' | 'accepted' | 'custom' | 'pending'
+
 export type CommercialTotals = {
   lines: Array<{ id: string; label: string; amount: number; billing: BillingKind }>
   oneTime: number
@@ -386,6 +388,12 @@ export type CommercialTotals = {
   initialFees: number
   /** Honorarios mensuales a partir del periodo siguiente. */
   nextMonthly: number
+  approvedAdBudget: number
+  pendingAdBudget: number
+  recommendedAdBudget: number
+  /** Honorarios iniciales más pauta ya aprobada. La pauta no es honorario. */
+  projectedInitial: number
+  projectedMonthly: number
   taxRate: number | null
   taxAmount: number
   storiesPending: boolean
@@ -393,6 +401,7 @@ export type CommercialTotals = {
 
 export type CommercialInput = {
   webPlanId: string | null
+  webPlanIds?: string[]
   marketingPlanId: string | null
   extraPages: number
   featureLines: Array<{ id: string; label: string; amount: number; includedInPlan?: boolean }>
@@ -400,6 +409,8 @@ export type CommercialInput = {
   storiesPerMonth: number
   storiesUnitPrice: number
   adBudgetAccepted: boolean
+  adBudgetChoice?: AdBudgetChoice
+  recommendedAdBudgetUsd?: number
   adBudgetUsd: number
   adsSetupPrice: number
   hasDomain: 'si' | 'no' | ''
@@ -410,26 +421,29 @@ export type CommercialInput = {
 
 export function priceCommercial(input: CommercialInput): CommercialTotals {
   const lines: CommercialTotals['lines'] = []
-  const web = isWebPlanId(input.webPlanId) ? getCatalogPlan(input.webPlanId) : null
+  const webIds = (input.webPlanIds?.length ? input.webPlanIds : input.webPlanId ? [input.webPlanId] : []).filter(
+    isWebPlanId,
+  )
+  const webs = webIds.map((id) => getCatalogPlan(id)).filter((plan): plan is CatalogPlan => Boolean(plan))
   const marketing = isMarketingPlanId(input.marketingPlanId) ? getCatalogPlan(input.marketingPlanId) : null
 
-  if (web) {
+  for (const plan of webs) {
     lines.push({
-      id: `project-${web.id}`,
-      label: web.label,
-      amount: web.basePrice,
+      id: `project-${plan.id}`,
+      label: plan.label,
+      amount: plan.basePrice,
       billing: 'once',
     })
-    const pages = web.pagesIncluded
-    const extra = Math.max(0, Math.floor(input.extraPages))
-    if (pages != null && extra > 0) {
-      lines.push({
-        id: 'extra-pages',
-        label: `Páginas adicionales (${extra} × $${PRICE_EXTRA_PAGE_USD})`,
-        amount: extra * PRICE_EXTRA_PAGE_USD,
-        billing: 'once',
-      })
-    }
+  }
+  const pagePlan = webs.find((plan) => plan.pagesIncluded != null)
+  const extra = Math.max(0, Math.floor(input.extraPages))
+  if (pagePlan?.pagesIncluded != null && extra > 0) {
+    lines.push({
+      id: 'extra-pages',
+      label: `Páginas adicionales (${extra} × $${PRICE_EXTRA_PAGE_USD})`,
+      amount: extra * PRICE_EXTRA_PAGE_USD,
+      billing: 'once',
+    })
   }
 
   for (const feature of input.featureLines) {
@@ -464,13 +478,13 @@ export function priceCommercial(input: CommercialInput): CommercialTotals {
   if (input.includeStories && input.storiesPerMonth > 0 && input.storiesUnitPrice > 0) {
     lines.push({
       id: 'stories',
-      label: `Historias (${input.storiesPerMonth}/mes × $${input.storiesUnitPrice})`,
-      amount: input.storiesPerMonth * input.storiesUnitPrice,
+      label: `Historias (${input.storiesPerMonth}/mes)`,
+      amount: input.storiesUnitPrice,
       billing: 'monthly',
     })
   }
 
-  if (web) {
+  if (webs.length > 0) {
     if (input.hasDomain === 'no') {
       lines.push({
         id: 'domain',
@@ -496,7 +510,7 @@ export function priceCommercial(input: CommercialInput): CommercialTotals {
         billing: 'external',
       })
     }
-    if (web.hasGateway) {
+    if (webs.some((plan) => plan.hasGateway)) {
       lines.push({
         id: 'gateway-fees',
         label: 'Comisiones de pasarela (las cobra el proveedor de pago, no están en los honorarios)',
@@ -506,11 +520,25 @@ export function priceCommercial(input: CommercialInput): CommercialTotals {
     }
   }
 
-  if (input.adBudgetAccepted && input.adBudgetUsd > 0) {
+  const recommendedAdBudget = Math.max(0, input.recommendedAdBudgetUsd ?? 150)
+  const managesAds = (marketing?.campaignsIncluded ?? 0) > 0
+  const choice: AdBudgetChoice = !managesAds
+    ? 'none'
+    : (input.adBudgetChoice ?? (input.adBudgetAccepted ? 'custom' : 'none'))
+  let approvedAdBudget = 0
+  let pendingAdBudget = 0
+  if (managesAds && choice === 'accepted') {
+    approvedAdBudget = recommendedAdBudget
+  } else if (managesAds && choice === 'custom' && input.adBudgetUsd > 0) {
+    approvedAdBudget = input.adBudgetUsd
+  } else if (managesAds && choice === 'pending') {
+    pendingAdBudget = recommendedAdBudget
+  }
+  if (approvedAdBudget > 0) {
     lines.push({
       id: 'ad-budget',
-      label: 'Inversión publicitaria mensual (la paga el cliente a la plataforma)',
-      amount: input.adBudgetUsd,
+      label: 'Presupuesto publicitario aprobado (lo paga el cliente a Meta, no es honorario)',
+      amount: approvedAdBudget,
       billing: 'external',
     })
   }
@@ -529,6 +557,11 @@ export function priceCommercial(input: CommercialInput): CommercialTotals {
     external,
     initialFees: Number((initialFees + taxAmount).toFixed(2)),
     nextMonthly: monthly,
+    approvedAdBudget,
+    pendingAdBudget,
+    recommendedAdBudget: managesAds ? recommendedAdBudget : 0,
+    projectedInitial: Number((initialFees + taxAmount + approvedAdBudget).toFixed(2)),
+    projectedMonthly: Number((monthly + approvedAdBudget).toFixed(2)),
     taxRate,
     taxAmount,
     storiesPending,
@@ -559,6 +592,8 @@ export type CommercialSnapshot = {
   scopeNotes: string
   includes: string[]
   excludes: string[]
+  webIncludes?: string[]
+  marketingIncludes?: string[]
   totals: CommercialTotals
   revisionRounds: number | null
   startDate: string
@@ -568,6 +603,12 @@ export type CommercialSnapshot = {
   balanceNote: string
   adBudgetUsd: number
   adBudgetAccepted: boolean
+  adBudgetChoice?: AdBudgetChoice
+  recommendedAdBudgetUsd?: number
+  approvedAdBudgetUsd?: number
+  webPlans?: Array<{ id: string; label: string; basePrice: number }>
+  marketingStartDate?: string
+  marketingFirstPayment?: string
   paymentSchedule: string
   termNote: string
   renewalNote: string

@@ -48,6 +48,8 @@ import {
   mapLegacyServiceToProject,
   splitFullName,
 } from '@/lib/quote-configurator'
+import type { CommercialOfferSettings } from '@/lib/commercial-settings'
+import { adBudgetRecommendationCopy, DEFAULT_COMMERCIAL_OFFER } from '@/lib/commercial-settings'
 import {
   MARKETING_PLANS,
   WEB_PLANS,
@@ -74,8 +76,13 @@ const labelClass = 'mb-1.5 block text-sm font-medium text-slate-700'
 const choiceOn = 'border-brand/30 bg-slate-50 ring-2 ring-brand/20'
 const choiceOff = 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
 
+function selectedWebIds(state: ConfiguratorState) {
+  if (state.webPlanIds.length > 0) return state.webPlanIds
+  return isWebPlanId(state.projectType) ? [state.projectType] : []
+}
+
 function hasWebSelection(state: ConfiguratorState) {
-  return isWebPlanId(state.projectType)
+  return selectedWebIds(state).length > 0
 }
 
 function canContinue(step: number, state: ConfiguratorState) {
@@ -121,9 +128,10 @@ function buildWhatsAppMessage(
 
 type Props = {
   initialServiceId?: string | null
+  offer?: CommercialOfferSettings
 }
 
-export function QuoteConfigurator({ initialServiceId = null }: Props) {
+export function QuoteConfigurator({ initialServiceId = null, offer = DEFAULT_COMMERCIAL_OFFER }: Props) {
   const messages = useMessages()
   const q = messages.quote
   const catalog = useMemo(() => buildLocalizedQuoteCatalog(q), [q])
@@ -135,6 +143,8 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
     return {
       ...INITIAL_CONFIGURATOR_STATE,
       projectType: mapped && isWebPlanId(mapped) ? mapped : null,
+      webPlanIds: mapped && isWebPlanId(mapped) ? [mapped] : [],
+      recommendedAdBudgetUsd: offer.recommendedAdBudgetUsd,
       marketingPlan: marketing,
       features: mapLegacyServiceToFeatures(initialServiceId),
       productCount: mapped && isWebPlanId(mapped) ? getCatalogPlan(mapped)?.productsIncluded ?? null : null,
@@ -157,13 +167,15 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
     setState((current) => ({
       ...current,
       projectType: mapped && isWebPlanId(mapped) ? mapped : current.projectType,
+      webPlanIds: mapped && isWebPlanId(mapped) ? [mapped] : current.webPlanIds,
+      recommendedAdBudgetUsd: offer.recommendedAdBudgetUsd,
       marketingPlan: marketing ?? current.marketingPlan,
       features: mapLegacyServiceToFeatures(initialServiceId),
       productCount: mapped && isWebPlanId(mapped) ? getCatalogPlan(mapped)?.productsIncluded ?? null : current.productCount,
       serviceCount: mapped && isWebPlanId(mapped) ? getCatalogPlan(mapped)?.servicesIncluded ?? null : current.serviceCount,
     }))
     setStep(2)
-  }, [initialServiceId])
+  }, [initialServiceId, offer.recommendedAdBudgetUsd])
 
   function update<K extends keyof ConfiguratorState>(key: K, value: ConfiguratorState[K]) {
     startTransition(() => {
@@ -212,15 +224,22 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
       state.scopeNotes.trim() ? `Alcance: ${state.scopeNotes.trim()}` : null,
       state.marketingPlan ? `Canales: ${state.channels.join(', ')}` : null,
       state.includeStories ? `Historias: ${state.storiesPerMonth}/mes a $${state.storiesUnitPrice}` : 'Historias: no contratadas',
-      state.adBudgetAccepted ? `Inversión publicitaria (cliente): $${state.adBudgetUsd}/mes` : 'Inversión publicitaria: no incluida',
+      state.adBudgetChoice === 'accepted'
+        ? `Pauta aprobada (cliente a Meta): $${offer.recommendedAdBudgetUsd}/mes`
+        : state.adBudgetChoice === 'custom'
+          ? `Pauta aprobada (cliente a Meta): $${state.adBudgetUsd}/mes`
+          : state.adBudgetChoice === 'pending'
+            ? `Pauta recomendada $${offer.recommendedAdBudgetUsd}/mes, pendiente de aprobación`
+            : 'Pauta: no aplica',
     ]
       .filter(Boolean)
       .join('\n')
 
     const commercial = buildCommercialSnapshot(state)
-    const web = isWebPlanId(state.projectType) ? getCatalogPlan(state.projectType) : null
+    const webs = selectedWebIds(state).map((id) => getCatalogPlan(id)).filter((plan) => Boolean(plan))
+    const web = webs[0] ?? null
     const marketing = state.marketingPlan ? getCatalogPlan(state.marketingPlan) : null
-    const selectedServices = [web, marketing].filter(Boolean).map((plan) => ({
+    const selectedServices = [...webs, marketing].filter(Boolean).map((plan) => ({
       serviceId: plan!.id,
       kind: 'catalog' as const,
       label: plan!.label,
@@ -495,23 +514,38 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                         Desarrollo web
                       </p>
                       <p className="mb-3 text-xs text-slate-500">
-                        Precio base por proyecto, en USD. Los requerimientos adicionales se cotizan aparte.
+                        Precio base por proyecto, en USD. Puedes elegir uno o varios. Lo adicional se cotiza aparte.
                       </p>
                       <div className="max-h-[22rem] space-y-2 overflow-y-auto pr-1">
                         {WEB_PLANS.map((project) => {
-                          const Icon = PROJECT_ICONS[project.id] ?? Layout
-                          const active = state.projectType === project.id
+                          const planId = project.id
+                          if (!isWebPlanId(planId)) return null
+                          const Icon = PROJECT_ICONS[planId] ?? Layout
+                          const active = selectedWebIds(state).includes(planId)
                           return (
                             <button
-                              key={project.id}
+                              key={planId}
                               type="button"
                               onClick={() =>
-                                setState((current) => ({
-                                  ...current,
-                                  projectType: current.projectType === project.id ? null : project.id,
-                                  productCount: project.productsIncluded,
-                                  serviceCount: project.servicesIncluded,
-                                }))
+                                setState((current) => {
+                                  const currentIds = selectedWebIds(current)
+                                  const nextIds = currentIds.includes(planId)
+                                    ? currentIds.filter((id) => id !== planId)
+                                    : [...currentIds, planId]
+                                  const primary = nextIds[0] ?? null
+                                  const primaryPlan = primary ? getCatalogPlan(primary) : null
+                                  return {
+                                    ...current,
+                                    webPlanIds: nextIds,
+                                    projectType: primary,
+                                    productCount: nextIds.includes('tienda')
+                                      ? getCatalogPlan('tienda')?.productsIncluded ?? null
+                                      : primaryPlan?.productsIncluded ?? null,
+                                    serviceCount: nextIds.includes('reservas')
+                                      ? getCatalogPlan('reservas')?.servicesIncluded ?? null
+                                      : primaryPlan?.servicesIncluded ?? null,
+                                  }
+                                })
                               }
                               className={`flex w-full cursor-pointer items-center gap-3 rounded-xl border p-3.5 text-left transition ${
                                 active ? choiceOn : choiceOff
@@ -547,7 +581,16 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                               key={project.id}
                               type="button"
                               onClick={() =>
-                                update('marketingPlan', active ? null : (project.id as MarketingPlanId))
+                                setState((current) => {
+                                  const next = active ? null : (project.id as MarketingPlanId)
+                                  const campaigns = next ? getCatalogPlan(next)?.campaignsIncluded ?? 0 : 0
+                                  return {
+                                    ...current,
+                                    marketingPlan: next,
+                                    adBudgetChoice: campaigns > 0 ? (current.adBudgetChoice === 'none' ? 'pending' : current.adBudgetChoice) : 'none',
+                                    adBudgetAccepted: campaigns > 0 && (current.adBudgetChoice === 'accepted' || current.adBudgetChoice === 'custom'),
+                                  }
+                                })
                               }
                               className={`flex w-full cursor-pointer items-center gap-3 rounded-xl border p-3.5 text-left transition ${
                                 active ? 'border-amber-400 bg-amber-50 ring-2 ring-amber-200' : choiceOff
@@ -706,52 +749,79 @@ export function QuoteConfigurator({ initialServiceId = null }: Props) {
                             )
                           })}
                         </div>
-                        <label className="flex items-center gap-2 text-sm text-slate-700">
-                          <input
-                            type="checkbox"
-                            checked={state.includeStories}
-                            onChange={(event) => update('includeStories', event.target.checked)}
-                          />
-                          Contratar historias (extra, no van en el plan base)
-                        </label>
-                        {state.includeStories ? (
-                          <div className="grid grid-cols-2 gap-2">
+                        {offer.storiesPriceUsd == null || offer.storiesQuantity == null ? (
+                          <p className="rounded-lg bg-white px-3 py-2 text-sm text-amber-900">
+                            Las historias no están incluidas. El administrador debe definir precio y cantidad en Comercial antes de añadir este extra.
+                          </p>
+                        ) : (
+                          <label className="flex items-start gap-2 text-sm text-slate-700">
                             <input
-                              type="number"
-                              min={1}
-                              placeholder="Cantidad / mes"
-                              value={state.storiesPerMonth || ''}
-                              onChange={(event) => update('storiesPerMonth', Math.max(0, Number(event.target.value) || 0))}
-                              className={fieldClass}
+                              type="checkbox"
+                              className="mt-1"
+                              checked={state.includeStories}
+                              onChange={(event) =>
+                                setState((current) => ({
+                                  ...current,
+                                  includeStories: event.target.checked,
+                                  storiesPerMonth: event.target.checked ? offer.storiesQuantity ?? 0 : 0,
+                                  storiesUnitPrice: event.target.checked ? offer.storiesPriceUsd ?? 0 : 0,
+                                }))
+                              }
                             />
-                            <input
-                              type="number"
-                              min={1}
-                              placeholder="Precio c/u USD"
-                              value={state.storiesUnitPrice || ''}
-                              onChange={(event) => update('storiesUnitPrice', Math.max(0, Number(event.target.value) || 0))}
-                              className={fieldClass}
-                            />
+                            <span>
+                              Añadir historias: {offer.storiesQuantity}/mes en {offer.storiesPlatform}, ${offer.storiesPriceUsd} al mes.
+                              {' '}
+                              {offer.storiesContentType}.
+                              {offer.storiesIncludesDesign ? ' Incluye diseño.' : ''}
+                              {offer.storiesIncludesCopy ? ' Incluye texto.' : ''}
+                              {offer.storiesIncludesScheduling ? ' Incluye programación.' : ''}
+                            </span>
+                          </label>
+                        )}
+                        {(getCatalogPlan(state.marketingPlan)?.campaignsIncluded ?? 0) > 0 ? (
+                          <div className="space-y-2 rounded-lg bg-white p-3">
+                            <p className="text-sm font-semibold text-slate-800">Presupuesto publicitario mensual recomendado</p>
+                            <p className="text-xs leading-relaxed text-slate-600">{adBudgetRecommendationCopy(offer.recommendedAdBudgetUsd)}</p>
+                            <p className="text-xs text-slate-500">El cliente paga este importe a Meta. No forma parte de los honorarios.</p>
+                            {([
+                              ['pending', 'Dejarlo pendiente de aprobación'],
+                              ['accepted', `Aprobar $${offer.recommendedAdBudgetUsd}/mes`],
+                              ['custom', 'Indicar otro importe'],
+                            ] as const).map(([choice, label]) => (
+                              <label key={choice} className="flex items-center gap-2 text-sm text-slate-700">
+                                <input
+                                  type="radio"
+                                  name="ad-budget"
+                                  checked={state.adBudgetChoice === choice}
+                                  onChange={() =>
+                                    setState((current) => ({
+                                      ...current,
+                                      adBudgetChoice: choice,
+                                      adBudgetAccepted: choice === 'accepted' || choice === 'custom',
+                                      adBudgetUsd: choice === 'accepted' ? offer.recommendedAdBudgetUsd : current.adBudgetUsd,
+                                    }))
+                                  }
+                                />
+                                {label}
+                              </label>
+                            ))}
+                            {state.adBudgetChoice === 'custom' ? (
+                              <input
+                                type="number"
+                                min={1}
+                                placeholder="Otro importe mensual USD"
+                                value={state.adBudgetUsd || ''}
+                                onChange={(event) => update('adBudgetUsd', Math.max(0, Number(event.target.value) || 0))}
+                                className={fieldClass}
+                              />
+                            ) : null}
+                            {state.adBudgetChoice === 'pending' ? (
+                              <p className="text-xs font-medium text-amber-800">Pendiente. No se suma como gasto autorizado.</p>
+                            ) : null}
                           </div>
-                        ) : null}
-                        <label className="flex items-center gap-2 text-sm text-slate-700">
-                          <input
-                            type="checkbox"
-                            checked={state.adBudgetAccepted}
-                            onChange={(event) => update('adBudgetAccepted', event.target.checked)}
-                          />
-                          Indicar inversión publicitaria (la paga el cliente, no se suma a honorarios)
-                        </label>
-                        {state.adBudgetAccepted ? (
-                          <input
-                            type="number"
-                            min={0}
-                            placeholder="Presupuesto mensual USD"
-                            value={state.adBudgetUsd || ''}
-                            onChange={(event) => update('adBudgetUsd', Math.max(0, Number(event.target.value) || 0))}
-                            className={fieldClass}
-                          />
-                        ) : null}
+                        ) : (
+                          <p className="text-xs text-slate-500">Este plan no incluye gestión de campañas, así que no se propone inversión publicitaria.</p>
+                        )}
                       </div>
                     ) : null}
                     <label className="mt-4 block">

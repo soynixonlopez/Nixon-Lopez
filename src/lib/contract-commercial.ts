@@ -1,3 +1,4 @@
+import { adBudgetRecommendationCopy } from '@/lib/commercial-settings'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
 import type { CommercialSnapshot } from '@/lib/service-catalog'
 import type { ServiceContractRecord } from '@/lib/types/contract'
@@ -62,14 +63,15 @@ export function commercialTermsReady(snapshot: CommercialSnapshot) {
       text(snapshot.deliveryDate) &&
       text(snapshot.termNote) &&
       text(snapshot.renewalNote) &&
-      text(snapshot.terminationNote),
+      text(snapshot.terminationNote) &&
+      (!snapshot.marketingPlanId || (text(snapshot.marketingStartDate) && text(snapshot.marketingFirstPayment))),
   )
 }
 
 export function contractIsReadyToSign(contract: ServiceContractRecord) {
   const snapshot = readCommercialSnapshot(contract.terms_payload)
   if (!snapshot) return contract.status === 'signed'
-  return commercialTermsReady(snapshot) && contract.status !== 'draft'
+  return commercialTermsReady(snapshot) && contract.status === 'signed'
 }
 
 export function buildCommercialContractClauses(
@@ -101,35 +103,72 @@ export function buildCommercialContractClauses(
     ],
   })
 
-  const scopeBullets = [...snapshot.includes]
-  if (snapshot.webPlanId) {
-    scopeBullets.push(
-      snapshot.pagesIncluded != null
-        ? `Páginas o secciones incluidas: ${snapshot.pagesIncluded}${snapshot.extraPages > 0 ? ` más ${snapshot.extraPages} adicionales` : ''}.`
-        : 'La estructura de páginas es la del plan contratado.',
-    )
-    if (snapshot.productsIncluded != null) scopeBullets.push(`Productos incluidos en la carga inicial: ${snapshot.productsIncluded}.`)
-    if (snapshot.servicesIncluded != null) scopeBullets.push(`Servicios o actividades reservables incluidos: ${snapshot.servicesIncluded}.`)
-    if (snapshot.adminModulesNote) scopeBullets.push(snapshot.adminModulesNote)
-  }
-  if (snapshot.marketingPlanId) {
-    scopeBullets.push(`Plataformas: ${snapshot.channels.length ? snapshot.channels.join(', ') : 'por definir'}.`)
-    scopeBullets.push(`Publicaciones de feed al mes (total, no por red): ${snapshot.postsPerMonth ?? 'según plan'}.`)
-    scopeBullets.push(`Reels al mes: ${snapshot.reelsPerMonth ?? 0}.`)
-    scopeBullets.push(
-      snapshot.storiesIncluded
-        ? `Historias contratadas: ${snapshot.storiesPerMonth} al mes, a USD $${snapshot.storiesUnitPrice} cada una.`
-        : 'Historias: no incluidas.',
-    )
-    scopeBullets.push(`Campañas activas incluidas: ${snapshot.campaigns ?? 0}. No equivalen a anuncios ni cambios ilimitados.`)
-    scopeBullets.push('El cliente entrega material, aprueba contenidos y facilita accesos de las cuentas.')
+  if (snapshot.webPlanId || (snapshot.webPlans?.length ?? 0) > 0) {
+    const webNames = snapshot.webPlans?.length
+      ? snapshot.webPlans.map((plan) => `${plan.label} (${money(plan.basePrice)}, pago único)`).join('; ')
+      : snapshot.webLabel
+    blocks.push({
+      title: titled(index++, 'APARTADO A. DESARROLLO WEB'),
+      paragraphs: [
+        `Paquete: ${webNames}.`,
+        'El precio del desarrollo web es un pago único. No se vuelve a cobrar en los meses posteriores, salvo un calendario distinto escrito en este contrato.',
+        snapshot.startDate ? `Inicio del desarrollo: ${snapshot.startDate}.` : 'Inicio del desarrollo: pendiente de acordar.',
+        snapshot.deliveryDate
+          ? `Entrega estimada del desarrollo: ${snapshot.deliveryDate}.`
+          : 'Entrega estimada del desarrollo: pendiente de acordar.',
+      ],
+      bullets: [
+        ...(snapshot.webIncludes ?? (snapshot.marketingPlanId ? [] : snapshot.includes)),
+        snapshot.pagesIncluded != null
+          ? `Páginas o secciones incluidas: ${snapshot.pagesIncluded}${snapshot.extraPages > 0 ? ` más ${snapshot.extraPages} adicionales` : ''}.`
+          : 'La estructura de páginas es la del plan contratado.',
+        snapshot.productsIncluded != null ? `Productos de la carga inicial: ${snapshot.productsIncluded}.` : '',
+        snapshot.servicesIncluded != null ? `Servicios reservables de la carga inicial: ${snapshot.servicesIncluded}.` : '',
+        snapshot.adminModulesNote ?? '',
+      ].filter(Boolean),
+    })
   }
 
-  blocks.push({
-    title: titled(index++, 'ALCANCE'),
-    paragraphs: ['Queda incluido solo lo siguiente:'],
-    bullets: scopeBullets,
-  })
+  if (snapshot.marketingPlanId) {
+    const recommended = snapshot.recommendedAdBudgetUsd ?? 0
+    const approved = snapshot.approvedAdBudgetUsd ?? (snapshot.adBudgetAccepted ? snapshot.adBudgetUsd : 0)
+    blocks.push({
+      title: titled(index++, 'APARTADO B. MARKETING DIGITAL'),
+      paragraphs: [
+        `Plan: ${snapshot.marketingLabel}. Honorario mensual: ${money(snapshot.totals.monthly)}.`,
+        'El honorario de gestión no incluye el presupuesto publicitario.',
+        snapshot.marketingStartDate
+          ? `Inicio del marketing: ${snapshot.marketingStartDate}. No tiene que coincidir con la entrega de la web.`
+          : 'Inicio del marketing: pendiente de acordar. No tiene que coincidir con la entrega de la web.',
+        snapshot.marketingFirstPayment
+          ? `Primer pago mensual: ${snapshot.marketingFirstPayment}.`
+          : 'Primer pago mensual: pendiente de acordar.',
+        recommended > 0 ? adBudgetRecommendationCopy(recommended) : 'Este plan no incluye gestión de campañas publicitarias.',
+        approved > 0
+          ? `Presupuesto publicitario aprobado: ${money(approved)} al mes. Lo paga el cliente directamente a Meta desde su cuenta publicitaria, salvo que las partes escriban otro mecanismo.`
+          : 'Presupuesto publicitario: pendiente de definición. No es un gasto autorizado y no se suma a los honorarios.',
+      ],
+      bullets: [
+        `Plataformas: ${snapshot.channels.length ? snapshot.channels.join(', ') : 'por definir'}.`,
+        `Publicaciones de feed al mes (total de los canales, no por cada red): ${snapshot.postsPerMonth ?? 'según plan'}.`,
+        `Reels al mes: ${snapshot.reelsPerMonth ?? 0}. Si hay reels, se editan con material del cliente.`,
+        snapshot.storiesIncluded
+          ? `Historias contratadas: ${snapshot.storiesPerMonth} al mes, por ${money(snapshot.storiesUnitPrice)} mensuales adicionales.`
+          : 'Historias: no incluidas.',
+        `Campañas activas incluidas: ${snapshot.campaigns ?? 0}. Ese límite no es un número ilimitado de anuncios ni de cambios.`,
+        'El cliente entrega material, aprueba contenidos y facilita el acceso a las cuentas.',
+      ],
+    })
+  }
+
+  if (snapshot.webPlanId && snapshot.marketingPlanId) {
+    blocks.push({
+      title: titled(index++, 'SERVICIOS INDEPENDIENTES'),
+      paragraphs: [
+        'Terminar el desarrollo web no cancela el marketing. Cancelar el marketing no elimina los pagos pendientes del desarrollo. Cada servicio conserva sus fechas y sus obligaciones de pago.',
+      ],
+    })
+  }
 
   blocks.push({
     title: titled(index++, 'EXCLUSIONES'),
@@ -141,11 +180,15 @@ export function buildCommercialContractClauses(
     `Desarrollo y otros pagos únicos: ${money(totals.oneTime)}.`,
     `Honorarios mensuales de gestión: ${money(totals.monthly)}.`,
     `Gastos externos estimados (los paga el cliente al tercero, no son honorarios): ${money(totals.external)}.`,
-    snapshot.adBudgetAccepted
-      ? `Inversión publicitaria indicada por el cliente: ${money(snapshot.adBudgetUsd)} al mes, pagada a la plataforma.`
-      : 'Inversión publicitaria: no aceptada en esta cotización y no se suma a los honorarios.',
-    `Importe inicial de honorarios: ${money(totals.initialFees)}.`,
-    `Importe mensual de honorarios a partir del periodo siguiente: ${money(totals.nextMonthly)}.`,
+    (snapshot.approvedAdBudgetUsd ?? 0) > 0
+      ? `Presupuesto publicitario aprobado: ${money(snapshot.approvedAdBudgetUsd ?? 0)} al mes. No es honorario del proveedor.`
+      : snapshot.marketingPlanId && (snapshot.recommendedAdBudgetUsd ?? 0) > 0
+        ? `Presupuesto publicitario recomendado: ${money(snapshot.recommendedAdBudgetUsd ?? 0)}. Pendiente de aprobación; no es gasto autorizado.`
+        : 'Presupuesto publicitario: no contratado en esta cotización.',
+    `Honorarios iniciales (sin pauta): ${money(totals.initialFees)}.`,
+    `Total inicial previsto, solo si la pauta ya está aprobada: ${money(totals.projectedInitial ?? totals.initialFees)}.`,
+    `Honorarios mensuales siguientes: ${money(totals.nextMonthly)}.`,
+    `Mensual posterior con pauta aprobada: ${money(totals.projectedMonthly ?? totals.nextMonthly)}. El desarrollo web no se repite en ese mensual.`,
     totals.taxRate != null ? `Impuesto configurado: ${totals.taxRate}%.` : 'Impuestos: no configurados en esta cotización.',
   ]
   if (ready) {
@@ -247,7 +290,7 @@ export function buildCommercialContractClauses(
     segundaIncluye: snapshot.includes,
     segundaNoIncluye: snapshot.excludes,
     tercera: paymentBullets,
-    cuarta: scopeBullets.slice(0, 8),
+    cuarta: (snapshot.webIncludes ?? snapshot.includes).slice(0, 8),
     quinta: snapshot.deliveryDate || 'Plazo pendiente de acordar.',
   }
 }

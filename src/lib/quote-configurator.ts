@@ -7,6 +7,7 @@ import {
   isMarketingPlanId,
   isWebPlanId,
   priceCommercial,
+  type AdBudgetChoice,
   type CommercialSnapshot,
   type MarketingPlanId,
   type SocialChannel,
@@ -74,10 +75,13 @@ export type ConfiguratorState = {
   correo: string
   whatsapp: string
   extraPages: number
+  webPlanIds: WebPlanId[]
   includeStories: boolean
   storiesPerMonth: number
   storiesUnitPrice: number
+  adBudgetChoice: AdBudgetChoice
   adBudgetAccepted: boolean
+  recommendedAdBudgetUsd: number
   adBudgetUsd: number
   adsSetupPrice: number
   channels: SocialChannel[]
@@ -100,6 +104,8 @@ export type ConfiguratorState = {
   terminationNote: string
   startDate: string
   deliveryDate: string
+  marketingStartDate: string
+  marketingFirstPayment: string
 }
 
 export const INITIAL_CONFIGURATOR_STATE: ConfiguratorState = {
@@ -116,10 +122,13 @@ export const INITIAL_CONFIGURATOR_STATE: ConfiguratorState = {
   correo: '',
   whatsapp: '',
   extraPages: 0,
+  webPlanIds: [],
   includeStories: false,
   storiesPerMonth: 0,
   storiesUnitPrice: 0,
+  adBudgetChoice: 'none',
   adBudgetAccepted: false,
+  recommendedAdBudgetUsd: 150,
   adBudgetUsd: 0,
   adsSetupPrice: 0,
   channels: ['instagram', 'facebook'],
@@ -141,6 +150,8 @@ export const INITIAL_CONFIGURATOR_STATE: ConfiguratorState = {
   terminationNote: '',
   startDate: '',
   deliveryDate: '',
+  marketingStartDate: '',
+  marketingFirstPayment: '',
 }
 
 /** Incluidos en todos los planes de redes (admin). */
@@ -469,9 +480,14 @@ function activeMarketingId(state: ConfiguratorState): MarketingPlanId | null {
   return null
 }
 
+function activeWebIds(state: ConfiguratorState): WebPlanId[] {
+  const fromList = state.webPlanIds.filter(isWebPlanId)
+  if (fromList.length > 0) return fromList
+  return isWebPlanId(state.projectType) ? [state.projectType] : []
+}
+
 function activeWebId(state: ConfiguratorState): WebPlanId | null {
-  if (isWebPlanId(state.projectType)) return state.projectType
-  return null
+  return activeWebIds(state)[0] ?? null
 }
 
 export function planAlreadyIncludes(planId: string | null, featureId: FeatureId) {
@@ -489,8 +505,10 @@ export function buildQuoteLines(state: ConfiguratorState): QuoteLine[] {
   const webId = activeWebId(state)
   const marketingId = activeMarketingId(state)
   if (webId || marketingId) {
+    const webIds = activeWebIds(state)
     const totals = priceCommercial({
-      webPlanId: webId,
+      webPlanId: webIds[0] ?? null,
+      webPlanIds: webIds,
       marketingPlanId: marketingId,
       extraPages: state.extraPages,
       featureLines: state.features.map((id) => {
@@ -499,13 +517,15 @@ export function buildQuoteLines(state: ConfiguratorState): QuoteLine[] {
           id,
           label: feature?.label ?? id,
           amount: feature?.price ?? 0,
-          includedInPlan: planAlreadyIncludes(webId, id),
+          includedInPlan: webIds.some((planId) => planAlreadyIncludes(planId, id)),
         }
       }),
       includeStories: state.includeStories,
       storiesPerMonth: state.storiesPerMonth,
       storiesUnitPrice: state.storiesUnitPrice,
-      adBudgetAccepted: state.adBudgetAccepted,
+      adBudgetAccepted: state.adBudgetChoice === 'accepted' || state.adBudgetChoice === 'custom',
+      adBudgetChoice: state.adBudgetChoice,
+      recommendedAdBudgetUsd: state.recommendedAdBudgetUsd,
       adBudgetUsd: state.adBudgetUsd,
       adsSetupPrice: state.adsSetupPrice,
       hasDomain: state.hasDomain,
@@ -569,18 +589,34 @@ export function calculateQuote(state: ConfiguratorState) {
   const external = lines.filter((line) => line.billing === 'external').reduce((sum, line) => sum + line.amount, 0)
   const hasCatalog = Boolean(activeWebId(state) || activeMarketingId(state))
   const total = hasCatalog ? oneTime + monthlyAmount : lines.reduce((sum, line) => sum + line.amount, 0)
-  const web = getCatalogPlan(activeWebId(state))
+  const webs = activeWebIds(state).map((id) => getCatalogPlan(id)).filter((plan): plan is NonNullable<typeof plan> => Boolean(plan))
   const marketing = getCatalogPlan(activeMarketingId(state))
   const project = getProjectType(state.projectType)
-  const projectLabel = [web?.label, marketing?.label].filter(Boolean).join(' + ') || project?.label || 'Tu proyecto'
+  const projectLabel = [...webs.map((plan) => plan.label), marketing?.label].filter(Boolean).join(' + ') || project?.label || 'Tu proyecto'
   const isMonthly = monthlyAmount > 0 && oneTime === 0
+  const managesAds = (marketing?.campaignsIncluded ?? 0) > 0
+  const recommendedAdBudget = managesAds ? state.recommendedAdBudgetUsd || 150 : 0
+  const approvedAdBudget = !managesAds
+    ? 0
+    : state.adBudgetChoice === 'accepted'
+      ? recommendedAdBudget
+      : state.adBudgetChoice === 'custom'
+        ? state.adBudgetUsd
+        : 0
+  const pendingAdBudget = managesAds && state.adBudgetChoice === 'pending' ? recommendedAdBudget : 0
+  const initialTotal = hasCatalog ? oneTime + monthlyAmount : total
   return {
     lines,
     total,
     oneTime: hasCatalog ? oneTime : isMonthly ? 0 : total,
     monthlyAmount,
     external: hasCatalog ? external : 0,
-    initialTotal: hasCatalog ? oneTime + monthlyAmount : total,
+    initialTotal,
+    approvedAdBudget,
+    pendingAdBudget,
+    recommendedAdBudget,
+    projectedInitial: initialTotal + approvedAdBudget,
+    projectedMonthly: monthlyAmount + approvedAdBudget,
     nextMonthly: monthlyAmount,
     delivery: project?.delivery ?? 'Por acordar en la cotización',
     projectLabel,
@@ -647,9 +683,11 @@ export function mapLegacyServiceToFeatures(serviceId: string | null): FeatureId[
 }
 
 export function buildCommercialSnapshot(state: ConfiguratorState): CommercialSnapshot | null {
-  const webId = activeWebId(state)
+  const webIds = activeWebIds(state)
+  const webId = webIds[0] ?? null
   const marketingId = activeMarketingId(state)
-  const web = getCatalogPlan(webId)
+  const webs = webIds.map((id) => getCatalogPlan(id)).filter((plan): plan is NonNullable<typeof plan> => Boolean(plan))
+  const web = webs[0] ?? null
   const marketing = getCatalogPlan(marketingId)
   if (!web && !marketing) return null
   const quote = calculateQuote(state)
@@ -657,13 +695,14 @@ export function buildCommercialSnapshot(state: ConfiguratorState): CommercialSna
   const reels = state.customizeVolume && state.customReels != null ? state.customReels : marketing?.reelsPerMonth ?? null
   const campaigns =
     state.customizeVolume && state.customCampaigns != null ? state.customCampaigns : marketing?.campaignsIncluded ?? null
-  const includes = [...(web?.includes ?? []), ...(marketing?.includes ?? [])]
-  const excludes = [...(web?.excludes ?? []), ...(marketing?.excludes ?? [])]
+  const includes = [...webs.flatMap((plan) => [...plan.includes]), ...(marketing?.includes ?? [])]
+  const excludes = [...webs.flatMap((plan) => [...plan.excludes]), ...(marketing?.excludes ?? [])]
   if (!state.includeStories) excludes.push('Historias: no contratadas.')
   return {
     webPlanId: webId,
     marketingPlanId: marketingId,
-    webLabel: web?.label ?? null,
+    webPlans: webs.map((plan) => ({ id: plan.id, label: plan.label, basePrice: plan.basePrice })),
+    webLabel: webs.map((plan) => plan.label).join(' + ') || null,
     marketingLabel: marketing?.label ?? null,
     channels: marketing ? state.channels : [],
     postsPerMonth: posts,
@@ -682,6 +721,8 @@ export function buildCommercialSnapshot(state: ConfiguratorState): CommercialSna
     scopeNotes: state.scopeNotes.trim(),
     includes,
     excludes,
+    webIncludes: webs.flatMap((plan) => [...plan.includes]),
+    marketingIncludes: [...(marketing?.includes ?? [])],
     totals: {
       lines: quote.lines.map((line) => ({
         id: line.id,
@@ -694,6 +735,11 @@ export function buildCommercialSnapshot(state: ConfiguratorState): CommercialSna
       external: quote.external,
       initialFees: quote.initialTotal,
       nextMonthly: quote.nextMonthly,
+      approvedAdBudget: quote.approvedAdBudget,
+      pendingAdBudget: quote.pendingAdBudget,
+      recommendedAdBudget: quote.recommendedAdBudget,
+      projectedInitial: quote.projectedInitial,
+      projectedMonthly: quote.projectedMonthly,
       taxRate: state.taxRate,
       taxAmount: 0,
       storiesPending: quote.storiesPending,
@@ -704,8 +750,13 @@ export function buildCommercialSnapshot(state: ConfiguratorState): CommercialSna
     paymentMethod: state.paymentMethod,
     advanceNote: state.advanceNote,
     balanceNote: state.balanceNote,
-    adBudgetUsd: state.adBudgetAccepted ? state.adBudgetUsd : 0,
-    adBudgetAccepted: state.adBudgetAccepted,
+    adBudgetUsd: quote.approvedAdBudget,
+    adBudgetAccepted: quote.approvedAdBudget > 0,
+    adBudgetChoice: state.adBudgetChoice,
+    recommendedAdBudgetUsd: quote.recommendedAdBudget,
+    approvedAdBudgetUsd: quote.approvedAdBudget,
+    marketingStartDate: state.marketingStartDate,
+    marketingFirstPayment: state.marketingFirstPayment,
     paymentSchedule: state.paymentSchedule.trim(),
     termNote: state.termNote.trim(),
     renewalNote: state.renewalNote.trim(),

@@ -42,6 +42,13 @@ export function ContractCreateForm({
   const [termNote, setTermNote] = useState('')
   const [renewalNote, setRenewalNote] = useState('')
   const [terminationNote, setTerminationNote] = useState('')
+  const [marketingStartDate, setMarketingStartDate] = useState('')
+  const [marketingFirstPayment, setMarketingFirstPayment] = useState('')
+  const hasMarketing = Boolean(
+    selected?.raw_payload &&
+      typeof selected.raw_payload === 'object' &&
+      (selected.raw_payload as { commercial?: { marketingPlanId?: string | null } }).commercial?.marketingPlanId,
+  )
 
   useEffect(() => {
     if (!selected?.raw_payload) return
@@ -66,9 +73,10 @@ export function ContractCreateForm({
       !deliveryDate.trim() ||
       !termNote.trim() ||
       !renewalNote.trim() ||
-      !terminationNote.trim()
+      !terminationNote.trim() ||
+      (hasMarketing && (!marketingStartDate.trim() || !marketingFirstPayment.trim()))
     ) {
-      alert('Completa revisión, pago, anticipo, saldo, calendario, fechas, vigencia, renovación y terminación. Sin esos datos el documento queda como borrador y no se crea la versión final.')
+      alert('Completa revisión, pago, anticipo, saldo, calendario, fechas, vigencia, renovación y terminación. Si hay marketing, indica su inicio y su primer pago. Sin esos datos no se crea la versión final.')
       return
     }
     setLoading(true)
@@ -109,6 +117,8 @@ export function ContractCreateForm({
                 termNote: termNote.trim(),
                 renewalNote: renewalNote.trim(),
                 terminationNote: terminationNote.trim(),
+                marketingStartDate: marketingStartDate.trim(),
+                marketingFirstPayment: marketingFirstPayment.trim(),
               },
               selected_services:
                 extractQuoteServiceSnapshots(selected.raw_payload).length > 0
@@ -257,6 +267,28 @@ export function ContractCreateForm({
             className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
           />
         </label>
+        {hasMarketing ? (
+          <>
+            <label>
+              <span className="text-xs text-slate-400">Inicio del marketing</span>
+              <input
+                value={marketingStartDate}
+                onChange={(e) => setMarketingStartDate(e.target.value)}
+                required
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+              />
+            </label>
+            <label>
+              <span className="text-xs text-slate-400">Primer pago mensual</span>
+              <input
+                value={marketingFirstPayment}
+                onChange={(e) => setMarketingFirstPayment(e.target.value)}
+                required
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+              />
+            </label>
+          </>
+        ) : null}
         <label>
           <span className="text-xs text-slate-400">Vigencia</span>
           <input

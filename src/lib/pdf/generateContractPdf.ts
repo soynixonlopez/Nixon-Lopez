@@ -152,7 +152,7 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
   const muted = rgb(0.38, 0.42, 0.48)
   const clauses = buildContractClauses(contract)
   const commercial = readCommercialSnapshot(contract.terms_payload)
-  const ready = commercial ? commercialTermsReady(commercial) && contract.status !== 'draft' : contract.status === 'signed'
+  const ready = commercial ? commercialTermsReady(commercial) && contract.status === 'signed' : contract.status === 'signed'
   const introWords = introSegmentsToWords(buildContractIntroSegments(contract))
 
   let page = pdf.addPage([W, H])
@@ -195,7 +195,9 @@ export async function generateContractPdfBuffer(contract: ServiceContractRecord)
   })
   y -= 14
   if (!ready) {
-    const draftLabel = 'BORRADOR - NO LISTO PARA FIRMAR'
+    const draftLabel = commercial && commercialTermsReady(commercial)
+      ? 'PENDIENTE DE ACEPTACION - EL PDF NO ES FIRMA'
+      : 'BORRADOR - NO LISTO PARA FIRMAR'
     page.drawText(draftLabel, {
       x: W - M - bold.widthOfTextAtSize(draftLabel, 8),
       y,
