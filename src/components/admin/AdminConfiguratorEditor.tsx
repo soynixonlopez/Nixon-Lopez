@@ -270,6 +270,23 @@ export function AdminConfiguratorEditor({ state, onChange }: Props) {
           })}
         </div>
 
+        {state.marketingPlan ? (
+          <label className="mt-3 block max-w-xs text-sm text-slate-700">
+            Historias por semana (cotización personalizada)
+            <input
+              type="number"
+              min={1}
+              max={21}
+              value={state.storiesPerWeek}
+              onChange={(event) => patch('storiesPerWeek', Math.max(1, Number(event.target.value) || 3))}
+              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2"
+            />
+            <span className="mt-1 block text-xs text-slate-500">
+              Predeterminado del catálogo: 3 por semana en todos los planes de redes.
+            </span>
+          </label>
+        ) : null}
+
         {selectedProject && isRedes ? (
           <div className="mt-3 space-y-3">
             <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">

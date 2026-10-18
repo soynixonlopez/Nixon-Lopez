@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { CommercialOfferSettings } from '@/lib/commercial-settings'
 import { adBudgetRecommendationCopy } from '@/lib/commercial-settings'
+import { MARKETING_STORIES_PER_WEEK } from '@/lib/service-catalog'
 
 const fieldClass =
   'w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-brand/40 focus:ring-2 focus:ring-brand/15'
@@ -39,48 +40,35 @@ export function CommercialSettingsForm({ initial }: { initial: CommercialOfferSe
   return (
     <form onSubmit={save} className="space-y-8">
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
-        <h2 className="text-lg font-bold text-slate-900">Historias (extra mensual)</h2>
+        <h2 className="text-lg font-bold text-slate-900">Historias en planes de redes</h2>
         <p className="mt-1 text-sm text-slate-500">
-          Ningún plan base incluye historias. Si el precio queda vacío, el cotizador no permite añadir este extra.
+          Todos los planes incluyen {MARKETING_STORIES_PER_WEEK} historias por semana. Puedes ajustar la frecuencia
+          por defecto solo para cotizaciones personalizadas creadas en admin (el cotizador público no pregunta por historias).
         </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <label className="block text-sm font-medium text-slate-700">
-            Precio adicional mensual (USD)
-            <input
-              className={`${fieldClass} mt-1`}
-              type="number"
-              min={0}
-              step="0.01"
-              value={form.storiesPriceUsd ?? ''}
-              placeholder="Sin definir"
-              onChange={(event) =>
-                patch('storiesPriceUsd', event.target.value === '' ? null : Number(event.target.value))
-              }
-            />
-          </label>
-          <label className="block text-sm font-medium text-slate-700">
-            Cantidad de historias al mes
+            Historias por semana (predeterminado admin)
             <input
               className={`${fieldClass} mt-1`}
               type="number"
               min={1}
-              value={form.storiesQuantity ?? ''}
-              placeholder="Sin definir"
+              max={21}
+              value={form.storiesQuantity ?? MARKETING_STORIES_PER_WEEK}
               onChange={(event) =>
                 patch('storiesQuantity', event.target.value === '' ? null : Number(event.target.value))
               }
             />
           </label>
           <label className="block text-sm font-medium text-slate-700">
-            Plataforma
+            Plataformas (texto informativo)
             <input
               className={`${fieldClass} mt-1`}
               value={form.storiesPlatform}
               onChange={(event) => patch('storiesPlatform', event.target.value)}
             />
           </label>
-          <label className="block text-sm font-medium text-slate-700">
-            Tipo de contenido
+          <label className="col-span-full block text-sm font-medium text-slate-700">
+            Alcance de las historias
             <input
               className={`${fieldClass} mt-1`}
               value={form.storiesContentType}
@@ -88,14 +76,14 @@ export function CommercialSettingsForm({ initial }: { initial: CommercialOfferSe
             />
           </label>
         </div>
-        <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-700">
+        <div className="mt-3 flex flex-wrap gap-4 text-sm text-slate-600">
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
               checked={form.storiesIncludesDesign}
               onChange={(event) => patch('storiesIncludesDesign', event.target.checked)}
             />
-            Diseño incluido
+            Incluye diseño
           </label>
           <label className="flex items-center gap-2">
             <input
@@ -103,7 +91,7 @@ export function CommercialSettingsForm({ initial }: { initial: CommercialOfferSe
               checked={form.storiesIncludesCopy}
               onChange={(event) => patch('storiesIncludesCopy', event.target.checked)}
             />
-            Texto incluido
+            Incluye texto
           </label>
           <label className="flex items-center gap-2">
             <input
@@ -111,7 +99,7 @@ export function CommercialSettingsForm({ initial }: { initial: CommercialOfferSe
               checked={form.storiesIncludesScheduling}
               onChange={(event) => patch('storiesIncludesScheduling', event.target.checked)}
             />
-            Programación incluida
+            Incluye programación
           </label>
         </div>
       </section>
@@ -119,20 +107,20 @@ export function CommercialSettingsForm({ initial }: { initial: CommercialOfferSe
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
         <h2 className="text-lg font-bold text-slate-900">Presupuesto publicitario recomendado</h2>
         <p className="mt-1 text-sm text-slate-500">
-          Es una inversión del cliente en Meta Ads. No es un honorario del proveedor y no se activa sin aprobación.
+          Importe orientativo editable. No se autoriza hasta que el cliente lo apruebe en la cotización.
         </p>
         <label className="mt-4 block max-w-xs text-sm font-medium text-slate-700">
-          Importe recomendado (USD / mes)
+          USD / mes recomendados
           <input
             className={`${fieldClass} mt-1`}
             type="number"
-            min={1}
-            step="0.01"
+            min={0}
+            step={1}
             value={form.recommendedAdBudgetUsd}
-            onChange={(event) => patch('recommendedAdBudgetUsd', Number(event.target.value))}
+            onChange={(event) => patch('recommendedAdBudgetUsd', Number(event.target.value) || 150)}
           />
         </label>
-        <p className="mt-4 whitespace-pre-line rounded-xl bg-slate-50 p-4 text-sm leading-relaxed text-slate-700">
+        <p className="mt-3 rounded-xl bg-slate-50 p-3 text-xs leading-relaxed text-slate-600">
           {adBudgetRecommendationCopy(form.recommendedAdBudgetUsd)}
         </p>
       </section>
@@ -142,7 +130,7 @@ export function CommercialSettingsForm({ initial }: { initial: CommercialOfferSe
       <button
         type="submit"
         disabled={saving}
-        className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
+        className="rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
       >
         {saving ? 'Guardando…' : 'Guardar configuración'}
       </button>

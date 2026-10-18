@@ -2,6 +2,7 @@
 
 import {
   MARKETING_PLANS,
+  MARKETING_STORIES_PER_WEEK,
   WEB_PLANS,
   getCatalogPlan,
   isMarketingPlanId,
@@ -76,6 +77,8 @@ export type ConfiguratorState = {
   whatsapp: string
   extraPages: number
   webPlanIds: WebPlanId[]
+  /** Frecuencia semanal de historias (planes de marketing). Predeterminado 3. */
+  storiesPerWeek: number
   includeStories: boolean
   storiesPerMonth: number
   storiesUnitPrice: number
@@ -123,6 +126,7 @@ export const INITIAL_CONFIGURATOR_STATE: ConfiguratorState = {
   whatsapp: '',
   extraPages: 0,
   webPlanIds: [],
+  storiesPerWeek: 3,
   includeStories: false,
   storiesPerMonth: 0,
   storiesUnitPrice: 0,
@@ -166,7 +170,6 @@ export const SOCIAL_MEDIA_GENERAL_INCLUDES = [
 
 /** Servicios que no forman parte de los planes base de marketing. */
 export const SOCIAL_MEDIA_ADDITIONAL_SERVICES = [
-  'Historias, salvo extra con cantidad mensual y precio definidos antes de firmar',
   'Presupuesto publicitario pagado a la plataforma (no es honorario)',
   'Producción presencial de fotografías o videos',
   'Atención ilimitada de mensajes',
@@ -520,9 +523,9 @@ export function buildQuoteLines(state: ConfiguratorState): QuoteLine[] {
           includedInPlan: webIds.some((planId) => planAlreadyIncludes(planId, id)),
         }
       }),
-      includeStories: state.includeStories,
-      storiesPerMonth: state.storiesPerMonth,
-      storiesUnitPrice: state.storiesUnitPrice,
+      includeStories: false,
+      storiesPerMonth: 0,
+      storiesUnitPrice: 0,
       adBudgetAccepted: state.adBudgetChoice === 'accepted' || state.adBudgetChoice === 'custom',
       adBudgetChoice: state.adBudgetChoice,
       recommendedAdBudgetUsd: state.recommendedAdBudgetUsd,
@@ -622,7 +625,7 @@ export function calculateQuote(state: ConfiguratorState) {
     projectLabel,
     monthly: isMonthly,
     mixed: oneTime > 0 && monthlyAmount > 0,
-    storiesPending: state.includeStories && !(state.storiesPerMonth > 0 && state.storiesUnitPrice > 0),
+    storiesPending: false,
     includedZeroPriceFeatures: isFixedScopeAdminProject(state.projectType) && !activeWebId(state)
       ? []
       : state.features
@@ -697,7 +700,9 @@ export function buildCommercialSnapshot(state: ConfiguratorState): CommercialSna
     state.customizeVolume && state.customCampaigns != null ? state.customCampaigns : marketing?.campaignsIncluded ?? null
   const includes = [...webs.flatMap((plan) => [...plan.includes]), ...(marketing?.includes ?? [])]
   const excludes = [...webs.flatMap((plan) => [...plan.excludes]), ...(marketing?.excludes ?? [])]
-  if (!state.includeStories) excludes.push('Historias: no contratadas.')
+  const storiesPerWeek = marketing
+    ? Math.max(1, state.storiesPerWeek > 0 ? state.storiesPerWeek : marketing.storiesPerWeek ?? MARKETING_STORIES_PER_WEEK)
+    : 0
   return {
     webPlanId: webId,
     marketingPlanId: marketingId,
@@ -708,9 +713,10 @@ export function buildCommercialSnapshot(state: ConfiguratorState): CommercialSna
     postsPerMonth: posts,
     reelsPerMonth: reels,
     campaigns,
-    storiesIncluded: state.includeStories && state.storiesPerMonth > 0 && state.storiesUnitPrice > 0,
-    storiesPerMonth: state.includeStories ? state.storiesPerMonth : 0,
-    storiesUnitPrice: state.includeStories ? state.storiesUnitPrice : 0,
+    storiesIncluded: Boolean(marketing),
+    storiesPerWeek: marketing ? storiesPerWeek : undefined,
+    storiesPerMonth: marketing ? storiesPerWeek * 4 : 0,
+    storiesUnitPrice: 0,
     pagesIncluded: web?.pagesIncluded ?? null,
     extraPages: state.extraPages,
     productsIncluded: state.productCount ?? web?.productsIncluded ?? null,
@@ -746,7 +752,11 @@ export function buildCommercialSnapshot(state: ConfiguratorState): CommercialSna
     },
     revisionRounds: state.revisionRounds,
     startDate: state.startDate,
-    deliveryDate: state.deliveryDate,
+    deliveryDate:
+      state.deliveryDate.trim() ||
+      (web && state.timeline
+        ? `Preferencia en cotización: ${getTimelineLabel(state.timeline)}. Acordar plazo exacto antes del contrato definitivo.`
+        : ''),
     paymentMethod: state.paymentMethod,
     advanceNote: state.advanceNote,
     balanceNote: state.balanceNote,

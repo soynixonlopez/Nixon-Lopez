@@ -219,6 +219,9 @@ function normalizeConfiguratorState(value: Record<string, unknown>): Configurato
     correo: typeof value.correo === 'string' ? value.correo : '',
     whatsapp: typeof value.whatsapp === 'string' ? value.whatsapp : '',
     extraPages: Number.isFinite(Number(value.extraPages)) ? Math.max(0, Number(value.extraPages)) : 0,
+    storiesPerWeek: Number.isFinite(Number(value.storiesPerWeek)) && Number(value.storiesPerWeek) > 0
+      ? Number(value.storiesPerWeek)
+      : 3,
     includeStories: value.includeStories === true,
     storiesPerMonth: Number.isFinite(Number(value.storiesPerMonth)) ? Number(value.storiesPerMonth) : 0,
     storiesUnitPrice: Number.isFinite(Number(value.storiesUnitPrice)) ? Number(value.storiesUnitPrice) : 0,

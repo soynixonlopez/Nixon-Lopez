@@ -155,8 +155,8 @@ export function buildCommercialContractClauses(
         `Publicaciones de feed al mes (total de los canales, no por cada red): ${snapshot.postsPerMonth ?? 'según plan'}.`,
         `Reels al mes: ${snapshot.reelsPerMonth ?? 0}. Si hay reels, se editan con material del cliente.`,
         snapshot.storiesIncluded
-          ? `Historias contratadas: ${snapshot.storiesPerMonth} al mes, por ${money(snapshot.storiesUnitPrice)} mensuales adicionales.`
-          : 'Historias: no incluidas.',
+          ? `Historias: ${snapshot.storiesPerWeek ?? 3} por semana incluidas (aprox. ${snapshot.storiesPerMonth || (snapshot.storiesPerWeek ?? 3) * 4} en cuatro semanas; obligación semanal). Diseñadas y publicadas con material del cliente; sin grabaciones presenciales salvo acuerdo expreso.`
+          : 'Historias: no aplican a este servicio.',
         `Campañas activas incluidas: ${snapshot.campaigns ?? 0}. Ese límite no es un número ilimitado de anuncios ni de cambios.`,
         'El cliente entrega material, aprueba contenidos y facilita el acceso a las cuentas.',
       ],
@@ -178,21 +178,59 @@ export function buildCommercialContractClauses(
     bullets: snapshot.excludes,
   })
 
-  const paymentBullets = [
-    `Desarrollo y otros pagos únicos: ${money(totals.oneTime)}.`,
-    `Honorarios mensuales de gestión: ${money(totals.monthly)}.`,
+  const hasWeb = Boolean(snapshot.webPlanId || (snapshot.webPlans?.length ?? 0) > 0)
+  const paymentBullets: string[] = []
+  if (hasWeb) {
+    paymentBullets.push(`Desarrollo web (pago único): ${money(totals.oneTime)}.`)
+    if (totals.oneTime > 0) {
+      const advance = Number((totals.oneTime / 2).toFixed(2))
+      const balance = Number((totals.oneTime - advance).toFixed(2))
+      paymentBullets.push(`Anticipo web (50%): ${money(advance)}. Saldo web (50%): ${money(balance)}.`)
+    }
+  }
+  if (snapshot.marketingPlanId) {
+    paymentBullets.push(`Honorarios mensuales de marketing: ${money(totals.monthly)}.`)
+    if (snapshot.storiesIncluded) {
+      paymentBullets.push(
+        `Historias incluidas: ${snapshot.storiesPerWeek ?? 3} por semana (aprox. ${snapshot.storiesPerMonth || (snapshot.storiesPerWeek ?? 3) * 4} en cuatro semanas).`,
+      )
+    }
+  }
+  paymentBullets.push(
     `Gastos externos estimados (los paga el cliente al tercero, no son honorarios): ${money(totals.external)}.`,
-    (snapshot.approvedAdBudgetUsd ?? 0) > 0
-      ? `Presupuesto publicitario aprobado: ${money(snapshot.approvedAdBudgetUsd ?? 0)} al mes. No es honorario del proveedor.`
-      : snapshot.marketingPlanId && (snapshot.recommendedAdBudgetUsd ?? 0) > 0
-        ? `Presupuesto publicitario recomendado: ${money(snapshot.recommendedAdBudgetUsd ?? 0)}. Pendiente de aprobación; no es gasto autorizado.`
-        : 'Presupuesto publicitario: no contratado en esta cotización.',
-    `Honorarios iniciales (sin pauta): ${money(totals.initialFees)}.`,
-    `Total inicial previsto, solo si la pauta ya está aprobada: ${money(totals.projectedInitial ?? totals.initialFees)}.`,
-    `Honorarios mensuales siguientes: ${money(totals.nextMonthly)}.`,
-    `Mensual posterior con pauta aprobada: ${money(totals.projectedMonthly ?? totals.nextMonthly)}. El desarrollo web no se repite en ese mensual.`,
+  )
+  const approvedAd = snapshot.approvedAdBudgetUsd ?? totals.approvedAdBudget ?? 0
+  const choice = snapshot.adBudgetChoice
+  if ((snapshot.campaigns ?? 0) > 0) {
+    if (approvedAd > 0) {
+      paymentBullets.push(
+        `Presupuesto publicitario aprobado: ${money(approvedAd)} al mes. Lo paga el cliente a Meta; no es honorario del proveedor.`,
+      )
+    } else if (choice === 'pending' && (snapshot.recommendedAdBudgetUsd ?? 0) > 0) {
+      paymentBullets.push(
+        `Presupuesto publicitario recomendado: ${money(snapshot.recommendedAdBudgetUsd ?? 0)}. Pendiente de aprobación; no es gasto autorizado.`,
+      )
+    } else {
+      paymentBullets.push('Presupuesto publicitario: no contratado o no definido en esta cotización.')
+    }
+  }
+  paymentBullets.push(`Honorarios iniciales (sin pauta): ${money(totals.initialFees)}.`)
+  if (approvedAd > 0) {
+    paymentBullets.push(
+      `Total inicial previsto con pauta aprobada: ${money(totals.projectedInitial ?? totals.initialFees)}.`,
+    )
+  }
+  if (snapshot.marketingPlanId) {
+    paymentBullets.push(`Honorarios mensuales siguientes: ${money(totals.nextMonthly)}.`)
+    if (approvedAd > 0) {
+      paymentBullets.push(
+        `Mensual posterior con pauta aprobada: ${money(totals.projectedMonthly ?? totals.nextMonthly)}. El desarrollo web no se repite en ese mensual.`,
+      )
+    }
+  }
+  paymentBullets.push(
     totals.taxRate != null ? `Impuesto configurado: ${totals.taxRate}%.` : 'Impuestos: no configurados en esta cotización.',
-  ]
+  )
   if (ready) {
     paymentBullets.push(`Forma de pago: ${text(snapshot.paymentMethod)}.`)
     paymentBullets.push(`Anticipo: ${text(snapshot.advanceNote)}.`)

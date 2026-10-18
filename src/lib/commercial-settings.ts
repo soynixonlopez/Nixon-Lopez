@@ -22,7 +22,7 @@ export const DEFAULT_COMMERCIAL_OFFER: CommercialOfferSettings = {
 
 export function adBudgetRecommendationCopy(amount: number) {
   const value = Number.isFinite(amount) && amount > 0 ? amount : 150
-  return `Se recomienda una inversión publicitaria inicial de $${value} USD mensuales, destinada a la difusión de anuncios en Facebook e Instagram mediante Meta Ads. Este presupuesto podrá distribuirse entre las campañas publicitarias activas según los objetivos comerciales, el público objetivo y la estrategia de marketing definida. El importe es orientativo y podrá ajustarse de común acuerdo con el cliente. Esta inversión es independiente de los honorarios mensuales por gestión de redes sociales y campañas publicitarias, y no está incluida en el precio del plan contratado. El presupuesto definitivo deberá ser aprobado por el cliente antes de activar las campañas publicitarias.`
+  return `Se recomienda una inversión publicitaria inicial de USD ${value} mensuales para distribuir entre las campañas activas de Facebook e Instagram mediante Meta Ads, de acuerdo con la estrategia definida. Este importe es orientativo, puede ajustarse de común acuerdo y no está incluido en los honorarios mensuales de gestión. La inversión definitiva deberá ser aprobada por el cliente antes de activar las campañas.`
 }
 
 export function parseCommercialOffer(value: unknown): CommercialOfferSettings {

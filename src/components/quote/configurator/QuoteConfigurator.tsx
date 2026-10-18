@@ -88,7 +88,7 @@ function hasWebSelection(state: ConfiguratorState) {
 function canContinue(step: number, state: ConfiguratorState) {
   if (step === 1) return Boolean(hasWebSelection(state) || state.marketingPlan)
   if (step === 2) return Boolean(state.business)
-  if (step === 3) return !state.includeStories || (state.storiesPerMonth > 0 && state.storiesUnitPrice > 0)
+  if (step === 3) return true
   if (step === 4) {
     if (!hasWebSelection(state)) return true
     return state.hasDomain !== '' && state.hasHosting !== ''
@@ -223,7 +223,7 @@ export function QuoteConfigurator({ initialServiceId = null, offer = DEFAULT_COM
       `Extras: ${state.features.join(', ') || '—'}`,
       state.scopeNotes.trim() ? `Alcance: ${state.scopeNotes.trim()}` : null,
       state.marketingPlan ? `Canales: ${state.channels.join(', ')}` : null,
-      state.includeStories ? `Historias: ${state.storiesPerMonth}/mes a $${state.storiesUnitPrice}` : 'Historias: no contratadas',
+      state.marketingPlan ? 'Historias: 3 por semana incluidas en el plan' : '',
       state.adBudgetChoice === 'accepted'
         ? `Pauta aprobada (cliente a Meta): $${offer.recommendedAdBudgetUsd}/mes`
         : state.adBudgetChoice === 'custom'
@@ -749,35 +749,10 @@ export function QuoteConfigurator({ initialServiceId = null, offer = DEFAULT_COM
                             )
                           })}
                         </div>
-                        {offer.storiesPriceUsd == null || offer.storiesQuantity == null ? (
-                          <p className="rounded-lg bg-white px-3 py-2 text-sm text-amber-900">
-                            Las historias no están incluidas. El administrador debe definir precio y cantidad en Comercial antes de añadir este extra.
-                          </p>
-                        ) : (
-                          <label className="flex items-start gap-2 text-sm text-slate-700">
-                            <input
-                              type="checkbox"
-                              className="mt-1"
-                              checked={state.includeStories}
-                              onChange={(event) =>
-                                setState((current) => ({
-                                  ...current,
-                                  includeStories: event.target.checked,
-                                  storiesPerMonth: event.target.checked ? offer.storiesQuantity ?? 0 : 0,
-                                  storiesUnitPrice: event.target.checked ? offer.storiesPriceUsd ?? 0 : 0,
-                                }))
-                              }
-                            />
-                            <span>
-                              Añadir historias: {offer.storiesQuantity}/mes en {offer.storiesPlatform}, ${offer.storiesPriceUsd} al mes.
-                              {' '}
-                              {offer.storiesContentType}.
-                              {offer.storiesIncludesDesign ? ' Incluye diseño.' : ''}
-                              {offer.storiesIncludesCopy ? ' Incluye texto.' : ''}
-                              {offer.storiesIncludesScheduling ? ' Incluye programación.' : ''}
-                            </span>
-                          </label>
-                        )}
+                        <p className="rounded-lg bg-white px-3 py-2 text-sm text-slate-700">
+                          Incluye 3 historias por semana en Instagram y Facebook (aprox. 12 en un mes de cuatro semanas).
+                          Historias diseñadas con el material del cliente; sin grabaciones presenciales salvo acuerdo expreso.
+                        </p>
                         {(getCatalogPlan(state.marketingPlan)?.campaignsIncluded ?? 0) > 0 ? (
                           <div className="space-y-2 rounded-lg bg-white p-3">
                             <p className="text-sm font-semibold text-slate-800">Presupuesto publicitario mensual recomendado</p>

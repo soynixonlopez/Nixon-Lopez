@@ -32,7 +32,8 @@ export type CatalogPlan = {
   postsPerMonth: number | null
   reelsPerMonth: number | null
   campaignsIncluded: number | null
-  storiesIncluded: false
+  storiesIncluded: boolean
+  storiesPerWeek?: number
   hasAdmin: boolean
   hasGateway: boolean
   includes: readonly string[]
@@ -58,8 +59,14 @@ const WEB_EXCLUDES = [
   'Contenido, fotografías o videos que el cliente no entregue.',
 ] as const
 
+/** Obligación comercial estándar en todos los planes de redes. */
+export const MARKETING_STORIES_PER_WEEK = 3
+export const MARKETING_STORIES_MONTHLY_ESTIMATE = 12
+
+export const MARKETING_STORIES_SCOPE_LINE =
+  '3 historias por semana en Instagram y Facebook (aprox. 12 en un mes de cuatro semanas; la obligación es semanal). Historias diseñadas y publicadas con el material e información disponibles; no incluye grabaciones presenciales salvo acuerdo expreso.'
+
 const MARKETING_EXCLUDES = [
-  'Historias de Instagram o Facebook, salvo extra con cantidad y precio acordados.',
   'Presupuesto publicitario pagado a Meta u otras plataformas.',
   'Producción presencial de fotografías o videos.',
   'Atención ilimitada de mensajes.',
@@ -261,7 +268,7 @@ export const MARKETING_PLANS: readonly CatalogPlan[] = [
   {
     id: 'mkt-presencia',
     label: 'Presencia Digital',
-    description: 'Publicaciones mensuales, calendario y un informe básico. Sin campañas de anuncios.',
+    description: 'Publicaciones mensuales, historias semanales, calendario e informe básico. Sin campañas de anuncios.',
     basePrice: 150,
     billing: 'monthly',
     category: 'marketing',
@@ -271,17 +278,19 @@ export const MARKETING_PLANS: readonly CatalogPlan[] = [
     postsPerMonth: 8,
     reelsPerMonth: 0,
     campaignsIncluded: 0,
-    storiesIncluded: false,
+    storiesIncluded: true,
+    storiesPerWeek: MARKETING_STORIES_PER_WEEK,
     hasAdmin: false,
     hasGateway: false,
     includes: [
-      '8 publicaciones mensuales en el feed (total del mes para los canales contratados, no por red).',
+      '8 publicaciones mensuales en el feed.',
+      MARKETING_STORIES_SCOPE_LINE,
       'Diseños gráficos y textos publicitarios.',
-      'Calendario mensual de contenido.',
-      'Adaptación de publicaciones para Instagram y Facebook.',
-      'Programación de las publicaciones.',
+      'Adaptación del contenido para Instagram y Facebook.',
+      'Calendario y programación de publicaciones.',
       'Optimización básica de los perfiles comerciales.',
-      'Informe mensual básico de rendimiento.',
+      'Informe mensual básico.',
+      'No incluye gestión de campañas publicitarias.',
     ],
     excludes: [
       ...MARKETING_EXCLUDES,
@@ -292,7 +301,7 @@ export const MARKETING_PLANS: readonly CatalogPlan[] = [
   {
     id: 'mkt-crecimiento',
     label: 'Publicidad y Crecimiento',
-    description: 'Contenido mensual y gestión de hasta 2 campañas de Meta Ads. La inversión en anuncios es aparte.',
+    description: 'Contenido mensual, historias semanales y hasta 2 campañas Meta Ads. La inversión en anuncios es aparte.',
     basePrice: 250,
     billing: 'monthly',
     category: 'marketing',
@@ -303,28 +312,28 @@ export const MARKETING_PLANS: readonly CatalogPlan[] = [
     postsPerMonth: 12,
     reelsPerMonth: 0,
     campaignsIncluded: 2,
-    storiesIncluded: false,
+    storiesIncluded: true,
+    storiesPerWeek: MARKETING_STORIES_PER_WEEK,
     hasAdmin: false,
     hasGateway: false,
     includes: [
-      '12 publicaciones mensuales en el feed (total del mes, no por red social).',
+      '12 publicaciones mensuales en el feed.',
+      MARKETING_STORIES_SCOPE_LINE,
       'Diseños gráficos y textos comerciales.',
-      'Adaptación de contenido para Instagram y Facebook.',
+      'Adaptación para Instagram y Facebook.',
       'Programación de publicaciones.',
-      'Configuración y gestión de campañas de Meta Ads.',
-      'Hasta 2 campañas publicitarias activas a la vez. No equivale a anuncios ni cambios ilimitados.',
-      'Segmentación de audiencias.',
-      'Creación de anuncios con diseños y textos incluidos en el alcance.',
+      'Configuración inicial de campañas publicitarias, incluida dentro de la contratación mensual.',
+      'Gestión de hasta 2 campañas activas de Meta Ads.',
+      'Segmentación, seguimiento y optimización.',
       'Configuración de Meta Pixel cuando corresponda y sea técnicamente viable.',
-      'Seguimiento y optimización de campañas.',
-      'Informe mensual de rendimiento y consultas generadas.',
+      'Informe mensual de resultados.',
     ],
     excludes: [...MARKETING_EXCLUDES],
   },
   {
     id: 'mkt-integral',
     label: 'Marketing Integral',
-    description: 'Más contenido, reels con material del cliente y hasta 3 campañas activas.',
+    description: 'Más contenido, historias semanales, reels y hasta 3 campañas activas.',
     basePrice: 400,
     billing: 'monthly',
     category: 'marketing',
@@ -334,21 +343,22 @@ export const MARKETING_PLANS: readonly CatalogPlan[] = [
     postsPerMonth: 16,
     reelsPerMonth: 4,
     campaignsIncluded: 3,
-    storiesIncluded: false,
+    storiesIncluded: true,
+    storiesPerWeek: MARKETING_STORIES_PER_WEEK,
     hasAdmin: false,
     hasGateway: false,
     includes: [
-      '16 publicaciones mensuales en el feed (total del mes, no por red social).',
-      'Diseños y textos publicitarios.',
-      'Adaptación de contenido para Instagram y Facebook.',
+      '16 publicaciones mensuales en el feed.',
+      MARKETING_STORIES_SCOPE_LINE,
+      'Diseños gráficos y textos publicitarios.',
+      'Adaptación para Instagram y Facebook.',
       'Programación de publicaciones.',
-      'Hasta 4 reels editados al mes, con material proporcionado por el cliente.',
-      'Gestión de hasta 3 campañas publicitarias activas. No equivale a anuncios ilimitados.',
+      'Hasta 4 reels editados mensuales, utilizando material proporcionado por el cliente.',
+      'Gestión de hasta 3 campañas activas de Meta Ads.',
       'Pruebas de creatividades y audiencias.',
-      'Seguimiento de conversiones y consultas.',
-      'Optimización de campañas.',
-      'Reporte mensual detallado.',
-      'Reunión mensual de seguimiento y recomendaciones comerciales.',
+      'Seguimiento de conversiones.',
+      'Informe mensual detallado.',
+      'Reunión mensual de seguimiento.',
     ],
     excludes: [...MARKETING_EXCLUDES, 'Servicios externos de pago.'],
   },
@@ -474,15 +484,7 @@ export function priceCommercial(input: CommercialInput): CommercialTotals {
     })
   }
 
-  const storiesPending = input.includeStories && !(input.storiesPerMonth > 0 && input.storiesUnitPrice > 0)
-  if (input.includeStories && input.storiesPerMonth > 0 && input.storiesUnitPrice > 0) {
-    lines.push({
-      id: 'stories',
-      label: `Historias (${input.storiesPerMonth}/mes)`,
-      amount: input.storiesUnitPrice,
-      billing: 'monthly',
-    })
-  }
+  const storiesPending = false
 
   if (webs.length > 0) {
     if (input.hasDomain === 'no') {
@@ -582,6 +584,7 @@ export type CommercialSnapshot = {
   reelsPerMonth: number | null
   campaigns: number | null
   storiesIncluded: boolean
+  storiesPerWeek?: number
   storiesPerMonth: number
   storiesUnitPrice: number
   pagesIncluded: number | null
