@@ -4,6 +4,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { parseClientExtraFromPayload } from '@/lib/admin-configurator-quote'
+import {
+  deriveContractTermsFromQuote,
+  quotePayloadHasMarketing,
+} from '@/lib/contract-terms-from-quote'
 import { extractQuoteServiceSnapshots } from '@/lib/quote-pricing'
 
 type QuoteOpt = {
@@ -44,11 +48,30 @@ export function ContractCreateForm({
   const [terminationNote, setTerminationNote] = useState('')
   const [marketingStartDate, setMarketingStartDate] = useState('')
   const [marketingFirstPayment, setMarketingFirstPayment] = useState('')
-  const hasMarketing = Boolean(
-    selected?.raw_payload &&
-      typeof selected.raw_payload === 'object' &&
-      (selected.raw_payload as { commercial?: { marketingPlanId?: string | null } }).commercial?.marketingPlanId,
-  )
+  const hasMarketing = Boolean(selected?.raw_payload && quotePayloadHasMarketing(selected.raw_payload))
+
+  function applyTermsFromQuote(raw: unknown) {
+    const derived = deriveContractTermsFromQuote(raw)
+    if (!derived) return
+    setRevisionRounds(derived.revisionRounds)
+    setPaymentMethod(derived.paymentMethod)
+    setAdvanceNote(derived.advanceNote)
+    setBalanceNote(derived.balanceNote)
+    setPaymentSchedule(derived.paymentSchedule)
+    setStartDate(derived.startDate)
+    setDeliveryDate(derived.deliveryDate)
+    setTermNote(derived.termNote)
+    setRenewalNote(derived.renewalNote)
+    setTerminationNote(derived.terminationNote)
+    setCustomNotes(derived.customNotes)
+    if (quotePayloadHasMarketing(raw)) {
+      setMarketingStartDate(derived.marketingStartDate)
+      setMarketingFirstPayment(derived.marketingFirstPayment)
+    } else {
+      setMarketingStartDate('')
+      setMarketingFirstPayment('')
+    }
+  }
 
   useEffect(() => {
     if (!selected?.raw_payload) return
@@ -56,6 +79,7 @@ export function ContractCreateForm({
     if (extra.client_ruc) setClientTaxId(extra.client_ruc)
     if (extra.client_address) setClientAddress(extra.client_address)
     if (extra.client_city) setCity(extra.client_city)
+    applyTermsFromQuote(selected.raw_payload)
   }, [selected])
 
   async function submit(e: React.FormEvent) {
@@ -202,6 +226,21 @@ export function ContractCreateForm({
           className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
         />
       </label>
+
+      <div className="rounded-xl border border-brand/20 bg-brand/5 px-4 py-3 text-sm text-slate-700">
+        <p>
+          Los términos comerciales se proponen automáticamente según la cotización seleccionada (montos, planes y
+          pauta). Revísalos y edítalos antes de crear el contrato.
+        </p>
+        <button
+          type="button"
+          onClick={() => selected?.raw_payload && applyTermsFromQuote(selected.raw_payload)}
+          className="mt-2 text-sm font-medium text-brand hover:underline"
+        >
+          Regenerar desde cotización
+        </button>
+      </div>
+
       <div className="grid sm:grid-cols-2 gap-4">
         <label>
           <span className="text-xs text-slate-400">Rondas de revisión</span>

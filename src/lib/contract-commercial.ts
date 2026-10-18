@@ -42,7 +42,9 @@ export function readCommercialSnapshot(terms: Record<string, unknown> | null): C
     return null
   }
   const value = terms.commercial as Partial<CommercialSnapshot>
-  if (!value.webPlanId && !value.marketingPlanId) return null
+  const hasWeb =
+    Boolean(value.webPlanId) || (Array.isArray(value.webPlans) && value.webPlans.length > 0)
+  if (!hasWeb && !value.marketingPlanId) return null
   if (!value.totals || typeof value.totals !== 'object') return null
   return value as CommercialSnapshot
 }
