@@ -105,8 +105,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       >
         <div
           className={clsx(
-            'flex min-h-[3.75rem] shrink-0 items-center justify-between gap-2 px-3 py-2.5',
-            collapsed && 'lg:justify-center lg:px-2',
+            'flex shrink-0 items-center justify-between gap-2 px-3 py-3',
+            collapsed ? 'min-h-[3.75rem] lg:justify-center lg:px-2' : 'min-h-[4.5rem]',
             adminUi.sidebarHeader
           )}
         >
@@ -117,7 +117,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             title="Cotizaciones"
             aria-label="Nixon Lopez Services — administración"
           >
-            <BrandLogo variant="official" alt="Nixon Lopez Services" sizes="200px" priority />
+            <BrandLogo
+              variant="official"
+              alt="Nixon Lopez Services"
+              sizes="280px"
+              priority
+              className="[&_img]:h-10 [&_img]:max-w-[min(100%,260px)] [&_img]:sm:h-11"
+            />
           </Link>
           <div className={clsx('flex shrink-0 items-center gap-0.5', collapsed && 'lg:w-full lg:justify-center')}>
             <button
@@ -248,8 +254,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <BrandLogo
             variant="official"
             alt="Nixon Lopez Services"
-            sizes="160px"
-            className="max-w-[160px]"
+            sizes="220px"
+            className="[&_img]:h-9 [&_img]:max-w-[min(100%,200px)] [&_img]:sm:h-10"
           />
         </header>
 
