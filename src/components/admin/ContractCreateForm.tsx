@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { parseClientExtraFromPayload } from '@/lib/admin-configurator-quote'
 import {
   deriveContractTermsFromQuote,
+  enrichQuotePayloadForContract,
   quotePayloadHasMarketing,
 } from '@/lib/contract-terms-from-quote'
 import { extractQuoteServiceSnapshots } from '@/lib/quote-pricing'
@@ -21,6 +22,14 @@ type QuoteOpt = {
   raw_payload?: unknown
 }
 
+function quoteMeta(selected: QuoteOpt) {
+  return {
+    totalAmount: selected.total_amount,
+    serviceId: selected.service_id,
+    serviceLabel: selected.service_label,
+  }
+}
+
 export function ContractCreateForm({
   quotes,
   prefillQuoteId,
@@ -31,6 +40,7 @@ export function ContractCreateForm({
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [quoteId, setQuoteId] = useState(prefillQuoteId ?? quotes[0]?.id ?? '')
+  const [editTerms, setEditTerms] = useState(false)
   const selected = useMemo(() => quotes.find((q) => q.id === quoteId), [quotes, quoteId])
   const [clientTaxId, setClientTaxId] = useState('')
   const [clientAddress, setClientAddress] = useState('')
@@ -48,59 +58,106 @@ export function ContractCreateForm({
   const [terminationNote, setTerminationNote] = useState('')
   const [marketingStartDate, setMarketingStartDate] = useState('')
   const [marketingFirstPayment, setMarketingFirstPayment] = useState('')
-  const hasMarketing = Boolean(selected?.raw_payload && quotePayloadHasMarketing(selected.raw_payload))
+  const [termsError, setTermsError] = useState('')
 
-  function applyTermsFromQuote(raw: unknown) {
-    const derived = deriveContractTermsFromQuote(raw)
-    if (!derived) return
-    setRevisionRounds(derived.revisionRounds)
-    setPaymentMethod(derived.paymentMethod)
-    setAdvanceNote(derived.advanceNote)
-    setBalanceNote(derived.balanceNote)
-    setPaymentSchedule(derived.paymentSchedule)
-    setStartDate(derived.startDate)
-    setDeliveryDate(derived.deliveryDate)
-    setTermNote(derived.termNote)
-    setRenewalNote(derived.renewalNote)
-    setTerminationNote(derived.terminationNote)
-    setCustomNotes(derived.customNotes)
-    if (quotePayloadHasMarketing(raw)) {
-      setMarketingStartDate(derived.marketingStartDate)
-      setMarketingFirstPayment(derived.marketingFirstPayment)
-    } else {
-      setMarketingStartDate('')
-      setMarketingFirstPayment('')
-    }
-  }
+  const enrichedPayload = useMemo(() => {
+    if (!selected?.raw_payload) return null
+    return enrichQuotePayloadForContract(selected.raw_payload)
+  }, [selected])
+
+  const hasMarketing = Boolean(enrichedPayload && quotePayloadHasMarketing(enrichedPayload))
+
+  const applyTermsFromQuote = useCallback(
+    (quote: QuoteOpt) => {
+      setTermsError('')
+      const enriched = enrichQuotePayloadForContract(quote.raw_payload)
+      const derived = deriveContractTermsFromQuote(enriched ?? quote.raw_payload, quoteMeta(quote))
+      if (!derived) {
+        setTermsError(
+          'No se pudieron calcular los términos desde esta cotización. Revisa que tenga servicios y montos guardados.',
+        )
+        return
+      }
+      setRevisionRounds(derived.revisionRounds)
+      setPaymentMethod(derived.paymentMethod)
+      setAdvanceNote(derived.advanceNote)
+      setBalanceNote(derived.balanceNote)
+      setPaymentSchedule(derived.paymentSchedule)
+      setStartDate(derived.startDate)
+      setDeliveryDate(derived.deliveryDate)
+      setTermNote(derived.termNote)
+      setRenewalNote(derived.renewalNote)
+      setTerminationNote(derived.terminationNote)
+      setCustomNotes(derived.customNotes)
+      if (quotePayloadHasMarketing(enriched ?? quote.raw_payload)) {
+        setMarketingStartDate(derived.marketingStartDate)
+        setMarketingFirstPayment(derived.marketingFirstPayment)
+      } else {
+        setMarketingStartDate('')
+        setMarketingFirstPayment('')
+      }
+    },
+    [],
+  )
 
   useEffect(() => {
-    if (!selected?.raw_payload) return
+    if (!selected) return
     const extra = parseClientExtraFromPayload(selected.raw_payload)
     if (extra.client_ruc) setClientTaxId(extra.client_ruc)
     if (extra.client_address) setClientAddress(extra.client_address)
     if (extra.client_city) setCity(extra.client_city)
-    applyTermsFromQuote(selected.raw_payload)
-  }, [selected])
+    applyTermsFromQuote(selected)
+  }, [selected, applyTermsFromQuote])
+
+  function resolveTermsForSubmit(quote: QuoteOpt) {
+    const enriched = enrichQuotePayloadForContract(quote.raw_payload)
+    const derived = deriveContractTermsFromQuote(enriched ?? quote.raw_payload, quoteMeta(quote))
+    if (!derived) return null
+    if (editTerms) {
+      return {
+        revisionRounds: revisionRounds.trim() || derived.revisionRounds,
+        paymentMethod: paymentMethod.trim() || derived.paymentMethod,
+        advanceNote: advanceNote.trim() || derived.advanceNote,
+        balanceNote: balanceNote.trim() || derived.balanceNote,
+        paymentSchedule: paymentSchedule.trim() || derived.paymentSchedule,
+        startDate: startDate.trim() || derived.startDate,
+        deliveryDate: deliveryDate.trim() || derived.deliveryDate,
+        termNote: termNote.trim() || derived.termNote,
+        renewalNote: renewalNote.trim() || derived.renewalNote,
+        terminationNote: terminationNote.trim() || derived.terminationNote,
+        marketingStartDate: marketingStartDate.trim() || derived.marketingStartDate,
+        marketingFirstPayment: marketingFirstPayment.trim() || derived.marketingFirstPayment,
+        customNotes: customNotes.trim() || derived.customNotes,
+      }
+    }
+    return derived
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     if (!selected) return
-    const rounds = Number(revisionRounds)
+    const terms = resolveTermsForSubmit(selected)
+    if (!terms) {
+      alert(termsError || 'No se pudieron generar los términos del contrato desde la cotización.')
+      return
+    }
+    const rounds = Number(terms.revisionRounds)
+    const marketing = Boolean(enrichedPayload && quotePayloadHasMarketing(enrichedPayload))
     if (
       !Number.isFinite(rounds) ||
       rounds < 0 ||
-      !paymentMethod.trim() ||
-      !advanceNote.trim() ||
-      !balanceNote.trim() ||
-      !paymentSchedule.trim() ||
-      !startDate.trim() ||
-      !deliveryDate.trim() ||
-      !termNote.trim() ||
-      !renewalNote.trim() ||
-      !terminationNote.trim() ||
-      (hasMarketing && (!marketingStartDate.trim() || !marketingFirstPayment.trim()))
+      !terms.paymentMethod.trim() ||
+      !terms.advanceNote.trim() ||
+      !terms.balanceNote.trim() ||
+      !terms.paymentSchedule.trim() ||
+      !terms.startDate.trim() ||
+      !terms.deliveryDate.trim() ||
+      !terms.termNote.trim() ||
+      !terms.renewalNote.trim() ||
+      !terms.terminationNote.trim() ||
+      (marketing && (!terms.marketingStartDate.trim() || !terms.marketingFirstPayment.trim()))
     ) {
-      alert('Completa revisión, pago, anticipo, saldo, calendario, fechas, vigencia, renovación y terminación. Si hay marketing, indica su inicio y su primer pago. Sin esos datos no se crea la versión final.')
+      alert('Los términos no se completaron. Usa «Regenerar desde cotización» o revisa la cotización base.')
       return
     }
     setLoading(true)
@@ -112,6 +169,7 @@ export function ContractCreateForm({
       return
     }
     const clientName = `${selected.client_first_name} ${selected.client_last_name}`.trim()
+    const enriched = enrichQuotePayloadForContract(selected.raw_payload) ?? selected.raw_payload
     const payload = {
       contract_number: numberData as string,
       quote_id: selected.id,
@@ -124,30 +182,30 @@ export function ContractCreateForm({
       service_label: selected.service_label || 'Servicio tecnológico',
       total_amount: selected.total_amount ?? 0,
       currency: 'USD',
-      custom_notes: customNotes || null,
+      custom_notes: terms.customNotes || null,
       terms_payload:
-        selected.raw_payload && typeof selected.raw_payload === 'object' && !Array.isArray(selected.raw_payload)
+        enriched && typeof enriched === 'object' && !Array.isArray(enriched)
           ? {
-              ...(selected.raw_payload as Record<string, unknown>),
+              ...enriched,
               commercial: {
-                ...((selected.raw_payload as { commercial?: Record<string, unknown> }).commercial ?? {}),
+                ...((enriched as { commercial?: Record<string, unknown> }).commercial ?? {}),
                 revisionRounds: rounds,
-                paymentMethod: paymentMethod.trim(),
-                advanceNote: advanceNote.trim(),
-                balanceNote: balanceNote.trim(),
-                paymentSchedule: paymentSchedule.trim(),
-                startDate: startDate.trim(),
-                deliveryDate: deliveryDate.trim(),
-                termNote: termNote.trim(),
-                renewalNote: renewalNote.trim(),
-                terminationNote: terminationNote.trim(),
-                marketingStartDate: marketingStartDate.trim(),
-                marketingFirstPayment: marketingFirstPayment.trim(),
+                paymentMethod: terms.paymentMethod.trim(),
+                advanceNote: terms.advanceNote.trim(),
+                balanceNote: terms.balanceNote.trim(),
+                paymentSchedule: terms.paymentSchedule.trim(),
+                startDate: terms.startDate.trim(),
+                deliveryDate: terms.deliveryDate.trim(),
+                termNote: terms.termNote.trim(),
+                renewalNote: terms.renewalNote.trim(),
+                terminationNote: terms.terminationNote.trim(),
+                marketingStartDate: terms.marketingStartDate.trim(),
+                marketingFirstPayment: terms.marketingFirstPayment.trim(),
               },
               selected_services:
-                extractQuoteServiceSnapshots(selected.raw_payload).length > 0
-                  ? extractQuoteServiceSnapshots(selected.raw_payload)
-                  : (selected.raw_payload as { selected_services?: unknown }).selected_services,
+                extractQuoteServiceSnapshots(enriched).length > 0
+                  ? extractQuoteServiceSnapshots(enriched)
+                  : (enriched as { selected_services?: unknown }).selected_services,
             }
           : null,
     }
@@ -158,7 +216,6 @@ export function ContractCreateForm({
       return
     }
 
-    // Proyecto de seguimiento (Iniciado) vinculado a la cotización/contrato
     const { data: existingProject } = await supabase
       .from('projects')
       .select('id')
@@ -187,13 +244,17 @@ export function ContractCreateForm({
         <span className="text-xs text-slate-400">Cotización base</span>
         <select
           value={quoteId}
-          onChange={(e) => setQuoteId(e.target.value)}
+          onChange={(e) => {
+            setQuoteId(e.target.value)
+            setEditTerms(false)
+          }}
           className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           required
         >
           {quotes.map((q) => (
             <option key={q.id} value={q.id}>
-              {q.client_first_name} {q.client_last_name} — {q.service_label || 'Servicio'} (${Number(q.total_amount || 0).toFixed(2)})
+              {q.client_first_name} {q.client_last_name} — {q.service_label || 'Servicio'} ($
+              {Number(q.total_amount || 0).toFixed(2)})
             </option>
           ))}
         </select>
@@ -227,150 +288,179 @@ export function ContractCreateForm({
         />
       </label>
 
-      <div className="rounded-xl border border-brand/20 bg-brand/5 px-4 py-3 text-sm text-slate-700">
-        <p>
-          Los términos comerciales se proponen automáticamente según la cotización seleccionada (montos, planes y
-          pauta). Revísalos y edítalos antes de crear el contrato.
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-4 text-sm text-slate-800">
+        <p className="font-semibold text-emerald-950">Contrato completo automático</p>
+        <p className="mt-1 text-slate-700">
+          Al elegir la cotización, se cargan pagos (50/50 web si aplica), marketing, pauta, plazos, vigencia y forma de
+          trabajo. No necesitas rellenar los términos salvo que quieras ajustar algo puntual.
         </p>
-        <button
-          type="button"
-          onClick={() => selected?.raw_payload && applyTermsFromQuote(selected.raw_payload)}
-          className="mt-2 text-sm font-medium text-brand hover:underline"
-        >
-          Regenerar desde cotización
-        </button>
+        {termsError ? <p className="mt-2 text-red-700">{termsError}</p> : null}
+        {paymentSchedule ? (
+          <dl className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
+            <div>
+              <dt className="font-medium text-slate-500">Anticipo</dt>
+              <dd>{advanceNote}</dd>
+            </div>
+            <div>
+              <dt className="font-medium text-slate-500">Saldo</dt>
+              <dd>{balanceNote}</dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="font-medium text-slate-500">Calendario</dt>
+              <dd className="whitespace-pre-wrap">{paymentSchedule}</dd>
+            </div>
+            <div>
+              <dt className="font-medium text-slate-500">Inicio</dt>
+              <dd>{startDate}</dd>
+            </div>
+            <div>
+              <dt className="font-medium text-slate-500">Entrega</dt>
+              <dd>{deliveryDate}</dd>
+            </div>
+          </dl>
+        ) : null}
+        <div className="mt-3 flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => selected && applyTermsFromQuote(selected)}
+            className="text-sm font-medium text-brand hover:underline"
+          >
+            Regenerar desde cotización
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditTerms((value) => !value)}
+            className="text-sm font-medium text-slate-600 hover:underline"
+          >
+            {editTerms ? 'Ocultar editor de términos' : 'Editar términos manualmente'}
+          </button>
+        </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-4">
-        <label>
-          <span className="text-xs text-slate-400">Rondas de revisión</span>
-          <input
-            value={revisionRounds}
-            onChange={(e) => setRevisionRounds(e.target.value)}
-            inputMode="numeric"
-            required
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
-          />
-        </label>
-        <label>
-          <span className="text-xs text-slate-400">Forma de pago</span>
-          <input
-            value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value)}
-            required
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
-          />
-        </label>
-        <label>
-          <span className="text-xs text-slate-400">Anticipo acordado</span>
-          <input
-            value={advanceNote}
-            onChange={(e) => setAdvanceNote(e.target.value)}
-            required
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
-          />
-        </label>
-        <label>
-          <span className="text-xs text-slate-400">Saldo acordado</span>
-          <input
-            value={balanceNote}
-            onChange={(e) => setBalanceNote(e.target.value)}
-            required
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
-          />
-        </label>
-        <label className="sm:col-span-2">
-          <span className="text-xs text-slate-400">Calendario de pagos</span>
-          <input
-            value={paymentSchedule}
-            onChange={(e) => setPaymentSchedule(e.target.value)}
-            required
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
-          />
-        </label>
-        <label>
-          <span className="text-xs text-slate-400">Fecha de inicio</span>
-          <input
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            required
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
-          />
-        </label>
-        <label>
-          <span className="text-xs text-slate-400">Plazo de entrega</span>
-          <input
-            value={deliveryDate}
-            onChange={(e) => setDeliveryDate(e.target.value)}
-            required
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
-          />
-        </label>
-        {hasMarketing ? (
-          <>
-            <label>
-              <span className="text-xs text-slate-400">Inicio del marketing</span>
-              <input
-                value={marketingStartDate}
-                onChange={(e) => setMarketingStartDate(e.target.value)}
-                required
-                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
-              />
-            </label>
-            <label>
-              <span className="text-xs text-slate-400">Primer pago mensual</span>
-              <input
-                value={marketingFirstPayment}
-                onChange={(e) => setMarketingFirstPayment(e.target.value)}
-                required
-                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
-              />
-            </label>
-          </>
-        ) : null}
-        <label>
-          <span className="text-xs text-slate-400">Vigencia</span>
-          <input
-            value={termNote}
-            onChange={(e) => setTermNote(e.target.value)}
-            required
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
-          />
-        </label>
-        <label>
-          <span className="text-xs text-slate-400">Renovación</span>
-          <input
-            value={renewalNote}
-            onChange={(e) => setRenewalNote(e.target.value)}
-            required
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
-          />
-        </label>
-        <label className="sm:col-span-2">
-          <span className="text-xs text-slate-400">Terminación</span>
-          <input
-            value={terminationNote}
-            onChange={(e) => setTerminationNote(e.target.value)}
-            required
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
-          />
-        </label>
-      </div>
-      <label className="block">
-        <span className="text-xs text-slate-400">Observaciones adicionales</span>
-        <textarea
-          value={customNotes}
-          onChange={(e) => setCustomNotes(e.target.value)}
-          rows={4}
-          className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
-        />
-      </label>
+      {editTerms ? (
+        <div className="grid sm:grid-cols-2 gap-4">
+          <label>
+            <span className="text-xs text-slate-400">Rondas de revisión</span>
+            <input
+              value={revisionRounds}
+              onChange={(e) => setRevisionRounds(e.target.value)}
+              inputMode="numeric"
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+            />
+          </label>
+          <label>
+            <span className="text-xs text-slate-400">Forma de pago</span>
+            <input
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+            />
+          </label>
+          <label>
+            <span className="text-xs text-slate-400">Anticipo acordado</span>
+            <textarea
+              value={advanceNote}
+              onChange={(e) => setAdvanceNote(e.target.value)}
+              rows={2}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+            />
+          </label>
+          <label>
+            <span className="text-xs text-slate-400">Saldo acordado</span>
+            <textarea
+              value={balanceNote}
+              onChange={(e) => setBalanceNote(e.target.value)}
+              rows={2}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+            />
+          </label>
+          <label className="sm:col-span-2">
+            <span className="text-xs text-slate-400">Calendario de pagos</span>
+            <textarea
+              value={paymentSchedule}
+              onChange={(e) => setPaymentSchedule(e.target.value)}
+              rows={4}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+            />
+          </label>
+          <label>
+            <span className="text-xs text-slate-400">Fecha de inicio</span>
+            <input
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+            />
+          </label>
+          <label>
+            <span className="text-xs text-slate-400">Plazo de entrega</span>
+            <input
+              value={deliveryDate}
+              onChange={(e) => setDeliveryDate(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+            />
+          </label>
+          {hasMarketing ? (
+            <>
+              <label>
+                <span className="text-xs text-slate-400">Inicio del marketing</span>
+                <input
+                  value={marketingStartDate}
+                  onChange={(e) => setMarketingStartDate(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+                />
+              </label>
+              <label>
+                <span className="text-xs text-slate-400">Primer pago mensual</span>
+                <input
+                  value={marketingFirstPayment}
+                  onChange={(e) => setMarketingFirstPayment(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+                />
+              </label>
+            </>
+          ) : null}
+          <label>
+            <span className="text-xs text-slate-400">Vigencia</span>
+            <input
+              value={termNote}
+              onChange={(e) => setTermNote(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+            />
+          </label>
+          <label>
+            <span className="text-xs text-slate-400">Renovación</span>
+            <input
+              value={renewalNote}
+              onChange={(e) => setRenewalNote(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+            />
+          </label>
+          <label className="sm:col-span-2">
+            <span className="text-xs text-slate-400">Terminación</span>
+            <input
+              value={terminationNote}
+              onChange={(e) => setTerminationNote(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+            />
+          </label>
+          <label className="sm:col-span-2">
+            <span className="text-xs text-slate-400">Observaciones adicionales</span>
+            <textarea
+              value={customNotes}
+              onChange={(e) => setCustomNotes(e.target.value)}
+              rows={4}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm"
+            />
+          </label>
+        </div>
+      ) : null}
+
       <button
         type="submit"
         disabled={loading || !selected}
         className="px-6 py-3 rounded-xl bg-brand text-white font-medium disabled:opacity-50"
       >
-        {loading ? 'Creando…' : 'Crear contrato'}
+        {loading ? 'Creando…' : 'Crear contrato con términos automáticos'}
       </button>
     </form>
   )
