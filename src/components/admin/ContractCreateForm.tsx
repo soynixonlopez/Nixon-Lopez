@@ -238,8 +238,10 @@ export function ContractCreateForm({
     router.refresh()
   }
 
+  const termsReady = Boolean(paymentSchedule && !termsError)
+
   return (
-    <form onSubmit={submit} className="max-w-3xl space-y-6">
+    <form onSubmit={submit} className="mx-auto w-full max-w-xl space-y-6">
       <label className="block">
         <span className="text-xs text-slate-400">Cotización base</span>
         <select
@@ -288,54 +290,30 @@ export function ContractCreateForm({
         />
       </label>
 
-      <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-4 text-sm text-slate-800">
-        <p className="font-semibold text-emerald-950">Contrato completo automático</p>
-        <p className="mt-1 text-slate-700">
-          Al elegir la cotización, se cargan pagos (50/50 web si aplica), marketing, pauta, plazos, vigencia y forma de
-          trabajo. No necesitas rellenar los términos salvo que quieras ajustar algo puntual.
+      {termsError ? (
+        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{termsError}</p>
+      ) : termsReady ? (
+        <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          Pagos, plazos y cláusulas se completan solos desde la cotización. El trabajo inicia al firmar el contrato.
         </p>
-        {termsError ? <p className="mt-2 text-red-700">{termsError}</p> : null}
-        {paymentSchedule ? (
-          <dl className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
-            <div>
-              <dt className="font-medium text-slate-500">Anticipo</dt>
-              <dd>{advanceNote}</dd>
-            </div>
-            <div>
-              <dt className="font-medium text-slate-500">Saldo</dt>
-              <dd>{balanceNote}</dd>
-            </div>
-            <div className="sm:col-span-2">
-              <dt className="font-medium text-slate-500">Calendario</dt>
-              <dd className="whitespace-pre-wrap">{paymentSchedule}</dd>
-            </div>
-            <div>
-              <dt className="font-medium text-slate-500">Inicio</dt>
-              <dd>{startDate}</dd>
-            </div>
-            <div>
-              <dt className="font-medium text-slate-500">Entrega</dt>
-              <dd>{deliveryDate}</dd>
-            </div>
-          </dl>
-        ) : null}
-        <div className="mt-3 flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={() => selected && applyTermsFromQuote(selected)}
-            className="text-sm font-medium text-brand hover:underline"
-          >
-            Regenerar desde cotización
-          </button>
-          <button
-            type="button"
-            onClick={() => setEditTerms((value) => !value)}
-            className="text-sm font-medium text-slate-600 hover:underline"
-          >
-            {editTerms ? 'Ocultar editor de términos' : 'Editar términos manualmente'}
-          </button>
-        </div>
-      </div>
+      ) : null}
+      {!termsError ? (
+        <button
+          type="button"
+          onClick={() => setEditTerms((value) => !value)}
+          className="text-sm text-slate-500 underline-offset-2 hover:text-brand hover:underline"
+        >
+          {editTerms ? 'Ocultar términos avanzados' : 'Ajustar términos (opcional)'}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => selected && applyTermsFromQuote(selected)}
+          className="text-sm font-medium text-brand hover:underline"
+        >
+          Reintentar desde cotización
+        </button>
+      )}
 
       {editTerms ? (
         <div className="grid sm:grid-cols-2 gap-4">
@@ -460,7 +438,7 @@ export function ContractCreateForm({
         disabled={loading || !selected}
         className="px-6 py-3 rounded-xl bg-brand text-white font-medium disabled:opacity-50"
       >
-        {loading ? 'Creando…' : 'Crear contrato con términos automáticos'}
+        {loading ? 'Creando…' : 'Crear contrato'}
       </button>
     </form>
   )

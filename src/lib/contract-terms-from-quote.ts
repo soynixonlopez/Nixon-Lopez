@@ -1,4 +1,3 @@
-import { adBudgetRecommendationCopy } from '@/lib/commercial-settings'
 import { CONTRACT_PAYMENT_BANK, CONTRACT_PAYMENT_YAPPY } from '@/lib/contract-payment'
 import { parseConfiguratorFromPayload } from '@/lib/admin-configurator-quote'
 import { mergeCourtesyCatalog } from '@/lib/courtesy-addons'
@@ -33,13 +32,11 @@ export type DerivedContractTerms = {
   customNotes: string
 }
 
+export const CONTRACT_START_FROM_SIGNATURE =
+  'El proyecto inicia a partir de la firma del presente contrato por ambas partes.'
+
 const DEFAULT_WEB_DELIVERY =
-  'Plazo según la cotización aceptada; el conteo inicia con el anticipo acordado y la entrega de materiales por el cliente.'
-
-const STANDARD_WORK_CLARIFICATION = `Forma de trabajo Nixon López Services: alcance y precios congelados según la cotización aceptada; pagos en las fechas pactadas; revisiones dentro del límite contratado; cambios fuera de alcance se cotizan por separado; el cliente aprueba diseños/contenidos y entrega materiales y accesos a tiempo.`
-
-const WEB_REVISION_NOTE =
-  'Cada ronda de revisión del desarrollo web corresponde a un conjunto consolidado de observaciones sobre el trabajo entregado. Los cambios que amplíen el alcance, agreguen funcionalidades o incorporen nuevas páginas se cotizan por separado.'
+  'Plazo según la cotización aceptada; el conteo inicia con la firma, el anticipo y la entrega de materiales por el cliente.'
 
 function fmtUsd(amount: number) {
   return `USD $${amount.toFixed(2)}`
@@ -70,17 +67,23 @@ function resolveDelivery(raw: unknown, commercial: CommercialSnapshot, hasWeb: b
   const cfg = parseConfiguratorFromPayload(raw)
   if (cfg?.deliveryDate?.trim()) return cfg.deliveryDate.trim()
   if (hasWeb && cfg?.timeline) {
-    return `Preferencia en cotización: ${getTimelineLabel(cfg.timeline)}. ${DEFAULT_WEB_DELIVERY}`
+    return `${DEFAULT_WEB_DELIVERY} Preferencia del cliente: ${getTimelineLabel(cfg.timeline)}.`
   }
   if (hasWeb) return DEFAULT_WEB_DELIVERY
   return 'No aplica entrega de proyecto web (solo servicio mensual).'
 }
 
-function resolveMarketingStart(commercial: CommercialSnapshot, hasMarketing: boolean, startDefault: string) {
+function resolveContractStart(commercial: CommercialSnapshot) {
+  const value = commercial.startDate?.trim()
+  if (value && /firma/i.test(value)) return value
+  return CONTRACT_START_FROM_SIGNATURE
+}
+
+function resolveMarketingStart(commercial: CommercialSnapshot, hasMarketing: boolean) {
   if (!hasMarketing) return ''
-  if (commercial.marketingStartDate?.trim()) return commercial.marketingStartDate.trim()
-  if (commercial.startDate?.trim()) return commercial.startDate.trim()
-  return startDefault
+  const value = commercial.marketingStartDate?.trim()
+  if (value && /firma/i.test(value)) return value
+  return CONTRACT_START_FROM_SIGNATURE
 }
 
 function adBudgetScheduleLine(commercial: CommercialSnapshot) {
@@ -335,12 +338,6 @@ export function deriveContractTermsFromQuote(
   const mktLabel = commercial.marketingLabel?.trim() || 'marketing digital'
   const storiesPerWeek = commercial.storiesPerWeek ?? MARKETING_STORIES_PER_WEEK
 
-  const startDefault = new Date().toLocaleDateString('es-PA', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-
   let derivedAdvance = ''
   let derivedBalance = ''
   const scheduleLines: string[] = []
@@ -394,10 +391,10 @@ export function deriveContractTermsFromQuote(
 
   const derivedTerm =
     hasWeb && hasMarketing
-      ? `Desarrollo web: desde la fecha de inicio acordada hasta la entrega del proyecto y el cumplimiento de las condiciones de entrega. Marketing: servicio mensual con la duración inicial y condiciones acordadas.`
+      ? `Desarrollo web: desde la firma de este contrato hasta la entrega acordada. Marketing: servicio mensual mientras esté vigente.`
       : hasWeb
-        ? 'Desde la fecha de inicio acordada hasta la entrega del proyecto y el cumplimiento de las condiciones de entrega establecidas.'
-        : 'Servicio mensual de marketing con la duración inicial y las condiciones acordadas entre las partes.'
+        ? 'Desde la firma de este contrato hasta la entrega del proyecto y el cumplimiento de las condiciones de entrega.'
+        : 'Servicio mensual de marketing desde la firma de este contrato, con las condiciones acordadas.'
 
   const derivedRenewal = hasMarketing
     ? 'Renovación mensual según las condiciones de renovación aceptadas por las partes.'
@@ -414,29 +411,15 @@ export function deriveContractTermsFromQuote(
       customNotes = customNotes ? `${customNotes}\n\n${comments.trim()}` : comments.trim()
     }
   }
-  customNotes = customNotes
-    ? `${customNotes}\n\n${STANDARD_WORK_CLARIFICATION}`
-    : STANDARD_WORK_CLARIFICATION
-  if (hasWeb) {
-    customNotes = `${customNotes}\n\n${WEB_REVISION_NOTE}`
-  }
-  const managesAds = (commercial.campaigns ?? 0) > 0
-  const recommended = commercial.recommendedAdBudgetUsd ?? totals.recommendedAdBudget ?? 150
-  if (managesAds && recommended > 0) {
-    customNotes = customNotes
-      ? `${customNotes}\n\n${adBudgetRecommendationCopy(recommended)}`
-      : adBudgetRecommendationCopy(recommended)
-  }
-
   return {
     revisionRounds: pickRounds(commercial.revisionRounds, derivedRounds),
     paymentMethod: pickText(commercial.paymentMethod, defaultPaymentMethod()),
     advanceNote: pickText(commercial.advanceNote, derivedAdvance),
     balanceNote: pickText(commercial.balanceNote, derivedBalance),
     paymentSchedule: pickText(commercial.paymentSchedule, derivedSchedule),
-    startDate: pickText(commercial.startDate, startDefault),
+    startDate: resolveContractStart(commercial),
     deliveryDate: pickText(commercial.deliveryDate, resolveDelivery(raw, commercial, hasWeb)),
-    marketingStartDate: pickText(commercial.marketingStartDate, resolveMarketingStart(commercial, hasMarketing, startDefault)),
+    marketingStartDate: resolveMarketingStart(commercial, hasMarketing),
     marketingFirstPayment: pickText(commercial.marketingFirstPayment, derivedMktFirst),
     termNote: pickText(commercial.termNote, derivedTerm),
     renewalNote: pickText(commercial.renewalNote, derivedRenewal),
