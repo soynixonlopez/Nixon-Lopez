@@ -12,6 +12,10 @@ import {
   quotePayloadHasWeb,
 } from '@/lib/contract-terms-from-quote'
 import { extractQuoteServiceSnapshots } from '@/lib/quote-pricing'
+import {
+  WEB_INSTALLMENT_PLANS,
+  type WebInstallmentPlanId,
+} from '@/lib/contract-web-installments'
 
 type QuoteOpt = {
   id: string
@@ -61,6 +65,7 @@ export function ContractCreateForm({
   const [marketingStartDate, setMarketingStartDate] = useState('')
   const [marketingFirstPayment, setMarketingFirstPayment] = useState('')
   const [termsError, setTermsError] = useState('')
+  const [webInstallmentPlan, setWebInstallmentPlan] = useState<WebInstallmentPlanId>('half-half')
 
   const quoteAssessment = useMemo(() => {
     if (!selected?.raw_payload) return null
@@ -73,13 +78,16 @@ export function ContractCreateForm({
   }, [selected])
 
   const hasMarketing = Boolean(enrichedPayload && quotePayloadHasMarketing(enrichedPayload))
+  const hasWeb = Boolean(quoteAssessment && quoteAssessment.displayWebOnce > 0)
 
   const applyTermsFromQuote = useCallback(
     (quote: QuoteOpt) => {
       setTermsError('')
       const meta = quoteMeta(quote)
       const enriched = enrichQuotePayloadForContract(quote.raw_payload, meta)
-      const derived = deriveContractTermsFromQuote(enriched ?? quote.raw_payload, meta)
+      const derived = deriveContractTermsFromQuote(enriched ?? quote.raw_payload, meta, {
+        webInstallmentPlan,
+      })
       if (!derived) {
         setTermsError(
           'No se pudieron calcular los términos desde esta cotización. Revisa que tenga servicios y montos guardados.',
@@ -105,11 +113,12 @@ export function ContractCreateForm({
         setMarketingFirstPayment('')
       }
     },
-    [],
+    [webInstallmentPlan],
   )
 
   useEffect(() => {
     if (!selected) return
+    setWebInstallmentPlan('half-half')
     const extra = parseClientExtraFromPayload(selected.raw_payload)
     if (extra.client_ruc) setClientTaxId(extra.client_ruc)
     if (extra.client_address) setClientAddress(extra.client_address)
@@ -117,9 +126,24 @@ export function ContractCreateForm({
     applyTermsFromQuote(selected)
   }, [selected, applyTermsFromQuote])
 
+  useEffect(() => {
+    if (!selected || !hasWeb || editTerms) return
+    const meta = quoteMeta(selected)
+    const enriched = enrichQuotePayloadForContract(selected.raw_payload, meta)
+    const derived = deriveContractTermsFromQuote(enriched ?? selected.raw_payload, meta, {
+      webInstallmentPlan,
+    })
+    if (!derived) return
+    setAdvanceNote(derived.advanceNote)
+    setBalanceNote(derived.balanceNote)
+    setPaymentSchedule(derived.paymentSchedule)
+  }, [webInstallmentPlan, selected, hasWeb, editTerms])
+
   function resolveTermsForSubmit(quote: QuoteOpt) {
     const enriched = enrichQuotePayloadForContract(quote.raw_payload)
-    const derived = deriveContractTermsFromQuote(enriched ?? quote.raw_payload, quoteMeta(quote))
+    const derived = deriveContractTermsFromQuote(enriched ?? quote.raw_payload, quoteMeta(quote), {
+      webInstallmentPlan,
+    })
     if (!derived) return null
     if (editTerms) {
       return {
@@ -227,6 +251,7 @@ export function ContractCreateForm({
                 terminationNote: terms.terminationNote.trim(),
                 marketingStartDate: terms.marketingStartDate.trim(),
                 marketingFirstPayment: terms.marketingFirstPayment.trim(),
+                webInstallmentPlan: hasWeb ? webInstallmentPlan : undefined,
               },
               selected_services:
                 extractQuoteServiceSnapshots(enriched).length > 0
@@ -355,6 +380,28 @@ export function ContractCreateForm({
             <> Honorarios: ${quoteAssessment.displayMonthly.toFixed(2)}/mes.</>
           ) : null}
         </p>
+      ) : null}
+      {hasWeb && !quoteAssessment?.incomplete ? (
+        <label className="block">
+          <span className="text-xs text-slate-400">Cuotas del desarrollo web</span>
+          <select
+            value={webInstallmentPlan}
+            onChange={(e) => {
+              setWebInstallmentPlan(e.target.value as WebInstallmentPlanId)
+              setEditTerms(false)
+            }}
+            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
+          >
+            {WEB_INSTALLMENT_PLANS.map((plan) => (
+              <option key={plan.id} value={plan.id}>
+                {plan.label}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-slate-500">
+            {WEB_INSTALLMENT_PLANS.find((p) => p.id === webInstallmentPlan)?.description}
+          </p>
+        </label>
       ) : null}
       {!termsError ? (
         <button

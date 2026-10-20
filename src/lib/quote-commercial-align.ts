@@ -35,7 +35,10 @@ function breakdownLinesFromRaw(raw: unknown): CommercialTotals['lines'] | null {
     const monthlyHint =
       services.some((service) => service.monthly && service.lines.some((line) => line.label === label)) ||
       /mensual|\/?mes/i.test(label)
-    const externalHint = /dominio|hosting|correo|meta|pauta|pasarela|tercero|externo/i.test(label)
+    const externalHint =
+      /dominio|hosting|correo|presupuesto publicitario|pauta|meta ads|comisiones de pasarela|gasto externo|lo paga el cliente/i.test(
+        label,
+      ) && !/^(sitio|sistema|tienda|landing|desarrollo web)/i.test(label.trim())
     const billing: BillingKind = monthlyHint ? 'monthly' : externalHint ? 'external' : 'once'
     lines.push({ id: `line-${lines.length}`, label, amount, billing })
   }
@@ -75,7 +78,7 @@ function resolveMarketingPlanId(raw: unknown, snapshot: CommercialSnapshot, meta
 
 function normalizeLineIds(lines: CommercialTotals['lines'], webId: WebPlanId | null, mktId: MarketingPlanId | null) {
   return lines.map((line, index) => {
-    if (line.id.startsWith('project-') || line.id.startsWith('line-')) return line
+    if (line.id.startsWith('project-')) return line
     if (webId && line.billing === 'once' && index === 0) {
       return { ...line, id: `project-${webId}` }
     }
@@ -83,6 +86,35 @@ function normalizeLineIds(lines: CommercialTotals['lines'], webId: WebPlanId | n
       return { ...line, id: `project-${mktId}` }
     }
     return { ...line, id: line.id || `line-${index}` }
+  })
+}
+
+function reclassifyMainProjectLines(
+  lines: CommercialTotals['lines'],
+  webPlanId: WebPlanId | null,
+  marketingPlanId: MarketingPlanId | null,
+  meta?: QuoteContractMeta,
+) {
+  const planLabel = (meta?.serviceLabel ?? (webPlanId ? getCatalogPlan(webPlanId)?.label : '') ?? '').toLowerCase()
+  return lines.map((line) => {
+    const label = line.label.toLowerCase()
+    const looksLikeMainWeb =
+      webPlanId &&
+      line.amount > 0 &&
+      (line.id === `project-${webPlanId}` ||
+        (planLabel && label.includes(planLabel.slice(0, Math.min(24, planLabel.length))) ) ||
+        /sistema web|tienda online|sitio web|landing page|desarrollo web|panel de administraci/i.test(line.label))
+    if (looksLikeMainWeb) {
+      return { ...line, id: `project-${webPlanId}`, billing: 'once' as BillingKind }
+    }
+    const looksLikeMainMkt =
+      marketingPlanId &&
+      line.amount > 0 &&
+      (line.id === `project-${marketingPlanId}` || /presencia digital|marketing integral|publicidad y crecimiento/i.test(line.label))
+    if (looksLikeMainMkt) {
+      return { ...line, id: `project-${marketingPlanId}`, billing: 'monthly' as BillingKind }
+    }
+    return line
   })
 }
 
@@ -133,16 +165,38 @@ export function alignCommercialSnapshotToQuote(
   }
 
   lines = normalizeLineIds(lines, webPlanId, marketingPlanId)
+  lines = reclassifyMainProjectLines(lines, webPlanId, marketingPlanId, meta)
 
   let oneTime = sumBilling(lines, 'once')
   let monthly = sumBilling(lines, 'monthly')
   let external = sumBilling(lines, 'external')
 
   const webOnceFromLines = hasWeb ? webLineAmount(lines, webPlanId) : 0
-  if (hasWeb && webOnceFromLines > 0) {
-    oneTime = webOnceFromLines + lines.filter((l) => l.billing === 'once' && l.id.startsWith('feature-')).reduce((s, l) => s + l.amount, 0)
-    oneTime += lines.filter((l) => l.billing === 'once' && l.id === 'extra-pages').reduce((s, l) => s + l.amount, 0)
-    oneTime += lines.filter((l) => l.billing === 'once' && l.id === 'ads-setup').reduce((s, l) => s + l.amount, 0)
+  if (hasWeb) {
+    const onceExtras = lines
+      .filter(
+        (l) =>
+          l.billing === 'once' &&
+          l.id !== `project-${webPlanId}` &&
+          (l.id.startsWith('feature-') || l.id === 'extra-pages' || l.id === 'ads-setup' || l.id.startsWith('line-')),
+      )
+      .reduce((s, l) => s + l.amount, 0)
+    if (webOnceFromLines > 0) {
+      oneTime = Number((webOnceFromLines + onceExtras).toFixed(2))
+    } else if (oneTime <= 0 && meta?.totalAmount != null && meta.totalAmount > 0 && !hasMarketing) {
+      oneTime = meta.totalAmount
+      if (webPlanId) {
+        const idx = lines.findIndex((l) => l.id === `project-${webPlanId}`)
+        if (idx >= 0) lines[idx] = { ...lines[idx], billing: 'once', amount: meta.totalAmount }
+        else
+          lines.push({
+            id: `project-${webPlanId}`,
+            label: meta.serviceLabel?.trim() || getCatalogPlan(webPlanId)?.label || 'Desarrollo web',
+            amount: meta.totalAmount,
+            billing: 'once',
+          })
+      }
+    }
   }
 
   if (hasMarketing && monthly === 0) {

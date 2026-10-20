@@ -3,6 +3,10 @@ import {
   alignCommercialSnapshotToQuote,
   refreshExternalTotalsFromConfigurator,
 } from '@/lib/quote-commercial-align'
+import {
+  buildWebInstallmentTerms,
+  type WebInstallmentPlanId,
+} from '@/lib/contract-web-installments'
 import { parseConfiguratorFromPayload } from '@/lib/admin-configurator-quote'
 import { mergeCourtesyCatalog, resolveCourtesyAddonsForWebPlans } from '@/lib/courtesy-addons'
 import { extractQuoteServiceSnapshots } from '@/lib/quote-pricing'
@@ -54,12 +58,6 @@ function pickText(existing: string | null | undefined, derived: string) {
 function pickRounds(existing: number | null | undefined, derived: string) {
   if (existing != null && Number.isFinite(existing) && existing >= 0) return String(existing)
   return derived
-}
-
-function splitWeb50(total: number) {
-  const advance = Number((total / 2).toFixed(2))
-  const balance = Number((total - advance).toFixed(2))
-  return { advance, balance }
 }
 
 function defaultPaymentMethod() {
@@ -442,9 +440,14 @@ export type QuoteContractMeta = {
   serviceLabel?: string | null
 }
 
+export type DeriveContractTermsOptions = {
+  webInstallmentPlan?: WebInstallmentPlanId
+}
+
 export function deriveContractTermsFromQuote(
   raw: unknown,
   meta?: QuoteContractMeta,
+  options?: DeriveContractTermsOptions,
 ): DerivedContractTerms | null {
   let commercial = resolveCommercialSnapshotForContract(raw, meta)
   if (!commercial && meta?.totalAmount != null && meta.totalAmount > 0) {
@@ -475,12 +478,13 @@ export function deriveContractTermsFromQuote(
   const scheduleLines: string[] = []
 
   if (hasWeb && oneTime > 0) {
-    const { advance, balance } = splitWeb50(oneTime)
-    derivedAdvance = `Anticipo del desarrollo web: ${fmtUsd(advance)} (50% de ${fmtUsd(oneTime)}), pagadero antes de iniciar el proyecto.`
-    derivedBalance = `Saldo del desarrollo web: ${fmtUsd(balance)} (50% restante), pagadero al finalizar el desarrollo y antes de la entrega definitiva.`
-    scheduleLines.push(`${webLabel} (pago único): ${fmtUsd(oneTime)}`)
-    scheduleLines.push(`Anticipo web (50%): ${fmtUsd(advance)} — al inicio`)
-    scheduleLines.push(`Saldo web (50%): ${fmtUsd(balance)} — al finalizar, antes de la entrega definitiva`)
+    const plan = options?.webInstallmentPlan ?? 'half-half'
+    const inst = buildWebInstallmentTerms(oneTime, plan, webLabel)
+    derivedAdvance = inst.advanceNote
+    derivedBalance = inst.balanceNote
+    for (const row of inst.paymentSchedule.split('\n').filter(Boolean)) {
+      scheduleLines.push(row)
+    }
   } else if (hasWeb) {
     derivedAdvance = 'Anticipo del desarrollo web: 50% del total acordado en cotización, antes de iniciar.'
     derivedBalance = 'Saldo del desarrollo web: 50% restante, al finalizar y antes de la entrega definitiva.'

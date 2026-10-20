@@ -233,6 +233,46 @@ scenarios.push({
 })
 
 scenarios.push({
+  name: 'Reservas: Pasarela en nombre no es gasto externo',
+  run() {
+    const raw = {
+      configurator: {
+        projectType: 'reservas',
+        webPlanIds: ['reservas'],
+        features: ['payment-gateway'],
+        hasDomain: 'si',
+        hasHosting: 'si',
+        emailCount: 0,
+        channels: ['instagram', 'facebook'],
+      },
+      breakdown: {
+        lines: [
+          { label: 'Sistema Web de Reservas con Pasarela de Pago', amount: 450 },
+          { label: 'Ajuste comercial', amount: -5 },
+        ],
+      },
+      totalNumeric: 445,
+      servicio: 'Sistema Web de Reservas con Pasarela de Pago',
+      tipoServicio: 'reservas',
+    }
+    const a = assessQuoteForContract(raw, {
+      totalAmount: 445,
+      serviceId: 'reservas',
+      serviceLabel: 'Sistema Web de Reservas con Pasarela de Pago',
+    })
+    if (a.incomplete) return { ok: false, detail: `incomplete warnings=${a.warnings.join(';')}` }
+    if (a.displayWebOnce < 444.99 || a.displayWebOnce > 445.01) {
+      return { ok: false, detail: `oneTime=${a.displayWebOnce}` }
+    }
+    const single = deriveContractTermsFromQuote(raw, { totalAmount: 445, serviceId: 'reservas' }, { webInstallmentPlan: 'single' })
+    if (!single?.advanceNote.includes('445.00')) return { ok: false, detail: 'single' }
+    const thirds = deriveContractTermsFromQuote(raw, { totalAmount: 445, serviceId: 'reservas' }, { webInstallmentPlan: 'three-thirds' })
+    if (!thirds?.paymentSchedule.includes('Cuota 3')) return { ok: false, detail: 'thirds' }
+    return { ok: true }
+  },
+})
+
+scenarios.push({
   name: 'Términos listos con snapshot congelado',
   run() {
     const state = baseState({ projectType: 'web-panel', webPlanIds: ['web-panel'] })
