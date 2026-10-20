@@ -617,6 +617,8 @@ export type CommercialSnapshot = {
   renewalNote: string
   terminationNote: string
   courtesyAddons?: Array<{ id: string; name: string; description: string }>
+  /** Plan de cuotas del honorario web acordado al crear el contrato. */
+  webInstallmentPlan?: 'single' | 'half-half' | 'three-thirds'
 }
 
 export function emptyCommercialTerms() {

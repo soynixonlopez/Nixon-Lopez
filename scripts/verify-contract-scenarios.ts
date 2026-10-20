@@ -9,6 +9,7 @@ import {
   enrichQuotePayloadForContract,
 } from '../src/lib/contract-terms-from-quote'
 import { buildCommercialContractClauses, commercialTermsReady, readCommercialSnapshot } from '../src/lib/contract-commercial'
+import { buildEconomicSummaryRows, buildEconomicTotalsFootnotes } from '../src/lib/contract-economic-summary'
 import { buildContractIntroSegments } from '../src/lib/contracts'
 import type { WebPlanId, MarketingPlanId } from '../src/lib/service-catalog'
 import { WEB_PLANS, MARKETING_PLANS } from '../src/lib/service-catalog'
@@ -268,6 +269,44 @@ scenarios.push({
     if (!single?.advanceNote.includes('445.00')) return { ok: false, detail: 'single' }
     const thirds = deriveContractTermsFromQuote(raw, { totalAmount: 445, serviceId: 'reservas' }, { webInstallmentPlan: 'three-thirds' })
     if (!thirds?.paymentSchedule.includes('Cuota 3')) return { ok: false, detail: 'thirds' }
+    return { ok: true }
+  },
+})
+
+scenarios.push({
+  name: 'Resumen económico: 3 cuotas y sin precio de agregados',
+  run() {
+    const state = baseState({
+      projectType: 'reservas',
+      webPlanIds: ['reservas'],
+      features: ['blog'],
+    })
+    const snap = buildCommercialSnapshot(state)
+    if (!snap) return { ok: false, detail: 'snap' }
+    const merged = {
+      ...snap,
+      webInstallmentPlan: 'three-thirds' as const,
+      revisionRounds: 2,
+      paymentMethod: 'Transferencia',
+      advanceNote: 'Cuota 1',
+      balanceNote: 'Cuotas 2 y 3',
+      paymentSchedule: 'Cuota 3 al final',
+      startDate: 'Al firmar',
+      deliveryDate: 'Al entregar',
+      termNote: 'Vigencia',
+      renewalNote: 'No',
+      terminationNote: 'Incumplimiento',
+    }
+    const rows = buildEconomicSummaryRows(merged)
+    const foot = buildEconomicTotalsFootnotes(merged)
+    if (rows.some((r) => /blog/i.test(r.service) && /\$40/.test(r.price))) {
+      return { ok: false, detail: 'blog priced' }
+    }
+    const cuotaRows = rows.filter((r) => /cuota [123]/i.test(r.service))
+    if (cuotaRows.length !== 3) return { ok: false, detail: `cuotas=${cuotaRows.length}` }
+    if (!foot.some((f) => /3 cuotas/i.test(f))) return { ok: false, detail: 'footnote' }
+    const main = rows.find((r) => r.price.includes(snap.totals.oneTime.toFixed(2)) && /reservas|desarrollo/i.test(r.service))
+    if (!main) return { ok: false, detail: 'main total row' }
     return { ok: true }
   },
 })

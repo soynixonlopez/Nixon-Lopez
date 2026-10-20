@@ -79,3 +79,86 @@ export function buildWebInstallmentTerms(
     ].join('\n'),
   }
 }
+
+export type WebInstallmentEconomicRow = {
+  service: string
+  paymentCondition: string
+  dueDate: string
+  amount: number
+}
+
+export function resolveWebInstallmentPlan(snapshot: {
+  webInstallmentPlan?: WebInstallmentPlanId | null
+  paymentSchedule?: string | null
+  advanceNote?: string | null
+  balanceNote?: string | null
+}): WebInstallmentPlanId {
+  const explicit = snapshot.webInstallmentPlan
+  if (explicit === 'single' || explicit === 'half-half' || explicit === 'three-thirds') return explicit
+  const sched = (snapshot.paymentSchedule ?? '').toLowerCase()
+  if (/cuota 3|tercera cuota/.test(sched)) return 'three-thirds'
+  const advance = (snapshot.advanceNote ?? '').toLowerCase()
+  const balance = (snapshot.balanceNote ?? '').toLowerCase()
+  if (/pago único del desarrollo/.test(advance) && /no aplica saldo fraccionado/.test(balance)) return 'single'
+  return 'half-half'
+}
+
+export function buildWebInstallmentEconomicRows(
+  total: number,
+  plan: WebInstallmentPlanId,
+  due: { start?: string | null; delivery?: string | null },
+): WebInstallmentEconomicRow[] {
+  const startDue = due.start?.trim() || 'Al firmar y antes del inicio'
+  const finalDue = due.delivery?.trim() || 'Al completar el desarrollo'
+
+  if (plan === 'single') {
+    return [
+      {
+        service: 'Pago único del desarrollo web',
+        amount: total,
+        paymentCondition: 'Según calendario de pagos del contrato',
+        dueDate: finalDue,
+      },
+    ]
+  }
+
+  if (plan === 'half-half') {
+    const [first, second] = splitAmount(total, 2)
+    return [
+      {
+        service: 'Cuota 1 — desarrollo web (50%)',
+        amount: first,
+        paymentCondition: 'Antes de iniciar el desarrollo',
+        dueDate: startDue,
+      },
+      {
+        service: 'Cuota 2 — desarrollo web (50%)',
+        amount: second,
+        paymentCondition: 'Al finalizar y antes de la entrega definitiva',
+        dueDate: finalDue,
+      },
+    ]
+  }
+
+  const [c1, c2, c3] = splitAmount(total, 3)
+  return [
+    {
+      service: 'Cuota 1 — desarrollo web (~33,33%)',
+      amount: c1,
+      paymentCondition: 'Antes de iniciar el desarrollo',
+      dueDate: startDue,
+    },
+    {
+      service: 'Cuota 2 — desarrollo web (~33,33%)',
+      amount: c2,
+      paymentCondition: 'Hito intermedio acordado entre las partes',
+      dueDate: 'Según calendario de pagos',
+    },
+    {
+      service: 'Cuota 3 — desarrollo web (saldo)',
+      amount: c3,
+      paymentCondition: 'Al finalizar y antes de la entrega definitiva',
+      dueDate: finalDue,
+    },
+  ]
+}

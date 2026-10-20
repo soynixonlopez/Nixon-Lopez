@@ -1,4 +1,8 @@
 import { isCourtesyAddonId } from '@/lib/courtesy-addons'
+import {
+  buildWebInstallmentEconomicRows,
+  resolveWebInstallmentPlan,
+} from '@/lib/contract-web-installments'
 import type { CommercialSnapshot } from '@/lib/service-catalog'
 
 export type EconomicSummaryRow = {
@@ -35,44 +39,59 @@ export function buildEconomicSummaryRows(snapshot: CommercialSnapshot): Economic
   const rows: EconomicSummaryRow[] = []
   const totals = snapshot.totals
   const hasWeb = Boolean(snapshot.webPlanId || (snapshot.webPlans?.length ?? 0) > 0)
+  const webLabel =
+    snapshot.webLabel?.trim() ||
+    snapshot.webPlans?.map((p) => p.label).join(' + ') ||
+    'Desarrollo web acordado'
 
   for (const line of totals.lines) {
+    if (line.billing === 'once') continue
     if (!isBillableContractLine(line.id, line.label)) continue
     if (line.amount <= 0 && line.billing !== 'external') continue
     rows.push({
       service: line.label,
       billingType: billingLabel(line.billing),
       price: money(line.amount),
-      frequency: line.billing === 'monthly' ? 'Mensual' : line.billing === 'once' ? 'Una vez' : 'Según consumo',
+      frequency: line.billing === 'monthly' ? 'Mensual' : 'Según consumo',
       paymentCondition:
         line.billing === 'external'
           ? 'Lo paga el cliente al proveedor; no es honorario del prestador'
-          : line.billing === 'monthly'
-            ? 'Vencimiento mensual acordado'
-            : 'Según calendario del contrato (anticipo / saldo)',
+          : 'Vencimiento mensual acordado',
       dueDate: line.billing === 'monthly' ? snapshot.marketingFirstPayment?.trim() || 'Primer mes acordado' : 'Ver calendario',
     })
   }
 
   if (hasWeb && totals.oneTime > 0) {
-    const advance = Number((totals.oneTime / 2).toFixed(2))
-    const balance = Number((totals.oneTime - advance).toFixed(2))
+    const plan = resolveWebInstallmentPlan(snapshot)
+    const totalBilling =
+      plan === 'single'
+        ? 'Pago único (honorarios web)'
+        : plan === 'three-thirds'
+          ? 'Honorarios web (3 cuotas)'
+          : 'Honorarios web (2 cuotas 50/50)'
+
     rows.push({
-      service: 'Anticipo desarrollo web (50%)',
-      billingType: 'Pago único',
-      price: money(advance),
-      frequency: 'Una vez',
-      paymentCondition: 'Antes de iniciar el desarrollo',
-      dueDate: snapshot.startDate?.trim() || 'Al firmar y antes del inicio',
+      service: webLabel,
+      billingType: totalBilling,
+      price: money(totals.oneTime),
+      frequency: plan === 'single' ? 'Una vez' : `${plan === 'three-thirds' ? '3' : '2'} pagos`,
+      paymentCondition: 'Total de honorarios del desarrollo web aceptado en cotización',
+      dueDate: 'Ver calendario de pagos del contrato',
     })
-    rows.push({
-      service: 'Saldo desarrollo web (50%)',
-      billingType: 'Pago único',
-      price: money(balance),
-      frequency: 'Una vez',
-      paymentCondition: 'Al finalizar y antes de la entrega definitiva',
-      dueDate: 'Al completar el desarrollo',
-    })
+
+    for (const inst of buildWebInstallmentEconomicRows(totals.oneTime, plan, {
+      start: snapshot.startDate,
+      delivery: snapshot.deliveryDate,
+    })) {
+      rows.push({
+        service: inst.service,
+        billingType: plan === 'single' ? 'Pago único' : 'Cuota de honorarios',
+        price: money(inst.amount),
+        frequency: 'Una vez',
+        paymentCondition: inst.paymentCondition,
+        dueDate: inst.dueDate,
+      })
+    }
   }
 
   const managesAds = (snapshot.campaigns ?? 0) > 0
@@ -107,9 +126,16 @@ export function buildEconomicTotalsFootnotes(snapshot: CommercialSnapshot) {
   const totals = snapshot.totals
   const approvedAd = snapshot.approvedAdBudgetUsd ?? totals.approvedAdBudget ?? 0
   const lines: string[] = []
+  const plan = resolveWebInstallmentPlan(snapshot)
 
   if (totals.oneTime > 0) {
-    lines.push(`Total desarrollo web (pago único): ${money(totals.oneTime)}.`)
+    if (plan === 'three-thirds') {
+      lines.push(`Total desarrollo web (honorarios, pagadero en 3 cuotas): ${money(totals.oneTime)}.`)
+    } else if (plan === 'single') {
+      lines.push(`Total desarrollo web (pago único de honorarios): ${money(totals.oneTime)}.`)
+    } else {
+      lines.push(`Total desarrollo web (honorarios, pagadero en 2 cuotas 50/50): ${money(totals.oneTime)}.`)
+    }
   }
   if (totals.monthly > 0) {
     lines.push(`Honorarios mensuales de marketing (y extras recurrentes en cotización): ${money(totals.monthly)}/mes.`)
@@ -123,6 +149,9 @@ export function buildEconomicTotalsFootnotes(snapshot: CommercialSnapshot) {
   } else if (totals.monthly > 0) {
     lines.push(`Importe mensual recurrente (honorarios): ${money(totals.nextMonthly)}/mes.`)
   }
+  lines.push(
+    'Los módulos y agregados incluidos en el alcance (blog, formularios, pasarela, etc.) forman parte del desarrollo web y no se facturan como líneas económicas aparte.',
+  )
   lines.push('Los agregados de cortesía no aparecen como líneas económicas independientes.')
 
   return lines
