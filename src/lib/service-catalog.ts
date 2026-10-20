@@ -102,37 +102,60 @@ export function appendWebExternalInfraLines(
   }
 }
 
+export function isExternalInfraLine(line: CommercialTotals['lines'][number]) {
+  if (line.id === 'gateway-fees') return false
+  if (INFRA_LINE_IDS.has(line.id)) return true
+  if (line.billing === 'once' || line.billing === 'monthly') return false
+  return /dominio|hosting|correo profesional|correos profesionales/i.test(line.label)
+}
+
+const INFRA_YEAR1_LINE = (): CommercialTotals['lines'][number] => ({
+  id: 'infra-year1',
+  label: 'Dominio, correo y hosting (1.er año; lo paga el cliente al proveedor)',
+  amount: PRICE_INFRA_FIRST_YEAR_BUNDLE_USD,
+  billing: 'external',
+})
+
 export function collapseExternalInfraLinesForContract(lines: CommercialTotals['lines']) {
   if (lines.some((line) => line.id === 'infra-year1')) {
-    return lines.filter((line) => !INFRA_LINE_IDS.has(line.id) || line.id === 'infra-year1')
+    return lines.filter((line) => !isExternalInfraLine(line) || line.id === 'infra-year1')
   }
-  const hasDomain = lines.some((line) => line.id === 'domain' && line.billing === 'external')
-  const hasHosting = lines.some((line) => line.id === 'hosting' && line.billing === 'external')
-  const hasLegacyBundle = lines.some((line) => line.id === 'domain-email-year1')
-  if ((hasDomain && hasHosting) || (hasLegacyBundle && hasHosting) || (hasDomain && hasLegacyBundle)) {
-    return [
-      ...lines.filter((line) => !INFRA_LINE_IDS.has(line.id)),
-      {
-        id: 'infra-year1',
-        label: 'Dominio, correo y hosting (1.er año; lo paga el cliente al proveedor)',
-        amount: PRICE_INFRA_FIRST_YEAR_BUNDLE_USD,
-        billing: 'external' as const,
-      },
-    ]
+  const infra = lines.filter(isExternalInfraLine)
+  if (infra.length >= 2) {
+    return [...lines.filter((line) => !isExternalInfraLine(line)), INFRA_YEAR1_LINE()]
   }
-  if (hasLegacyBundle) {
+  if (infra.some((line) => line.id === 'domain-email-year1')) {
     return lines.map((line) =>
-      line.id === 'domain-email-year1'
-        ? {
-            ...line,
-            id: 'infra-year1',
-            label: 'Dominio, correo y hosting (1.er año; lo paga el cliente al proveedor)',
-            amount: PRICE_INFRA_FIRST_YEAR_BUNDLE_USD,
-          }
-        : line,
+      line.id === 'domain-email-year1' ? { ...INFRA_YEAR1_LINE() } : line,
     )
   }
   return lines
+}
+
+/** Alinea líneas de infra externa al paquete de 1.er año al renderizar o guardar contratos. */
+export function normalizeCommercialSnapshotForContractDisplay(
+  snapshot: CommercialSnapshot,
+  options?: { forceInfraBundle?: boolean },
+): CommercialSnapshot {
+  let lines = collapseExternalInfraLinesForContract([...(snapshot.totals.lines ?? [])])
+  if (options?.forceInfraBundle) {
+    lines = lines.filter((line) => !isExternalInfraLine(line) || line.id === 'infra-year1')
+    if (!lines.some((line) => line.id === 'infra-year1')) {
+      lines.push(INFRA_YEAR1_LINE())
+    }
+  }
+  lines = collapseExternalInfraLinesForContract(lines)
+  const external = lines
+    .filter((line) => line.billing === 'external' || isExternalInfraLine(line))
+    .reduce((sum, line) => sum + line.amount, 0)
+  return {
+    ...snapshot,
+    totals: {
+      ...snapshot.totals,
+      lines,
+      external,
+    },
+  }
 }
 
 export function externalInfraPaymentCondition(lineId: string) {

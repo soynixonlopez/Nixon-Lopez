@@ -6,7 +6,9 @@ import {
 import { buildEconomicSummaryRows, buildEconomicTotalsFootnotes } from '@/lib/contract-economic-summary'
 import { isCourtesyAddonId } from '@/lib/courtesy-addons'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
+import { normalizeCommercialSnapshotForContractDisplay } from '@/lib/service-catalog'
 import type { CommercialSnapshot } from '@/lib/service-catalog'
+import { parseConfiguratorFromPayload } from '@/lib/admin-configurator-quote'
 import type { ServiceContractRecord } from '@/lib/types/contract'
 import type { ContractClauseBlock } from '@/lib/contracts'
 
@@ -107,11 +109,23 @@ export function contractIsReadyToSign(contract: ServiceContractRecord) {
   return commercialTermsReady(snapshot) && contract.status === 'signed'
 }
 
+function snapshotForContractClauses(
+  contract: ServiceContractRecord,
+  snapshot: CommercialSnapshot,
+): CommercialSnapshot {
+  const terms = contract.terms_payload
+  const cfg = terms ? parseConfiguratorFromPayload(terms) : null
+  const hasWeb = Boolean(snapshot.webPlanId || (snapshot.webPlans?.length ?? 0) > 0)
+  const forceInfraBundle = Boolean(hasWeb && cfg?.hasDomain === 'no' && cfg?.hasHosting === 'no')
+  return normalizeCommercialSnapshotForContractDisplay(snapshot, { forceInfraBundle })
+}
+
 export function buildCommercialContractClauses(
   contract: ServiceContractRecord,
   snapshot: CommercialSnapshot,
   introSegments: IntroSegment[],
 ) {
+  snapshot = snapshotForContractClauses(contract, snapshot)
   const intro = introSegments.map((segment) => segment.value).join('')
   const blocks: ClauseBlock[] = []
   let index = 0

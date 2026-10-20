@@ -17,6 +17,9 @@ import {
   buildWebInstallmentTerms,
   type WebInstallmentPlanId,
 } from '@/lib/contract-web-installments'
+import { parseConfiguratorFromPayload } from '@/lib/admin-configurator-quote'
+import { normalizeCommercialSnapshotForContractDisplay } from '@/lib/service-catalog'
+import type { CommercialSnapshot } from '@/lib/service-catalog'
 
 type QuoteOpt = {
   id: string
@@ -235,6 +238,30 @@ export function ContractCreateForm({
     const clientName = `${selected.client_first_name} ${selected.client_last_name}`.trim()
     const meta = quoteMeta(selected)
     const enriched = enrichQuotePayloadForContract(selected.raw_payload, meta) ?? selected.raw_payload
+    const cfg = parseConfiguratorFromPayload(enriched ?? selected.raw_payload)
+    const forceInfraBundle = Boolean(hasWeb && cfg?.hasDomain === 'no' && cfg?.hasHosting === 'no')
+    const commercialBase = (assessment.aligned ?? null) as CommercialSnapshot | null
+    const commercialSnapshot = commercialBase
+      ? normalizeCommercialSnapshotForContractDisplay(
+          {
+            ...commercialBase,
+            revisionRounds: rounds,
+            paymentMethod: terms.paymentMethod.trim(),
+            advanceNote: terms.advanceNote.trim(),
+            balanceNote: terms.balanceNote.trim(),
+            paymentSchedule: terms.paymentSchedule.trim(),
+            startDate: terms.startDate.trim(),
+            deliveryDate: terms.deliveryDate.trim(),
+            termNote: terms.termNote.trim(),
+            renewalNote: terms.renewalNote.trim(),
+            terminationNote: terms.terminationNote.trim(),
+            marketingStartDate: terms.marketingStartDate.trim(),
+            marketingFirstPayment: terms.marketingFirstPayment.trim(),
+            webInstallmentPlan: hasWeb ? webInstallmentPlan : undefined,
+          },
+          { forceInfraBundle },
+        )
+      : null
     const payload = {
       contract_number: numberData as string,
       quote_id: selected.id,
@@ -253,7 +280,7 @@ export function ContractCreateForm({
         enriched && typeof enriched === 'object' && !Array.isArray(enriched)
           ? {
               ...enriched,
-              commercial: {
+              commercial: commercialSnapshot ?? {
                 ...((enriched as { commercial?: Record<string, unknown> }).commercial ?? {}),
                 revisionRounds: rounds,
                 paymentMethod: terms.paymentMethod.trim(),

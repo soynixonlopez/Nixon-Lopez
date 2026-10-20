@@ -10,6 +10,7 @@ import {
 } from '../src/lib/contract-terms-from-quote'
 import { buildCommercialContractClauses, commercialTermsReady, readCommercialSnapshot } from '../src/lib/contract-commercial'
 import { buildEconomicSummaryRows, buildEconomicTotalsFootnotes } from '../src/lib/contract-economic-summary'
+import { collapseExternalInfraLinesForContract } from '../src/lib/service-catalog'
 import { buildContractIntroSegments } from '../src/lib/contracts'
 import type { WebPlanId, MarketingPlanId } from '../src/lib/service-catalog'
 import { WEB_PLANS, MARKETING_PLANS } from '../src/lib/service-catalog'
@@ -269,6 +270,26 @@ scenarios.push({
     if (!single?.advanceNote.includes('445.00')) return { ok: false, detail: 'single' }
     const thirds = deriveContractTermsFromQuote(raw, { totalAmount: 445, serviceId: 'reservas' }, { webInstallmentPlan: 'three-thirds' })
     if (!thirds?.paymentSchedule.includes('Cuota 3')) return { ok: false, detail: 'thirds' }
+    return { ok: true }
+  },
+})
+
+scenarios.push({
+  name: 'Infra externa legacy se colapsa a paquete USD 47',
+  run() {
+    const collapsed = collapseExternalInfraLinesForContract([
+      { id: 'domain', label: 'Dominio (lo paga el cliente al registrador)', amount: 20, billing: 'external' },
+      { id: 'hosting', label: 'Hosting (lo paga el cliente al proveedor)', amount: 60, billing: 'external' },
+      { id: 'emails', label: 'Correos profesionales (1, costo de tercero)', amount: 15, billing: 'external' },
+    ])
+    if (collapsed.length !== 1 || collapsed[0].id !== 'infra-year1' || collapsed[0].amount !== 47) {
+      return { ok: false, detail: JSON.stringify(collapsed) }
+    }
+    const legacyBilling = collapseExternalInfraLinesForContract([
+      { id: 'domain', label: 'Dominio', amount: 20, billing: undefined as unknown as 'external' },
+      { id: 'hosting', label: 'Hosting', amount: 60, billing: undefined as unknown as 'external' },
+    ])
+    if (legacyBilling.length !== 1 || legacyBilling[0].amount !== 47) return { ok: false, detail: 'legacy billing' }
     return { ok: true }
   },
 })
