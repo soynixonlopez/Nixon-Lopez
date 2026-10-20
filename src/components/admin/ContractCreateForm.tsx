@@ -14,6 +14,7 @@ import {
 import { extractQuoteServiceSnapshots } from '@/lib/quote-pricing'
 import {
   WEB_INSTALLMENT_PLANS,
+  buildWebInstallmentTerms,
   type WebInstallmentPlanId,
 } from '@/lib/contract-web-installments'
 
@@ -79,6 +80,21 @@ export function ContractCreateForm({
 
   const hasMarketing = Boolean(enrichedPayload && quotePayloadHasMarketing(enrichedPayload))
   const hasWeb = Boolean(quoteAssessment && quoteAssessment.displayWebOnce > 0)
+
+  const webInstallmentSummary = useMemo(() => {
+    const total = quoteAssessment?.displayWebOnce ?? 0
+    if (total <= 0) return ''
+    const inst = buildWebInstallmentTerms(total, webInstallmentPlan, 'desarrollo web')
+    if (webInstallmentPlan === 'single') {
+      return ` Web: $${total.toFixed(2)} (pago único).`
+    }
+    if (webInstallmentPlan === 'three-thirds') {
+      const first = inst.advanceNote.match(/USD \$[\d.]+/)?.[0] ?? ''
+      return ` Web: $${total.toFixed(2)} (3 cuotas; 1.ª ${first}).`
+    }
+    const half = (total / 2).toFixed(2)
+    return ` Web: $${total.toFixed(2)} (anticipo 50%: $${half}).`
+  }, [quoteAssessment?.displayWebOnce, webInstallmentPlan])
 
   const applyTermsFromQuote = useCallback((quote: QuoteOpt, installmentPlan: WebInstallmentPlanId) => {
       setTermsError('')
@@ -369,13 +385,7 @@ export function ContractCreateForm({
       ) : termsReady ? (
         <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
           Pagos, plazos y cláusulas se completan solos desde la cotización. El trabajo inicia al firmar el contrato.
-          {quoteAssessment?.displayWebOnce ? (
-            <>
-              {' '}
-              Web: ${quoteAssessment.displayWebOnce.toFixed(2)} (anticipo 50%: $
-              {(quoteAssessment.displayWebOnce / 2).toFixed(2)}).
-            </>
-          ) : null}
+          {webInstallmentSummary}
           {quoteAssessment?.displayMonthly ? (
             <> Honorarios: ${quoteAssessment.displayMonthly.toFixed(2)}/mes.</>
           ) : null}
