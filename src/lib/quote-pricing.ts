@@ -1,11 +1,18 @@
 /** Catálogo y reglas de cotización pública (Nixon Lopez Services) + opciones del panel admin. */
 
-import { CATALOG_PLANS, getCatalogPlan } from '@/lib/service-catalog'
+import {
+  CATALOG_PLANS,
+  getCatalogPlan,
+  PRICE_INFRA_FIRST_YEAR_BUNDLE_USD,
+  PRICE_EMAIL_USD,
+} from '@/lib/service-catalog'
+
+export { PRICE_EMAIL_USD } from '@/lib/service-catalog'
 
 export const MAX_INCLUDED_PAGES = 5
 export const PRICE_EXTRA_PAGE_USD = 25
+/** @deprecated Prefer PRICE_DOMAIN_EMAIL_FIRST_YEAR_USD desde service-catalog. */
 export const PRICE_DOMAIN_USD = 15
-export const PRICE_EMAIL_USD = 10
 export const PRICE_PASARELA_ADDON_USD = 200
 
 /** Dominio + hosting 1.er año (presupuesto) para proyectos WordPress en la cotización pública */
@@ -317,7 +324,7 @@ export function getQuoteAddonIfMissing(service: ServiceDef | undefined): {
     }
   }
   return {
-    domainUsd: PRICE_DOMAIN_USD,
+    domainUsd: PRICE_INFRA_FIRST_YEAR_BUNDLE_USD,
     secondUsd: PRICE_EMAIL_USD,
     isWordPressHosting: false,
   }
@@ -426,13 +433,21 @@ export function buildCatalogQuoteServiceSnapshot(input: {
       ? 'Hosting — 1.er año (incluido en presupuesto)'
       : 'Correo profesional (incluido en presupuesto)'
 
-    if (input.tieneDominio === 'no') {
-      lines.push({ label: domainLine, amount: add.domainUsd })
-      total += add.domainUsd
-    }
-    if (input.tieneCorreo === 'no') {
-      lines.push({ label: secondLine, amount: add.secondUsd })
-      total += add.secondUsd
+    if (input.tieneDominio === 'no' && input.tieneCorreo === 'no' && !add.isWordPressHosting) {
+      lines.push({
+        label: 'Dominio, correo y hosting (1.er año, incluido en presupuesto)',
+        amount: PRICE_INFRA_FIRST_YEAR_BUNDLE_USD,
+      })
+      total += PRICE_INFRA_FIRST_YEAR_BUNDLE_USD
+    } else {
+      if (input.tieneDominio === 'no') {
+        lines.push({ label: domainLine, amount: add.domainUsd })
+        total += add.domainUsd
+      }
+      if (input.tieneCorreo === 'no') {
+        lines.push({ label: secondLine, amount: add.secondUsd })
+        total += add.secondUsd
+      }
     }
   }
 

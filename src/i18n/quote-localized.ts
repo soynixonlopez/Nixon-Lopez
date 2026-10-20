@@ -1,10 +1,8 @@
 import type { Messages } from '@/i18n/messages'
 import { publicBillableFeatures } from '@/lib/courtesy-addons'
+import { appendWebExternalInfraLines } from '@/lib/service-catalog'
 import {
   FEATURES,
-  PRICE_DOMAIN_USD,
-  PRICE_EMAIL_USD,
-  PRICE_HOSTING_USD,
   PROJECT_TYPES,
   calculateQuote,
   type BusinessId,
@@ -151,19 +149,15 @@ export function buildLocalizedQuoteLines(
     })
   }
 
-  if (state.hasDomain === 'no') {
-    lines.push({ id: 'domain', label: catalog.quote.lines.domain, amount: PRICE_DOMAIN_USD })
-  }
-  if (state.hasHosting === 'no') {
-    lines.push({ id: 'hosting', label: catalog.quote.lines.hosting, amount: PRICE_HOSTING_USD })
-  }
-  if (state.emailCount > 0) {
-    const count = Math.min(state.emailCount, 6)
-    lines.push({
-      id: 'emails',
-      label: emailLineLabel(catalog, count),
-      amount: count * PRICE_EMAIL_USD,
-    })
+  appendWebExternalInfraLines(lines, {
+    hasDomain: state.hasDomain,
+    hasHosting: state.hasHosting,
+    emailCount: state.emailCount,
+  })
+  for (const line of lines) {
+    if (line.id === 'domain') line.label = catalog.quote.lines.domain
+    if (line.id === 'hosting') line.label = catalog.quote.lines.hosting
+    if (line.id === 'emails') line.label = emailLineLabel(catalog, Math.min(state.emailCount, 6))
   }
 
   return lines

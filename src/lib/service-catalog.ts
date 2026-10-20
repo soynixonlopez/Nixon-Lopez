@@ -41,9 +41,115 @@ export type CatalogPlan = {
 }
 
 export const PRICE_EXTRA_PAGE_USD = 25
-export const PRICE_DOMAIN_USD = 20
-export const PRICE_HOSTING_USD = 60
-export const PRICE_EMAIL_USD = 15
+/** 1.er año: dominio + correo + hosting (pago del cliente al proveedor). */
+export const PRICE_INFRA_FIRST_YEAR_BUNDLE_USD = 47
+/** Renovaciones anuales de referencia (desde el 2.º año, por separado). */
+export const PRICE_DOMAIN_RENEWAL_ANNUAL_USD = 20
+export const PRICE_EMAIL_RENEWAL_ANNUAL_USD = 47
+export const PRICE_HOSTING_RENEWAL_ANNUAL_USD = 147
+/** @deprecated Alias de PRICE_INFRA_FIRST_YEAR_BUNDLE_USD */
+export const PRICE_DOMAIN_EMAIL_FIRST_YEAR_USD = PRICE_INFRA_FIRST_YEAR_BUNDLE_USD
+/** @deprecated Alias de PRICE_DOMAIN_RENEWAL_ANNUAL_USD */
+export const PRICE_DOMAIN_USD = PRICE_DOMAIN_RENEWAL_ANNUAL_USD
+/** @deprecated Alias de PRICE_HOSTING_RENEWAL_ANNUAL_USD */
+export const PRICE_HOSTING_USD = PRICE_HOSTING_RENEWAL_ANNUAL_USD
+/** @deprecated Alias de PRICE_EMAIL_RENEWAL_ANNUAL_USD */
+export const PRICE_EMAIL_USD = PRICE_EMAIL_RENEWAL_ANNUAL_USD
+
+const INFRA_LINE_IDS = new Set(['infra-year1', 'domain-email-year1', 'domain', 'hosting', 'emails'])
+
+export function appendWebExternalInfraLines(
+  lines: CommercialTotals['lines'],
+  input: { hasDomain?: 'si' | 'no' | null; hasHosting?: 'si' | 'no' | null; emailCount?: number },
+) {
+  const needsDomain = input.hasDomain === 'no'
+  const needsHosting = input.hasHosting === 'no'
+  const emailCount = Math.min(Math.max(0, input.emailCount ?? 0), 6)
+
+  if (needsDomain && needsHosting) {
+    lines.push({
+      id: 'infra-year1',
+      label: 'Dominio, correo y hosting (1.er año; lo paga el cliente al proveedor)',
+      amount: PRICE_INFRA_FIRST_YEAR_BUNDLE_USD,
+      billing: 'external',
+    })
+    return
+  }
+
+  if (needsDomain) {
+    lines.push({
+      id: 'domain',
+      label: 'Dominio (lo paga el cliente al registrador)',
+      amount: PRICE_DOMAIN_RENEWAL_ANNUAL_USD,
+      billing: 'external',
+    })
+  }
+  if (needsHosting) {
+    lines.push({
+      id: 'hosting',
+      label: 'Hosting (lo paga el cliente al proveedor)',
+      amount: PRICE_HOSTING_RENEWAL_ANNUAL_USD,
+      billing: 'external',
+    })
+  }
+  if (emailCount > 0) {
+    lines.push({
+      id: 'emails',
+      label: `Correo profesional (${emailCount}, lo paga el cliente al proveedor)`,
+      amount: PRICE_EMAIL_RENEWAL_ANNUAL_USD,
+      billing: 'external',
+    })
+  }
+}
+
+export function collapseExternalInfraLinesForContract(lines: CommercialTotals['lines']) {
+  if (lines.some((line) => line.id === 'infra-year1')) {
+    return lines.filter((line) => !INFRA_LINE_IDS.has(line.id) || line.id === 'infra-year1')
+  }
+  const hasDomain = lines.some((line) => line.id === 'domain' && line.billing === 'external')
+  const hasHosting = lines.some((line) => line.id === 'hosting' && line.billing === 'external')
+  const hasLegacyBundle = lines.some((line) => line.id === 'domain-email-year1')
+  if ((hasDomain && hasHosting) || (hasLegacyBundle && hasHosting) || (hasDomain && hasLegacyBundle)) {
+    return [
+      ...lines.filter((line) => !INFRA_LINE_IDS.has(line.id)),
+      {
+        id: 'infra-year1',
+        label: 'Dominio, correo y hosting (1.er año; lo paga el cliente al proveedor)',
+        amount: PRICE_INFRA_FIRST_YEAR_BUNDLE_USD,
+        billing: 'external' as const,
+      },
+    ]
+  }
+  if (hasLegacyBundle) {
+    return lines.map((line) =>
+      line.id === 'domain-email-year1'
+        ? {
+            ...line,
+            id: 'infra-year1',
+            label: 'Dominio, correo y hosting (1.er año; lo paga el cliente al proveedor)',
+            amount: PRICE_INFRA_FIRST_YEAR_BUNDLE_USD,
+          }
+        : line,
+    )
+  }
+  return lines
+}
+
+export function externalInfraPaymentCondition(lineId: string) {
+  if (lineId === 'infra-year1' || lineId === 'domain-email-year1') {
+    return `1.er año: USD $${PRICE_INFRA_FIRST_YEAR_BUNDLE_USD.toFixed(2)} al proveedor (dominio, correo y hosting). Desde el 2.º año, por separado: dominio USD $${PRICE_DOMAIN_RENEWAL_ANNUAL_USD.toFixed(2)}/año, correo USD $${PRICE_EMAIL_RENEWAL_ANNUAL_USD.toFixed(2)}/año, hosting USD $${PRICE_HOSTING_RENEWAL_ANNUAL_USD.toFixed(2)}/año. No es honorario del prestador.`
+  }
+  if (lineId === 'domain') {
+    return `Lo paga el cliente al registrador. Referencia desde el 2.º año: USD $${PRICE_DOMAIN_RENEWAL_ANNUAL_USD.toFixed(2)}/año. No es honorario del prestador.`
+  }
+  if (lineId === 'emails') {
+    return `Lo paga el cliente al proveedor de correo. Referencia desde el 2.º año: USD $${PRICE_EMAIL_RENEWAL_ANNUAL_USD.toFixed(2)}/año. No es honorario del prestador.`
+  }
+  if (lineId === 'hosting') {
+    return `Lo paga el cliente al proveedor de hosting. Referencia desde el 2.º año: USD $${PRICE_HOSTING_RENEWAL_ANNUAL_USD.toFixed(2)}/año. No es honorario del prestador.`
+  }
+  return 'Lo paga el cliente al proveedor; no es honorario del prestador'
+}
 
 /** Productos iniciales incluidos en la tienda. Se puede cambiar en la cotización. */
 export const STORE_PRODUCTS_INCLUDED = 15
@@ -487,31 +593,11 @@ export function priceCommercial(input: CommercialInput): CommercialTotals {
   const storiesPending = false
 
   if (webs.length > 0) {
-    if (input.hasDomain === 'no') {
-      lines.push({
-        id: 'domain',
-        label: 'Dominio (lo paga el cliente al registrador)',
-        amount: PRICE_DOMAIN_USD,
-        billing: 'external',
-      })
-    }
-    if (input.hasHosting === 'no') {
-      lines.push({
-        id: 'hosting',
-        label: 'Hosting (lo paga el cliente al proveedor)',
-        amount: PRICE_HOSTING_USD,
-        billing: 'external',
-      })
-    }
-    if (input.emailCount > 0) {
-      const count = Math.min(input.emailCount, 6)
-      lines.push({
-        id: 'emails',
-        label: `Correos profesionales (${count}, costo de tercero)`,
-        amount: count * PRICE_EMAIL_USD,
-        billing: 'external',
-      })
-    }
+    appendWebExternalInfraLines(lines, {
+      hasDomain: input.hasDomain,
+      hasHosting: input.hasHosting,
+      emailCount: input.emailCount,
+    })
     if (webs.some((plan) => plan.hasGateway)) {
       lines.push({
         id: 'gateway-fees',

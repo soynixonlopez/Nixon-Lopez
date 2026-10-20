@@ -16,6 +16,7 @@ import {
   getCatalogPlan,
   isMarketingPlanId,
   isWebPlanId,
+  appendWebExternalInfraLines,
   priceCommercial,
   type AdBudgetChoice,
   type CommercialSnapshot,
@@ -456,9 +457,6 @@ export const TIMELINES = [
   { id: 'sin-prisa' as const, label: 'Sin prisa', description: 'Flexible' },
 ] as const
 
-export const PRICE_DOMAIN_USD = 20
-export const PRICE_HOSTING_USD = 60
-export const PRICE_EMAIL_USD = 15
 export const TOTAL_STEPS = 6
 
 export const STEP_LABELS = [
@@ -597,22 +595,11 @@ export function buildQuoteLines(state: ConfiguratorState, ctx?: QuotePricingCont
     })
   }
 
-  if (state.hasDomain === 'no') {
-    lines.push({ id: 'domain', label: 'Dominio', amount: PRICE_DOMAIN_USD })
-  }
-  if (state.hasHosting === 'no') {
-    lines.push({ id: 'hosting', label: 'Hosting Premium', amount: PRICE_HOSTING_USD })
-  }
-  if (state.emailCount > 0) {
-    const count = Math.min(state.emailCount, 6)
-    const label =
-      count >= 6 ? 'Correos (6+)' : count === 1 ? '1 Correo' : `${count} Correos`
-    lines.push({
-      id: 'emails',
-      label,
-      amount: count * PRICE_EMAIL_USD,
-    })
-  }
+  appendWebExternalInfraLines(lines, {
+    hasDomain: state.hasDomain,
+    hasHosting: state.hasHosting,
+    emailCount: state.emailCount,
+  })
 
   return lines
 }

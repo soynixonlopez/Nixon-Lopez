@@ -3,7 +3,15 @@ import {
   buildWebInstallmentEconomicRows,
   resolveWebInstallmentPlan,
 } from '@/lib/contract-web-installments'
-import type { CommercialSnapshot } from '@/lib/service-catalog'
+import {
+  PRICE_DOMAIN_RENEWAL_ANNUAL_USD,
+  PRICE_EMAIL_RENEWAL_ANNUAL_USD,
+  PRICE_HOSTING_RENEWAL_ANNUAL_USD,
+  PRICE_INFRA_FIRST_YEAR_BUNDLE_USD,
+  collapseExternalInfraLinesForContract,
+  externalInfraPaymentCondition,
+  type CommercialSnapshot,
+} from '@/lib/service-catalog'
 
 export type EconomicSummaryRow = {
   service: string
@@ -22,6 +30,12 @@ function billingLabel(kind: 'once' | 'monthly' | 'external') {
   if (kind === 'monthly') return 'Honorario mensual'
   if (kind === 'external') return 'Gasto externo (tercero)'
   return 'Pago único'
+}
+
+function externalFrequency(line: { id: string }) {
+  if (line.id === 'infra-year1' || line.id === 'domain-email-year1') return '1.er año (paquete)'
+  if (line.id === 'domain' || line.id === 'hosting' || line.id === 'emails') return 'Referencia anual'
+  return 'Según consumo'
 }
 
 function isBillableContractLine(id: string, label: string) {
@@ -44,19 +58,18 @@ export function buildEconomicSummaryRows(snapshot: CommercialSnapshot): Economic
     snapshot.webPlans?.map((p) => p.label).join(' + ') ||
     'Desarrollo web acordado'
 
-  for (const line of totals.lines) {
+  for (const line of collapseExternalInfraLinesForContract(totals.lines)) {
     if (line.billing === 'once') continue
     if (!isBillableContractLine(line.id, line.label)) continue
     if (line.amount <= 0 && line.billing !== 'external') continue
+    const displayAmount = line.id === 'infra-year1' ? PRICE_INFRA_FIRST_YEAR_BUNDLE_USD : line.amount
     rows.push({
       service: line.label,
       billingType: billingLabel(line.billing),
-      price: money(line.amount),
-      frequency: line.billing === 'monthly' ? 'Mensual' : 'Según consumo',
+      price: money(displayAmount),
+      frequency: line.billing === 'monthly' ? 'Mensual' : line.billing === 'external' ? externalFrequency(line) : 'Según consumo',
       paymentCondition:
-        line.billing === 'external'
-          ? 'Lo paga el cliente al proveedor; no es honorario del prestador'
-          : 'Vencimiento mensual acordado',
+        line.billing === 'external' ? externalInfraPaymentCondition(line.id) : 'Vencimiento mensual acordado',
       dueDate: line.billing === 'monthly' ? snapshot.marketingFirstPayment?.trim() || 'Primer mes acordado' : 'Ver calendario',
     })
   }
@@ -149,6 +162,11 @@ export function buildEconomicTotalsFootnotes(snapshot: CommercialSnapshot) {
   } else if (totals.monthly > 0) {
     lines.push(`Importe mensual recurrente (honorarios): ${money(totals.nextMonthly)}/mes.`)
   }
+  lines.push(
+    `Infraestructura (dominio, correo y hosting): 1.er año ${money(PRICE_INFRA_FIRST_YEAR_BUNDLE_USD)} al proveedor. Desde el 2.º año: dominio ${money(
+      PRICE_DOMAIN_RENEWAL_ANNUAL_USD,
+    )}/año, correo ${money(PRICE_EMAIL_RENEWAL_ANNUAL_USD)}/año, hosting ${money(PRICE_HOSTING_RENEWAL_ANNUAL_USD)}/año (referencias, por separado).`,
+  )
   lines.push(
     'Los módulos y agregados incluidos en el alcance (blog, formularios, pasarela, etc.) forman parte del desarrollo web y no se facturan como líneas económicas aparte.',
   )
