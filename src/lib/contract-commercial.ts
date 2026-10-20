@@ -4,10 +4,15 @@ import {
   appendStandardWebSections,
 } from '@/lib/contract-commercial-sections'
 import { buildEconomicSummaryRows, buildEconomicTotalsFootnotes } from '@/lib/contract-economic-summary'
-import { isCourtesyAddonId } from '@/lib/courtesy-addons'
 import { INVOICE_BRANDING } from '@/lib/invoice-branding'
-import { normalizeCommercialSnapshotForContractDisplay } from '@/lib/service-catalog'
-import type { CommercialSnapshot } from '@/lib/service-catalog'
+import { resolveWebInstallmentPlan } from '@/lib/contract-web-installments'
+import {
+  PRICE_INFRA_FIRST_YEAR_BUNDLE_USD,
+  collapseExternalInfraLinesForContract,
+  isExternalInfraLine,
+  normalizeCommercialSnapshotForContractDisplay,
+  type CommercialSnapshot,
+} from '@/lib/service-catalog'
 import { parseConfiguratorFromPayload } from '@/lib/admin-configurator-quote'
 import type { ServiceContractRecord } from '@/lib/types/contract'
 import type { ContractClauseBlock } from '@/lib/contracts'
@@ -88,17 +93,120 @@ export function commercialTermsReady(snapshot: CommercialSnapshot) {
 }
 
 function annexLines(snapshot: CommercialSnapshot, moneyFn: (n: number) => string) {
-  return snapshot.totals.lines
-    .filter((line) => {
-      if (line.id.startsWith('feature-') && isCourtesyAddonId(line.id.slice('feature-'.length))) return false
-      if (line.amount <= 0 && line.billing !== 'external') return false
-      return true
-    })
-    .map((line) => {
-      const kind =
-        line.billing === 'monthly' ? 'honorario mensual' : line.billing === 'external' ? 'gasto externo' : 'pago único'
-      return `${line.label}: ${moneyFn(line.amount)} (${kind})`
-    })
+  const rows: string[] = []
+  const totals = snapshot.totals
+  if (totals.oneTime > 0) {
+    rows.push(
+      `${snapshot.webLabel?.trim() || 'Desarrollo web'}: ${moneyFn(totals.oneTime)} (honorarios del proyecto web, total acordado).`,
+    )
+  }
+  if (totals.monthly > 0) {
+    rows.push(
+      `${snapshot.marketingLabel?.trim() || 'Marketing digital'}: ${moneyFn(totals.monthly)}/mes (honorarios recurrentes).`,
+    )
+  }
+  for (const line of collapseExternalInfraLinesForContract(totals.lines)) {
+    if (line.billing === 'once' || line.billing === 'monthly') continue
+    if (line.id.startsWith('feature-')) continue
+    if (line.amount <= 0 && line.id !== 'gateway-fees') continue
+    const amount = line.id === 'infra-year1' ? PRICE_INFRA_FIRST_YEAR_BUNDLE_USD : line.amount
+    rows.push(`${line.label}: ${moneyFn(amount)} (gasto externo — lo paga el cliente al tercero).`)
+  }
+  return rows
+}
+
+function webInstallmentSummaryLabel(snapshot: CommercialSnapshot) {
+  const plan = resolveWebInstallmentPlan(snapshot)
+  if (plan === 'single') return 'según calendario acordado (pago único de honorarios web)'
+  if (plan === 'three-thirds') return 'en 3 cuotas según el calendario de este contrato'
+  return 'en 2 cuotas (50% / 50%) según el calendario de este contrato'
+}
+
+function buildPaymentClauseBullets(snapshot: CommercialSnapshot, ready: boolean) {
+  const totals = snapshot.totals
+  const hasWeb = Boolean(snapshot.webPlanId || (snapshot.webPlans?.length ?? 0) > 0)
+  const hasMarketing = Boolean(snapshot.marketingPlanId)
+  const bullets: string[] = []
+
+  if (hasWeb && totals.oneTime > 0) {
+    bullets.push(
+      `Honorarios de desarrollo web (total de la cotización aceptada): ${money(totals.oneTime)}, pagadero ${webInstallmentSummaryLabel(snapshot)}.`,
+    )
+  }
+  if (hasMarketing && totals.monthly > 0) {
+    bullets.push(`Honorarios mensuales de marketing: ${money(totals.monthly)}/mes.`)
+  }
+
+  const infra = totals.lines.find((line) => line.id === 'infra-year1')
+  if (infra) {
+    bullets.push(
+      `Dominio, correo y hosting (1.er año): ${money(PRICE_INFRA_FIRST_YEAR_BUNDLE_USD)} — lo paga el cliente al proveedor; no forma parte de los honorarios del prestador.`,
+    )
+  } else if (totals.external > 0) {
+    const externalLines = collapseExternalInfraLinesForContract(totals.lines).filter(
+      (line) => line.billing === 'external' || isExternalInfraLine(line),
+    )
+    if (externalLines.length === 1) {
+      bullets.push(
+        `${externalLines[0].label}: ${money(externalLines[0].amount)} — gasto externo a cargo del cliente.`,
+      )
+    } else if (externalLines.length > 1) {
+      bullets.push(
+        `Gastos externos de la cotización (terceros): ${money(totals.external)} en total — no son honorarios del prestador.`,
+      )
+    }
+  }
+
+  const approvedAd = snapshot.approvedAdBudgetUsd ?? totals.approvedAdBudget ?? 0
+  const choice = snapshot.adBudgetChoice
+  if ((snapshot.campaigns ?? 0) > 0) {
+    if (approvedAd > 0) {
+      bullets.push(
+        `Presupuesto publicitario aprobado: ${money(approvedAd)}/mes — lo paga el cliente a Meta; no es honorario del prestador.`,
+      )
+    } else if (choice === 'pending' && (snapshot.recommendedAdBudgetUsd ?? 0) > 0) {
+      bullets.push(
+        `Presupuesto publicitario recomendado: ${money(snapshot.recommendedAdBudgetUsd ?? 0)}/mes — pendiente de aprobación; no es gasto autorizado.`,
+      )
+    } else {
+      bullets.push('Presupuesto publicitario: no contratado en esta cotización (plan sin gestión de campañas).')
+    }
+  }
+
+  if (hasWeb && hasMarketing) {
+    bullets.push(`Honorarios iniciales exigibles (web + primer mes de marketing, sin pauta): ${money(totals.initialFees)}.`)
+  } else if (hasMarketing && !hasWeb) {
+    bullets.push(`Primer ciclo de honorarios mensuales: ${money(totals.monthly)}.`)
+  }
+
+  if (approvedAd > 0 && totals.projectedInitial != null) {
+    bullets.push(`Total inicial estimado incluyendo pauta aprobada: ${money(totals.projectedInitial)}.`)
+  }
+  if (hasMarketing && approvedAd > 0 && totals.projectedMonthly != null) {
+    bullets.push(`Mensual estimado con pauta: ${money(totals.projectedMonthly)}/mes.`)
+  }
+
+  bullets.push(
+    totals.taxRate != null ? `Impuesto configurado en cotización: ${totals.taxRate}%.` : 'Impuestos: no aplican en esta cotización.',
+  )
+
+  if (ready) {
+    bullets.push(`Forma de pago: ${text(snapshot.paymentMethod)}`)
+    if (text(snapshot.advanceNote)) bullets.push(text(snapshot.advanceNote))
+    if (text(snapshot.balanceNote)) bullets.push(text(snapshot.balanceNote))
+    const schedule = text(snapshot.paymentSchedule)
+    if (schedule) {
+      for (const row of schedule.split('\n').map((line) => line.trim()).filter(Boolean)) {
+        bullets.push(row)
+      }
+    }
+  } else {
+    bullets.push(
+      'Faltan forma de pago, anticipo, saldo o calendario. Este borrador no fija vencimientos ni penalizaciones.',
+    )
+  }
+
+  return bullets
 }
 
 const WEB_REVISION_DEFAULT = 2
@@ -151,14 +259,16 @@ export function buildCommercialContractClauses(
   })
 
   if (snapshot.webPlanId || (snapshot.webPlans?.length ?? 0) > 0) {
-    const webNames = snapshot.webPlans?.length
-      ? snapshot.webPlans.map((plan) => `${plan.label} (${money(plan.basePrice)}, pago único)`).join('; ')
-      : snapshot.webLabel
+    const webTitle = snapshot.webLabel?.trim() || snapshot.webPlans?.map((plan) => plan.label).join(' + ') || 'Desarrollo web'
+    const webPrice =
+      totals.oneTime > 0
+        ? `${money(totals.oneTime)} (total acordado en cotización)`
+        : snapshot.webPlans?.map((plan) => money(plan.basePrice)).join(' + ') || 'según cotización'
     blocks.push({
       title: titled(index++, 'APARTADO A. DESARROLLO WEB'),
       paragraphs: [
-        `Paquete: ${webNames}.`,
-        'El precio del desarrollo web es un pago único. No se vuelve a cobrar en los meses posteriores, salvo un calendario distinto escrito en este contrato.',
+        `Proyecto contratado: ${webTitle}. Honorarios de desarrollo web: ${webPrice}.`,
+        'Los honorarios del desarrollo web no se repiten mensualmente; el calendario de cobro es el indicado en la cláusula de precio y forma de pago.',
         snapshot.startDate ? `Inicio del desarrollo: ${snapshot.startDate}.` : 'Inicio del desarrollo: pendiente de acordar.',
         snapshot.deliveryDate
           ? `Entrega estimada del desarrollo: ${snapshot.deliveryDate}.`
@@ -250,68 +360,7 @@ export function buildCommercialContractClauses(
   })
 
   const hasWeb = Boolean(snapshot.webPlanId || (snapshot.webPlans?.length ?? 0) > 0)
-  const paymentBullets: string[] = []
-  if (hasWeb) {
-    paymentBullets.push(`Desarrollo web (pago único): ${money(totals.oneTime)}.`)
-    if (totals.oneTime > 0) {
-      const advance = Number((totals.oneTime / 2).toFixed(2))
-      const balance = Number((totals.oneTime - advance).toFixed(2))
-      paymentBullets.push(`Anticipo web (50%): ${money(advance)}. Saldo web (50%): ${money(balance)}.`)
-    }
-  }
-  if (snapshot.marketingPlanId) {
-    paymentBullets.push(`Honorarios mensuales de marketing: ${money(totals.monthly)}.`)
-    if (snapshot.storiesIncluded) {
-      paymentBullets.push(
-        `Historias incluidas: ${snapshot.storiesPerWeek ?? 3} por semana (aprox. ${snapshot.storiesPerMonth || (snapshot.storiesPerWeek ?? 3) * 4} en cuatro semanas).`,
-      )
-    }
-  }
-  paymentBullets.push(
-    `Gastos externos estimados (los paga el cliente al tercero, no son honorarios): ${money(totals.external)}.`,
-  )
-  const approvedAd = snapshot.approvedAdBudgetUsd ?? totals.approvedAdBudget ?? 0
-  const choice = snapshot.adBudgetChoice
-  if ((snapshot.campaigns ?? 0) > 0) {
-    if (approvedAd > 0) {
-      paymentBullets.push(
-        `Presupuesto publicitario aprobado: ${money(approvedAd)} al mes. Lo paga el cliente a Meta; no es honorario del proveedor.`,
-      )
-    } else if (choice === 'pending' && (snapshot.recommendedAdBudgetUsd ?? 0) > 0) {
-      paymentBullets.push(
-        `Presupuesto publicitario recomendado: ${money(snapshot.recommendedAdBudgetUsd ?? 0)}. Pendiente de aprobación; no es gasto autorizado.`,
-      )
-    } else {
-      paymentBullets.push('Presupuesto publicitario: no contratado o no definido en esta cotización.')
-    }
-  }
-  paymentBullets.push(`Honorarios iniciales (sin pauta): ${money(totals.initialFees)}.`)
-  if (approvedAd > 0) {
-    paymentBullets.push(
-      `Total inicial previsto con pauta aprobada: ${money(totals.projectedInitial ?? totals.initialFees)}.`,
-    )
-  }
-  if (snapshot.marketingPlanId) {
-    paymentBullets.push(`Honorarios mensuales siguientes: ${money(totals.nextMonthly)}.`)
-    if (approvedAd > 0) {
-      paymentBullets.push(
-        `Mensual posterior con pauta aprobada: ${money(totals.projectedMonthly ?? totals.nextMonthly)}. El desarrollo web no se repite en ese mensual.`,
-      )
-    }
-  }
-  paymentBullets.push(
-    totals.taxRate != null ? `Impuesto configurado: ${totals.taxRate}%.` : 'Impuestos: no configurados en esta cotización.',
-  )
-  if (ready) {
-    paymentBullets.push(`Forma de pago: ${text(snapshot.paymentMethod)}.`)
-    paymentBullets.push(`Anticipo: ${text(snapshot.advanceNote)}.`)
-    paymentBullets.push(`Saldo: ${text(snapshot.balanceNote)}.`)
-    paymentBullets.push(`Calendario de pagos: ${text(snapshot.paymentSchedule)}.`)
-  } else {
-    paymentBullets.push(
-      'Faltan forma de pago, anticipo, saldo o calendario. Este borrador no fija porcentajes, vencimientos ni penalizaciones.',
-    )
-  }
+  const paymentBullets = buildPaymentClauseBullets(snapshot, ready)
 
   if (hasWeb) {
     blocks.push({
@@ -342,7 +391,11 @@ export function buildCommercialContractClauses(
   blocks.push({
     title: titled(index++, 'PRECIO Y FORMA DE PAGO'),
     paragraphs: [
-      'Los montos provienen de la cotización aceptada. El proyecto web no inicia hasta recibir el anticipo y la información necesaria.',
+      hasWeb
+        ? `Los importes de esta cláusula corresponden a la cotización aceptada para ${snapshot.webLabel?.trim() || 'el desarrollo web'}${
+            snapshot.marketingPlanId ? ` y ${snapshot.marketingLabel?.trim() || 'marketing'}` : ''
+          }. El desarrollo web no inicia hasta el primer pago acordado y la entrega de materiales.`
+        : 'Los importes corresponden a la cotización aceptada. El servicio no inicia hasta el pago y materiales acordados.',
     ],
     bullets: paymentBullets,
   })
