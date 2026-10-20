@@ -58,9 +58,16 @@ export const PRICE_EMAIL_USD = PRICE_EMAIL_RENEWAL_ANNUAL_USD
 
 const INFRA_LINE_IDS = new Set(['infra-year1', 'domain-email-year1', 'domain', 'hosting', 'emails'])
 
+type InfraLinesSink = Array<{
+  id: string
+  label: string
+  amount: number
+  billing?: BillingKind
+}>
+
 export function appendWebExternalInfraLines(
-  lines: CommercialTotals['lines'],
-  input: { hasDomain?: 'si' | 'no' | null; hasHosting?: 'si' | 'no' | null; emailCount?: number },
+  lines: InfraLinesSink,
+  input: { hasDomain?: 'si' | 'no' | '' | null; hasHosting?: 'si' | 'no' | '' | null; emailCount?: number },
 ) {
   const needsDomain = input.hasDomain === 'no'
   const needsHosting = input.hasHosting === 'no'
