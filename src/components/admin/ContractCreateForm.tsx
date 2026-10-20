@@ -80,13 +80,12 @@ export function ContractCreateForm({
   const hasMarketing = Boolean(enrichedPayload && quotePayloadHasMarketing(enrichedPayload))
   const hasWeb = Boolean(quoteAssessment && quoteAssessment.displayWebOnce > 0)
 
-  const applyTermsFromQuote = useCallback(
-    (quote: QuoteOpt) => {
+  const applyTermsFromQuote = useCallback((quote: QuoteOpt, installmentPlan: WebInstallmentPlanId) => {
       setTermsError('')
       const meta = quoteMeta(quote)
       const enriched = enrichQuotePayloadForContract(quote.raw_payload, meta)
       const derived = deriveContractTermsFromQuote(enriched ?? quote.raw_payload, meta, {
-        webInstallmentPlan,
+        webInstallmentPlan: installmentPlan,
       })
       if (!derived) {
         setTermsError(
@@ -113,7 +112,7 @@ export function ContractCreateForm({
         setMarketingFirstPayment('')
       }
     },
-    [webInstallmentPlan],
+    [],
   )
 
   useEffect(() => {
@@ -123,8 +122,9 @@ export function ContractCreateForm({
     if (extra.client_ruc) setClientTaxId(extra.client_ruc)
     if (extra.client_address) setClientAddress(extra.client_address)
     if (extra.client_city) setCity(extra.client_city)
-    applyTermsFromQuote(selected)
-  }, [selected, applyTermsFromQuote])
+    applyTermsFromQuote(selected, 'half-half')
+    // Solo al cambiar de cotización; no depender de applyTermsFromQuote para no resetear cuotas.
+  }, [selected?.id, applyTermsFromQuote])
 
   useEffect(() => {
     if (!selected || !hasWeb || editTerms) return
@@ -382,7 +382,7 @@ export function ContractCreateForm({
         </p>
       ) : null}
       {hasWeb && !quoteAssessment?.incomplete ? (
-        <label className="block">
+        <label className="relative z-20 block pb-1">
           <span className="text-xs text-slate-400">Cuotas del desarrollo web</span>
           <select
             value={webInstallmentPlan}
@@ -390,7 +390,7 @@ export function ContractCreateForm({
               setWebInstallmentPlan(e.target.value as WebInstallmentPlanId)
               setEditTerms(false)
             }}
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
+            className="relative z-20 mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 shadow-sm focus:border-brand/40 focus:ring-2 focus:ring-brand/15"
           >
             {WEB_INSTALLMENT_PLANS.map((plan) => (
               <option key={plan.id} value={plan.id}>
@@ -403,23 +403,6 @@ export function ContractCreateForm({
           </p>
         </label>
       ) : null}
-      {!termsError ? (
-        <button
-          type="button"
-          onClick={() => setEditTerms((value) => !value)}
-          className="text-sm text-slate-500 underline-offset-2 hover:text-brand hover:underline"
-        >
-          {editTerms ? 'Ocultar términos avanzados' : 'Ajustar términos (opcional)'}
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={() => selected && applyTermsFromQuote(selected)}
-          className="text-sm font-medium text-brand hover:underline"
-        >
-          Reintentar desde cotización
-        </button>
-      )}
 
       {editTerms ? (
         <div className="grid sm:grid-cols-2 gap-4">
@@ -539,13 +522,32 @@ export function ContractCreateForm({
         </div>
       ) : null}
 
-      <button
-        type="submit"
-        disabled={loading || !selected || Boolean(quoteAssessment?.incomplete)}
-        className="px-6 py-3 rounded-xl bg-brand text-white font-medium disabled:opacity-50"
-      >
-        {loading ? 'Creando…' : 'Crear contrato'}
-      </button>
+      <div className="relative z-0 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-5">
+        {!termsError ? (
+          <button
+            type="button"
+            onClick={() => setEditTerms((value) => !value)}
+            className="text-left text-sm text-slate-500 underline-offset-2 hover:text-brand hover:underline"
+          >
+            {editTerms ? 'Ocultar términos avanzados' : 'Ajustar términos (opcional)'}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => selected && applyTermsFromQuote(selected, webInstallmentPlan)}
+            className="text-left text-sm font-medium text-brand hover:underline"
+          >
+            Reintentar desde cotización
+          </button>
+        )}
+        <button
+          type="submit"
+          disabled={loading || !selected || Boolean(quoteAssessment?.incomplete)}
+          className="ml-auto shrink-0 px-6 py-3 rounded-xl bg-brand text-white font-medium disabled:opacity-50"
+        >
+          {loading ? 'Creando…' : 'Crear contrato'}
+        </button>
+      </div>
     </form>
   )
 }
